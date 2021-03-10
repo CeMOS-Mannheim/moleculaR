@@ -1,0 +1,173 @@
+---
+title: "example workflow"
+author: "Denis Abu Sammour"
+output:
+  html_notebook:
+    fig_height: 10
+    fig_width: 15
+  html_document:
+    df_print: paged
+    code_folding: hide
+editor_options:
+  chunk_output_type: inline
+---
+
+This notebook is used as blueprint for the shiny app development and dedicated vignettes. 
+
+## App inputs/outputs
+
+GUI Inputs 
+\code{imzmlFile}        string-browse, path to a single centroided (i.e. processed) imzML file.  
+\code{spectrFile}       string-browse, path to a single tsv file contianing a full continuous spectrum. 
+
+*single analyte case*
+\code{queryMass}        numeric-insert, 
+
+*collective projections case*
+\code{sdb}              csv or tsv file pre-loaded internally.
+\code{mtspc}            string-browse, path to the metaspcae annotations csv file. 
+\code{lipidSpecies}     string-dropdown, values = \code{searchList$allClasses}
+
+
+
+GUI Outputs
+*single analyte case*
+image                   ion image of the \code{queryMass}.
+image                   ion probability map of the \code{queryMass}.
+
+*collective projections case - if metaspace annotation file is not supplied*
+image                   collective projection of all instances of the chosen \code{lipidSpecies}.
+image                   collective probability map of all instances of the chosen \code{lipidSpecies}.
+
+*collective projections case - if metaspace annotation file is provided*
+image                   collective projection of confirmed instances of the chosen \code{lipidSpecies}.
+image                   collective probability map of confirmed instances of the chosen \code{lipidSpecies}.
+console output          confirmed identifications.
+
+
+```{r}
+#// input and load ----
+imzmlFile         = file.path(getwd(), "data", 
+                              "pos-XIII-82492-recal.imzML")  # <-- browse input-selected locally i.e. file will be 
+                                                       # uploaded to the temp dir of R. 
+spectrFile        = file.path(getwd(), "data", 
+                              "test_spectrum.tab")     # <-- browse input-selected locally i.e. file will be 
+                                                       # uploaded to the temp dir of R. 
+
+msData            = readCentrData(path = imzmlFile)    # would be nice to console-notify when done reading
+msSpectr          = readSingleSpect(spectrFile) 
+
+
+#// estimate fwhm from msSpectr ----
+fwhmFun           = estimateFwhm(s = msSpectr, plot = TRUE) # <-- this should be run directly after the spectrFile is 
+                                                            # uploaded, console-notify when done. 
+
+#// preprocessing ----
+
+# bin peaks
+# -- notify at start  --#
+msData            =  MALDIquant::binPeaks(msData, 
+                                           tolerance = fwhmFun(400)/400, #focusing on lipids 
+                                           method = "relaxed")
+# -- notify when done --#
+
+
+# filter out peaks which occur in less than 1% of the time - the built-in function of MALDIquant crashes for bigger datasets
+# -- notify at start  --#
+msData            = filterPeaks(x = msData, minFreq = 0.01)
+# -- notify when done --#
+
+
+# normalization 
+# -- notify at start  --#
+msData            = foldChangeNorm(msData)
+# -- notify when done --#
+
+
+
+#// create spatial window 
+spwin             = spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+
+
+#// create sparse matrix representation
+spmat             = createSparseMat(x = msData)
+
+# End of preproccessing
+
+```
+
+
+
+## view one analyte at a time - m/z case
+
+
+```{r}
+#// input by m/z value
+queryMass         = 516.3085                                # <-- input, numeric m/z value
+
+.uniqueMass       = as.numeric(spmat@Dimnames[[2]])
+
+
+hits              = searchAnalyte(m = queryMass, 
+                                  fwhm = fwhmFun(queryMass), 
+                                  massAxis = .uniqueMass, 
+                                  spData = spmat, 
+                                  coords = MALDIquant::coordinates(msData))
+
+
+
+#// check if hits is empty
+if(nrow(hits) == 0)
+{
+  
+  par(mfrow = c(1, 1))
+  #// image without masking
+  spatstat::plot.owin(spwin, 
+                  main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"), 
+                  ylim = rev(range(spwin$y)), 
+                  box = FALSE)
+  
+} else {
+  
+  
+  #// create the spatial point pattern
+  hitsppp              = spatstat::ppp(x = hits$x,
+                                       y = hits$y,
+                                       window = spwin,
+                                       marks = hits[ , -c(1, 2)])
+  
+  
+  #// plotting
+  
+  probImg              = probMap(hitsppp, win = spwin)
+  
+  
+  pixelation           = spatstat::pixellate(hitsppp,
+                                             weights = hitsppp$marks$intensity,
+                                             W = spatstat::as.mask(spwin,
+                                                         dimyx=c(diff(spwin$yrange) + 1,
+                                                                 diff(spwin$xrange) + 1)),
+                                             padzero = FALSE, savemap = TRUE)
+  
+  
+  par(mfrow = c(1, 2))
+  #// image without masking
+  spatstat::plot.im(pixelation, 
+                    main = round(queryMass, 4), 
+                    ylim = rev(range(spwin$y)), 
+                    box = FALSE)
+  
+  #// image masked with analyte probablity map
+  spatstat::plot.im(pixelation, 
+                    main = round(queryMass, 4), 
+                    ylim = rev(range(spwin$y)),
+                    box = FALSE)
+  
+  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.5), add = TRUE)
+    
+  
+  
+  
+}
+```
+

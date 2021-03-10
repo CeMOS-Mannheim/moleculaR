@@ -22,7 +22,6 @@ readCentrData     = function(path, verbose = FALSE){
       # ---------- #
 
 
-      MALDIquantForeign::importImzMl(path = path,
-                                     verbose = verbose)
+      MALDIquantForeign::importImzMl(path = path, centroided = TRUE, verbose = verbose)
 
 }
