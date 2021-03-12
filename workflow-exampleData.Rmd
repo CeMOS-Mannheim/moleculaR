@@ -1,0 +1,71 @@
+---
+title: "shiny app example workflow - Example & web-hosted"
+author: "Denis Abu Sammour"
+output:
+  html_notebook:
+    fig_height: 10
+    fig_width: 15
+  html_document:
+    df_print: paged
+    code_folding: hide
+editor_options:
+  chunk_output_type: inline
+---
+
+This notebook is used as blueprint for the shiny app development and dedicated vignettes. 
+
+## Accompanying data
+
+For more info on how to properly include data into packages check [this page](https://r-pkgs.org/data.html).  
+
+**data** subdirectroy contains a pre-processed and analysis-ready RData file, containing everything needed to run an example or web-hosted shiny app. This will be included on the Github (not Git-synced).
+
+**inst/extdata/** subdirectroy contains: (this will be part of the package but not synced by Git)  
+* two txt file holding the url of the imzml (and ibd) in metaspace.  
+* one tsv file containing one single continuous (full) spectrum (used for the accompanying example data).   
+* one tsv file cotaning filtered swiss lipids database (used internally).     
+* one csv file containing metaspace annotations for the example datase (used for the accompanying example data).   
+  
+**data-external** subdirectroy contains: (this is only for development, not Git-synced and will be removed later)  
+* two files; imzML and ibd, processed examplary MSI data.  
+  
+**data-shinyWebHosted** subdirectroy is meant to contain processed ready-to-analyze data preferrably in .RData envirobnment type. This would ideally work with a web-hosted shiny app and will load RData on start. Please check [this page](https://shiny.rstudio.com/articles/persistent-data-storage.html) and let me know if this is actually an option. If they do not allow for data hosting we could always fetch the Github::moleculaR/data/RData file by downloading it and loading it into the session.   
+  
+## Package-app inputs/outputs
+
+**[GUI Inputs]**    
+*single analyte case*  
+**queryMass**     numeric-insert, m/z value.    
+*collective projections case*   
+**lipidSpecies**  string-dropdown, values = `searchList$allClasses`      
+
+
+**[GUI Outputs]**  
+**plot**          fwhm as a function of m/z, generated after loading the single spectrum.   
+*single analyte case*
+**image**         ion image of the `queryMass`.   
+**image**         ion probability map of the `queryMass`.   
+*collective projections case*  
+**image**         collective projection of confirmed instances of the chosen `lipidSpecies`.  
+**image**         collective probability map of confirmed instances of the chosen `lipidSpecies`.  
+
+
+## Workflow for example data + web-hosted app 
+
+
+### Load data 
+
+```{r}
+library(moleculaR)
+
+#// load saved image
+data("processed-example-Data")
+
+#// create sparse matrix representation
+spmat             = createSparseMat(x = msData)
+
+
+# Done!
+```
+
+

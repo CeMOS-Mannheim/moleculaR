@@ -1,0 +1,263 @@
+---
+title: "example workflow"
+author: "Denis Abu Sammour"
+output:
+  html_notebook:
+    fig_height: 10
+    fig_width: 15
+  html_document:
+    df_print: paged
+    code_folding: hide
+editor_options:
+  chunk_output_type: inline
+---
+
+This notebook is used as blueprint for the shiny app development and dedicated vignettes. 
+
+## Accompanying data
+
+For more info on how to properly include data into packages check [this page](https://r-pkgs.org/data.html).  
+
+**data** subdirectroy contains a pre-processed and analysis-ready RData file, containing everything needed to run an example or web-hosted shiny app. This will be included on the Github (not Git-synced).
+
+**inst/extdata/** subdirectroy contains: (this will be part of the package but not synced by Git)  
+* two txt file holding the url of the imzml (and ibd) in metaspace.  
+* one tsv file containing one single continuous (full) spectrum (used for the accompanying example data).   
+* one tsv file cotaning filtered swiss lipids database (used internally).     
+* one csv file containing metaspace annotations for the example datase (used for the accompanying example data).   
+  
+**data-external** subdirectroy contains: (this is only for development, not Git-synced and will be removed later)  
+* two files; imzML and ibd, processed examplary MSI data.  
+  
+**data-shinyWebHosted** subdirectroy is meant to contain processed ready-to-analyze data preferrably in .RData envirobnment type. This would ideally work with a web-hosted shiny app and will load RData on start. Please check [this page](https://shiny.rstudio.com/articles/persistent-data-storage.html) and let me know if this is actually an option. If they do not allow for data hosting we could always fetch the Github::moleculaR/data/RData file by downloading it and loading it into the session.
+  
+## Package-app inputs/outputs
+
+**[GUI Inputs]**    
+**imzmlFile**     string-browse, path to a single centroided (i.e. processed) imzML file.  
+**spectrFile**    string-browse, path to a single tsv file contianing a full continuous spectrum.  
+*single analyte case*  
+**queryMass**     numeric-insert, m/z value.    
+*collective projections case*   
+**sldb**          internally loaded, /inst/extdata/swisslipids-speciesOnly-sep2020.tsv   
+**mtspc**         string-browse, path to metaspace annotation file (.csv).  
+**lipidSpecies**  string-dropdown, values = `searchList$allClasses`      
+
+
+**[GUI Outputs]**  
+**plot**          fwhm as a function of m/z, generated after loading the single spectrum.   
+*single analyte case*
+**image**         ion image of the `queryMass`.   
+**image**         ion probability map of the `queryMass`.   
+  
+*collective projections case - if metaspace annotation file is not supplied*  
+**image**         collective projection of all instances of the chosen `lipidSpecies`.  
+**image**         collective probability map of all instances of the chosen `lipidSpecies`.  
+  
+*collective projections case - if metaspace annotation file is provided*  
+**image**         collective projection of confirmed instances of the chosen `lipidSpecies`.  
+**image**         collective probability map of confirmed instances of the chosen `lipidSpecies`.  
+**console output** confirmed identifications.  
+
+
+## webHosted-app inputs/outputs   
+  
+**[GUI Inputs]**   
+**RData file**    internally loaded, processed data. Need to find a way to attach this data to a [web-hosted shiny app](https://www.shinyapps.io/)
+*single analyte case*  
+**queryMass**     numeric-insert, m/z value.    
+*collective projections case*   
+**lipidSpecies**  string-dropdown, values = `searchList$allClasses`      
+
+
+**[GUI Outputs]**  
+*single analyte case*
+**image**         ion image of the `queryMass`.   
+**image**         ion probability map of the `queryMass`.   
+*collective projections case - if metaspace annotation file is provided*  
+**image**         collective projection of confirmed instances of the chosen `lipidSpecies`.  
+**image**         collective probability map of confirmed instances of the chosen `lipidSpecies`.  
+**console output** confirmed identifications.
+
+## Workflow for package-app 
+
+
+### Load data 
+
+```{r}
+library(moleculaR)
+######################
+#### local input #####
+######################
+
+#// MSI data - either load a local file 
+imzmlFile         = "pathToFile.imzML"                # <-- browse input-selected locally i.e. file will be 
+                                                       # uploaded to the temp dir of R. 
+
+imzmlFile         = file.path(getwd(), "data-external", "pos-XIII-82492-msi.imzML") # temporary, just to test this nb
+
+#// read the file into R
+msData            = readCentrData(path = imzmlFile)    # would be nice to console-notify when done reading
+
+
+#// single spectrum -  load a local tsv file 
+spectrFile        = "pathToFile.tsv"                  # <-- browse input-selected locally i.e. file will be 
+                                                       # uploaded to the temp dir of R. 
+
+spectrFile        = system.file("extdata", "pos-XIII-82492-singleSpectrum.tsv", package = "moleculaR", mustWork = TRUE)# temporary
+msSpectr          = readSingleSpect(spectrFile) 
+
+
+#// load the processed swisslipids db internally
+pathTosldb        = system.file("extdata", "swisslipids-speciesOnly-sep2020.tsv", package = "moleculaR", mustWork = TRUE)
+sldb              = loadSwissDB(pathTosldb)
+
+
+#// load the metaspace annotations file - supplied by user
+pathToMtspc       = "pathToFile.csv"                  # <-- browse input-selected locally
+pathToMtspc        = system.file("extdata", "metaspace_annotations.csv", package = "moleculaR", mustWork = TRUE) # temporary
+mtspc             = read.csv(file = pathToMtspc, skip = 2,header = TRUE, colClasses = "character")
+
+
+##########################
+#### or load example #####
+##########################
+
+
+
+#//  download an example dataset 
+# imzmlFile         = downloadExData() # this takes time, would be nice to show progress
+     
+#// read the file into R
+# msData            = readCentrData(path = imzmlFile)    # would be nice to console-notify when done reading
+
+#// or load the example file available with the package
+# spectrFile        = system.file("extdata", "pos-XIII-82492-singleSpectrum.tsv", package = "moleculaR", mustWork = TRUE)  
+# msSpectr          = readSingleSpect(spectrFile) 
+
+#// load the processed swisslipids db internally
+# pathTosldb        = system.file("extdata", "swisslipids-speciesOnly-sep2020.tsv", package = "moleculaR", mustWork = TRUE) 
+
+#// load the metaspace annotations file - supplied by user
+# pathToMtspc       = system.file("extdata", "metaspace_annotations.csv", package = "moleculaR", mustWork = TRUE)
+# mtspc             = read.csv(file = pathToMtspc, skip = 2,header = TRUE, colClasses = "character")
+
+
+
+```
+
+
+### preprocessing of MS data
+
+```{r}
+#// estimate fwhm from msSpectr ----
+fwhmFun           = estimateFwhm(s = msSpectr, plot = TRUE) # <-- this should be run directly after the spectrFile is 
+                                                            # uploaded, a plot is generated
+
+
+# bin peaks
+# -- notify at start  --#
+msData            =  MALDIquant::binPeaks(msData, 
+                                           tolerance = fwhmFun(400)/400, #focusing on lipids 
+                                           method = "relaxed")
+# -- notify when done --#
+
+
+# filter out peaks which occur in less than 1% of the time - the 
+# built-in function of MALDIquant crashes for bigger datasets
+# -- notify at start  --#
+msData            = filterPeaks(x = msData, minFreq = 0.01)
+# -- notify when done --#
+
+
+# normalization 
+# -- notify at start  --#
+#msData            = foldChangeNorm(msData) <-- this is optional
+# -- notify when done --#
+
+
+#// create spatial window 
+spwin             = spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+
+
+#// create sparse matrix representation
+spmat             = createSparseMat(x = msData)
+
+# End of preproccessing
+```
+
+
+
+## view one analyte at a time - m/z case
+
+
+```{r}
+#// input by m/z value
+queryMass         = 516.3085                                # <-- input, numeric m/z value
+
+.uniqueMass       = as.numeric(spmat@Dimnames[[2]])
+
+
+hits              = searchAnalyte(m = queryMass, 
+                                  fwhm = fwhmFun(queryMass), 
+                                  massAxis = .uniqueMass, 
+                                  spData = spmat, 
+                                  coords = MALDIquant::coordinates(msData))
+
+
+
+#// check if hits is empty
+if(nrow(hits) == 0)
+{
+  
+  par(mfrow = c(1, 1))
+  #// image without masking
+  spatstat::plot.owin(spwin, 
+                  main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"), 
+                  ylim = rev(range(spwin$y)), 
+                  box = FALSE)
+  
+} else {
+  
+  
+  #// create the spatial point pattern
+  hitsppp              = spatstat::ppp(x = hits$x,
+                                       y = hits$y,
+                                       window = spwin,
+                                       marks = hits[ , -c(1, 2)])
+  
+  
+  #// plotting
+  
+  probImg              = probMap(hitsppp, win = spwin)
+  
+  
+  pixelation           = spatstat::pixellate(hitsppp,
+                                             weights = hitsppp$marks$intensity,
+                                             W = spatstat::as.mask(spwin,
+                                                         dimyx=c(diff(spwin$yrange) + 1,
+                                                                 diff(spwin$xrange) + 1)),
+                                             padzero = FALSE, savemap = TRUE)
+  
+  
+  par(mfrow = c(1, 2))
+  #// image without masking
+  spatstat::plot.im(pixelation, 
+                    main = round(queryMass, 4), 
+                    ylim = rev(range(spwin$y)), 
+                    box = FALSE)
+  
+  #// image masked with analyte probablity map
+  spatstat::plot.im(pixelation, 
+                    main = round(queryMass, 4), 
+                    ylim = rev(range(spwin$y)),
+                    box = FALSE)
+  
+  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.5), add = TRUE)
+    
+  
+  
+  
+}
+```
+
