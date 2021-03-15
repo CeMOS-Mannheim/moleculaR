@@ -19,22 +19,22 @@ shrinkData     = function(x, mzKeep, fwhmFun) {
       }
 
       mzKeep      = sort(mzKeep)
-      x                    = lapply(x, FUN = function(i) {
+      x              = lapply(x, FUN = function(i) {
 
-            xm            = MALDIquant::mass(i)
-            #xkpIdx        = which(xm %in% mzKeep)
-            xkpIdx      = MALDIquant::match.closest(x = mzKeep,
+            xm       = MALDIquant::mass(i)
+            xkpIdx   = MALDIquant::match.closest(x = mzKeep,
                                                     table = xm,
                                                     tolerance = fwhmFun(mzKeep))
-            xkpIdx      = xkpIdx[!is.na(xkpIdx)]
+            xkpIdx   = xkpIdx[!is.na(xkpIdx)]
 
-            #mt            = MALDIquant::metaData(i)
+            mt       = list()
+            mt$imaging$pos = MALDIquant::metaData(i)$imaging$pos # keep only pixel coordinates
 
 
             MALDIquant::createMassPeaks(mass = xm[xkpIdx],
                                         intensity = MALDIquant::intensity(i)[xkpIdx],
                                         snr = MALDIquant::snr(i)[xkpIdx],
-                                        metaData = list())
+                                        metaData = mt)
 
       })
 

@@ -35,9 +35,10 @@ For more info on how to properly include data into packages check [this page](ht
 
 **[GUI Inputs]**    
 *single analyte case*  
-**queryMass**     numeric-insert, m/z value.    
+**queryMass**     numeric-insert, m/z value.  
+**probMapMethod** method used to generate the molecular probability map method.  
 *collective projections case*   
-**lipidSpecies**  string-dropdown, values = `searchList$allClasses`      
+**lipidClass**  string-dropdown, values = `searchList$allClasses`      
 
 
 **[GUI Outputs]**  
@@ -46,8 +47,8 @@ For more info on how to properly include data into packages check [this page](ht
 **image**         ion image of the `queryMass`.   
 **image**         ion probability map of the `queryMass`.   
 *collective projections case*  
-**image**         collective projection of confirmed instances of the chosen `lipidSpecies`.  
-**image**         collective probability map of confirmed instances of the chosen `lipidSpecies`.  
+**image**         collective projection of confirmed instances of the chosen `lipidClass`.  
+**image**         collective probability map of confirmed instances of the chosen `lipidClass`.  
 
 
 ## Workflow for example data + web-hosted app 
@@ -61,6 +62,8 @@ library(moleculaR)
 #// load saved image
 data("processed-example-Data")
 
+fwhmFun           = fwhm$fwhmFun
+
 #// create sparse matrix representation
 spmat             = createSparseMat(x = msData)
 
@@ -68,4 +71,364 @@ spmat             = createSparseMat(x = msData)
 # Done!
 ```
 
+### plot the fwhm(m/z) 
 
+```{r}
+p           = fwhm$fwhmValues$peaks          #peaks of the single spectrum
+r           = range(p)              # range of m/z
+qp          = seq(r[1], r[2])       # query peaks
+
+plot(x = p, y = fwhm$fwhmValues$fwhmValues,
+      main = "Estimated fwhm(m/z)", xlab = "m/z (Da)", ylab = "fwhm")
+lines(x = qp, y = fwhmFun(qp), col = "green", lwd = 2)
+```
+
+## one analyte at a time - m/z case
+
+
+```{r}
+#// input by m/z value
+queryMass         = 496.33972                                   # <-- input, numeric m/z value, use this as default value for exmaple
+bwMethod          = "iterative"                                 # <-- input, c("iterative", "scott")
+
+# NOTE: would be better to have two bwMethod inputs; one for one analyte case (defaults to "iterative") and one for 
+# collective projection case (defaults to "scott").  
+
+```
+
+
+```{r fig.width=8}
+#// output::ion image
+s                 = MALDIquant::msiSlices(x = msData, center = queryMass, 
+                                          tolerance = (fwhmFun(queryMass) / 2.355) * 3)
+
+if(sum(s, na.rm = T) == 0){
+      par(mfrow = c(1, 1))
+      #// image without masking
+      spatstat::plot.owin(spwin, 
+                  main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"), 
+                  ylim = rev(range(spwin$y)), 
+                  box = FALSE)
+} else {
+      
+    MALDIquant::plotMsiSlice(x = s,  
+                             colRamp = colorRamp(viridis::viridis_pal(option = "inferno")(100)), 
+                             interpolate = F)
+  
+}
+```
+
+
+```{r fig.width=8}
+#// output::molecular probability map
+.uniqueMass       = as.numeric(spmat@Dimnames[[2]])
+
+
+hits              = searchAnalyte(m = queryMass, 
+                                  fwhm = fwhmFun(queryMass), 
+                                  massAxis = .uniqueMass, 
+                                  spData = spmat, 
+                                  coords = MALDIquant::coordinates(msData))
+
+
+
+#// check if hits is empty
+if(nrow(hits) == 0)
+{
+  
+  par(mfrow = c(1, 1))
+  #// image without masking
+  spatstat::plot.owin(spwin, 
+                  main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"), 
+                  ylim = rev(range(spwin$y)), 
+                  box = FALSE)
+  
+} else {
+  
+  par(mfrow = c(1, 1))
+
+  
+  #// create the spatial point pattern
+  hitsppp              = spatstat::ppp(x = hits$x,
+                                       y = hits$y,
+                                       window = spwin,
+                                       marks = hits[ , -c(1, 2)])
+  
+  
+  #// plotting
+  
+  probImg              = probMap(hitsppp, win = spwin, bwMethod = bwMethod)
+  
+  
+  spatstat::plot.im(probImg$denspp,
+                    main = paste0("m/z ", round(queryMass, 4), " +/- ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
+  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
+  
+    
+  
+  
+  
+}
+```
+
+## Collective projection case - lipid classes
+
+```{r fig.width=8}
+#// load swiss lipid database - 
+# -- loaded -- 
+
+#// initialize the swisslipids database
+searchList           = initLipidSearch(swissdb = sldb)
+
+
+#// choose one lipid species
+lipidClass         = "PI(x:x)"                        # <-- Input, selection from drop-down, values = searchList$allClasses
+bwMethod          = "scott"                           # <-- input, c("iterative", "scott")
+# NOTE: would be better to have two bwMethod inputs; one for one analyte case (defaults to "iterative") and one for 
+# collective projection case (defaults to "scott").  
+
+
+#// load metaspace identification list
+# -- loaded --
+
+#// check if these files exist
+# -- no need do in this case -- 
+
+#// find peaks
+.uniqueMass       = as.numeric(spmat@Dimnames[[2]])
+
+
+
+searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchList$swissList[[lipidClass]])), 
+                                                          mc.cores = 5, FUN = function(i) {
+       
+       
+       df            = data.frame(x = integer(0), 
+                            y = integer(0),
+                            mass = numeric(0),
+                            intensity = numeric(0), 
+                            adduct = character(0), 
+                            mode = character(0),
+                            modeAdduct = character(0),
+                            lipidID = character(0),
+                            sumformula = character(0), 
+                            fullName = character(0),
+                            abbrev = character(0),
+                            numDoubleBonds = integer(0),
+                            stringsAsFactors = F)
+       
+       msCoordinates = MALDIquant::coordinates(msData)
+       
+       #// protonated ----
+       lipTmp        = searchList$swissList[[lipidClass]]$`Exact m/z of [M+H]+`[i]
+       
+              if(!is.na(lipTmp)) { # for example there is no protonated version of this lipid species
+
+
+                       df     = rbind(df, 
+                                      searchLipid(m = lipTmp, 
+                                                  fwhm = fwhmFun(lipTmp), 
+                                                  massAxis = .uniqueMass, 
+                                                  spData = spmat, 
+                                                  coords = msCoordinates,
+                                                  mtspc = mtspc, # <--
+                                                  adduct = "H1",  # <--
+                                                  mode = "positive",  # <--
+                                                  modeAdduct = "M+H",  # <--
+                                                  lipidID = searchList$swissList[[lipidClass]]$`Lipid ID`[i], 
+                                                  sumformula = searchList$swissList[[lipidClass]]$`Formula (pH7.3)`[i], 
+                                                  abbrev = searchList$swissList[[lipidClass]]$`Abbreviation*`[i], 
+                                                  numDoubleBonds = searchList$swissList[[lipidClass]]$numDoubleBond[i]))
+  
+
+              }
+      
+       
+       #// Na+ adduct ----
+       lipTmp               = searchList$swissList[[lipidClass]]$`Exact m/z of [M+Na]+`[i]
+       
+              if(!is.na(lipTmp)) { # for example there is no Na-adduct version
+
+
+                       
+                       df     = rbind(df, 
+                                      searchLipid(m = lipTmp, 
+                                                  fwhm = fwhmFun(lipTmp), 
+                                                  massAxis = .uniqueMass, 
+                                                  spData = spmat, 
+                                                  coords = msCoordinates,
+                                                  mtspc = mtspc, # <--
+                                                  adduct = "Na1",  # <--
+                                                  mode = "positive",  # <--
+                                                  modeAdduct = "M+Na",  # <--
+                                                  lipidID = searchList$swissList[[lipidClass]]$`Lipid ID`[i], 
+                                                  sumformula = searchList$swissList[[lipidClass]]$`Formula (pH7.3)`[i], 
+                                                  abbrev = searchList$swissList[[lipidClass]]$`Abbreviation*`[i], 
+                                                  numDoubleBonds = searchList$swissList[[lipidClass]]$numDoubleBond[i]))
+                       
+
+  
+
+              }
+
+       
+       #// K+ adduct ----
+       lipTmp        = searchList$swissList[[lipidClass]]$`Exact m/z of [M+K]+`[i]
+       
+              if(!is.na(lipTmp)) { # for example there is no Na-adduct version
+
+                       df     = rbind(df, 
+                                      searchLipid(m = lipTmp, 
+                                                  fwhm = fwhmFun(lipTmp), 
+                                                  massAxis = .uniqueMass, 
+                                                  spData = spmat, 
+                                                  coords = msCoordinates,
+                                                  mtspc = mtspc, # <--
+                                                  adduct = "K1",  # <--
+                                                  mode = "positive",  # <--
+                                                  modeAdduct = "M+K",  # <--
+                                                  lipidID = searchList$swissList[[lipidClass]]$`Lipid ID`[i], 
+                                                  sumformula = searchList$swissList[[lipidClass]]$`Formula (pH7.3)`[i], 
+                                                  abbrev = searchList$swissList[[lipidClass]]$`Abbreviation*`[i], 
+                                                  numDoubleBonds = searchList$swissList[[lipidClass]]$numDoubleBond[i]))
+                                                   
+ 
+                     
+
+              }
+      
+       
+       return(df)
+       })
+
+
+#// merge
+searchList$lipidHits[[lipidClass]] = do.call("rbind", searchList$lipidHits[[lipidClass]])
+
+
+#// added check 
+if(nrow(searchList$lipidHits[[lipidClass]]) == 0) {
+  
+  par(mfrow = c(1, 1))
+  
+  #// empty window
+  spatstat::plot.owin(spwin, 
+                  main = paste0("No insances of ", lipidClass, " were detected"), 
+                  ylim = rev(range(spwin$y)), 
+                  box = FALSE)
+  
+  detectionsExist = FALSE
+  
+  
+} else {
+  detectionsExist = TRUE
+}
+
+#// create the spatial point pattern
+if(detectionsExist){
+  
+  hitsppp              = spatstat::ppp(x = searchList$lipidHits[[lipidClass]]$x,
+                                     y = searchList$lipidHits[[lipidClass]]$y,
+                                     window = spwin,
+                                     marks = searchList$lipidHits[[lipidClass]][ , -c(1, 2)])
+
+}
+
+
+if(detectionsExist) {
+  
+  tmpm                 = unique(searchList$lipidHits[[lipidClass]]$mass) # stores unique detected masses
+tmpc                 = unique(searchList$lipidHits[[lipidClass]][c("mass", "confirmed", "modeAdduct")])
+
+cat("\nConfirmed(metaspace) | Detected(in dataset) | Total(swisslipids) = ", 
+   length(which(tmpc$confirmed)),
+   " | ",
+   length(tmpm),
+   " | ",
+   nrow(searchList$swissList[[lipidClass]]) * 4, # because each entry has 4 different adducts
+   "\n")
+cat(" M+H  detected = ", length(which(tmpc$modeAdduct == "M+H") ),
+   " | ",
+   "M+H  confirmed = ", length(which(tmpc$modeAdduct == "M+H" & tmpc$confirmed)),
+   "\n",
+   "M-H  detected = ", length(which(tmpc$modeAdduct == "M-H") ),
+   " | ",
+   "M-H  confirmed = ", length(which(tmpc$modeAdduct == "M-H" & tmpc$confirmed)),
+   "\n",
+   "M+Na detected = ", length(which(tmpc$modeAdduct == "M+Na") ),
+   " | ",
+   "M+Na confirmed = ", length(which(tmpc$modeAdduct == "M+Na" & tmpc$confirmed == TRUE)),"\n",
+   "M+K  detected = ", length(which(tmpc$modeAdduct == "M+K") ),
+   " | ",
+   "M+K  confirmed = ", length(which(tmpc$modeAdduct == "M+K" & tmpc$confirmed)),
+   "\n",
+   "\n\n\n")
+}
+
+
+```
+
+
+plotting all detections
+
+```{r fig.width=12}
+
+if(detectionsExist) {
+
+
+
+  probImg              = probMap(hitsppp, win = spwin, bwMethod = bwMethod)
+  
+  
+  spatstat::plot.im(probImg$denspp,
+                    main =  paste0(lipidClass, " - all ", length(tmpm), " detections"),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
+  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
+
+}
+
+
+```
+
+plotting confirmed/verified detections
+
+```{r fig.width=12}
+if(detectionsExist) {
+  
+  subsetppp            = spatstat::subset.ppp(hitsppp, confirmed == TRUE)
+
+#// check if empty
+if(subsetppp$n == 0) {
+  
+  par(mfrow = c(1, 1))
+  spatstat::plot.owin(spwin, 
+                    main = paste0(lipidClass, " - ", "no confirmed detections"), 
+                    ylim = rev(range(spwin$y)), 
+                    box = FALSE)
+  
+  
+} else {
+  
+ 
+  
+  probImg              = probMap(subsetppp, win = spwin, bwMethod = bwMethod)
+  
+  
+  spatstat::plot.im(probImg$denspp,
+                    main = paste0(lipidClass, " - ", length(which(tmpc$confirmed)), " confirmed detections"),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
+  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
+
+}
+}
+
+
+
+```

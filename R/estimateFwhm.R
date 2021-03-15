@@ -7,13 +7,15 @@
 #' @param sampling:  an integer specifying how many detected p to consider for fwhm estimation.
 #' @param plot:      whether to plot the result
 #' @param savePlot:  either \code{NULL} or file path to save a plot as svg.
+#' @param returnValues: if set to \code{TRUE}, returns additionally the calculated fwhm values.
 #' @return
-#' Returns a linear interplotor function fwhm(m/z).
+#' Returns a linear interplotor function fwhm(m/z). If \code{returnValues = TRUE} a list is returned
+#' storing the fwhm(m/z) interpolating function in addition to the calculated fwhm values.
 #'
 #' @export
 #'
 #'
-estimateFwhm      = function(s, sampling = 1000L, plot = FALSE, savePlot = NULL) {
+estimateFwhm      = function(s, sampling = 1000L, plot = FALSE, savePlot = NULL, returnValues = FALSE) {
 
       #// detect peaks
       p           = MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = 3)
@@ -55,7 +57,11 @@ estimateFwhm      = function(s, sampling = 1000L, plot = FALSE, savePlot = NULL)
            dev.off()
        }
 
-       return(fwhmFun)
+      if(returnValues) {
+         return(list(fwhmValues = fwhmdf, fwhmFun = fwhmFun))
+      } else{
+         return(fwhmFun)
+      }
 
 }
 
