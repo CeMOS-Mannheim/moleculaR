@@ -8,8 +8,6 @@
 #' @param adjRange:  whether to adjust the range of the second derivative to match
 #' the range of y so it could be displayed along the original data. 
 #' @param xQuery:    x values, at which to evaluate the fitted spline. 
-#' @param 
-#' @return
 #' A list .. 
 #'
 #' @export

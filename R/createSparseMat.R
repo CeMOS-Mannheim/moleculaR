@@ -2,7 +2,7 @@
 #'
 #' The sparse matrix is created via \code{Matrix::sparseMatrix}.
 #'
-#' @param x:    a list of \code{MassPeaks objects.
+#' @param x:    a list of \code{MassPeaks objects}.
 #' @return
 #' A sparse matrix, see \code{?Matrix::sparseMatrix} for more info.
 #'
