@@ -26,7 +26,7 @@ createSparseMat             = function(x) {
                                                     dimnames = list(NULL, .uniqueMass),
                                                     dims = c(length(x), length(.uniqueMass)))
 
-
+        attr(spmat, "coordinates") = MALDIquant::coordinates(x) # could used later to rectreate a list of MassPeaks objects
 
        return(spmat)
 
