@@ -23,26 +23,37 @@
 #'
 #'
 
-superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noiseFactor = 3L,
+superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noiseFactor = 1L,
                                    searchFactor = 3L, sigmaInterfering = 2L, mzTrim = 0,
-                                   numSpikedPeaks = 10L) {
+                                   numSpikedPeaks = 10L, verbose = FALSE) {
 
 
       #// checks
       if(is.null(x) & is.null(spmat)){
-         stop("one of x or spmat has to be provided. \n")
+            stop("one of x or spmat has to be provided. \n")
       }
 
       if(is.null(spmat)){
-         if(!MALDIquant::isMassPeaksList(x)){
-            stop("x is not a list of MassPeaks objects. \n")
-         }
+
+            coords      = MALDIquant::coordinates(x) # save a copy of the coordinates
+
+
+            if(!MALDIquant::isMassPeaksList(x)){
+                  stop("x is not a list of MassPeaks objects. \n")
+            }
       }
 
       if(is.null(x)){
-         if(class(spmat) != "dgCMatrix"){
-            stop("spmat must be of sparse matrix type Matrix::dgCMatrix. \n")
-         }
+
+            coords      = attr(spmat, "coordinates") # save a copy of the coordinates
+
+            if(is.null(coords))
+                  stop("spmat does not hold pixel coordianetes in its attr!\n")
+
+
+            if(class(spmat) != "dgCMatrix"){
+                  stop("spmat must be of sparse matrix type Matrix::dgCMatrix. \n")
+            }
       }
 
       if((method == "interfering") & (sigmaInterfering > searchFactor)) {
@@ -56,7 +67,8 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
 
       # create sparse matrix
       if(is.null(spmat)){
-         spmat       = moleculaR::createSparseMat(x)
+            if(verbose) {cat("creating sparse matrix representation .. \n")}
+            spmat       = moleculaR::createSparseMat(x)
       }
       mzAxis      = as.numeric(colnames(spmat))
 
@@ -76,88 +88,124 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
             idx   = idx[!is.na(idx)]
       }
 
-      #intVec      = spmat[ , idx, drop = FALSE]
 
+      if(is.null(attr(spmat, "coordinates")))
+            stop("no coordinates!")
 
       # add noise to data
+      if(verbose) {cat("applying noise .. \n")}
+
       switch (method,
-             "Gaussian" = {
-
-                      n = vector("list", ncol(spmat))
-                      # n[idx] = lapply(seq_len(ncol(intVec)), function(icol){
-                      n[idx] = lapply(idx, function(icol){
-                            abs(rnorm(nrow(spmat),
-                                      mean(spmat[ , icol]),
-                                      sd(spmat[ , icol]) * noiseFactor))
-
-                      })
-
-                      for(i in idx){
-
-                         spmat[ , i] = spmat[ , i] + n[[i]]
-
-                      }
+              "Gaussian" = {
 
 
-             },
-             "spiked" = {
-
-                   idxSpike    = sample(seq(1, nrow(spmat)), numSpikedPeaks)
-
-                   n = vector("list", ncol(spmat))
-
-                   n[idx] = lapply(idx, function(icol){
-
-                      rpois(length(idxSpike), max(spmat[ , icol], na.rm = TRUE) * 3)
-
-                   })
+                    # nmat = Matrix::sparseMatrix(i = r, j = i, x = .intensity,
+                    #                             dimnames = list(NULL, NULL),
+                    #                             dims = dim(spmat))
 
 
-                   for(i in idx){
+                    n = vector("list", ncol(spmat))
+                    n[idx] = lapply(idx, function(icol){
 
-                      spmat[idxSpike , i] = spmat[idxSpike , i] + n[[i]]
+                          colData = .extractCol(spmat, icol)
+                          abs(rnorm(nrow(spmat),
+                                    mean(colData),
+                                    sd(colData) * noiseFactor))
 
-                   }
+                    })
 
+                    #// to show progress
+                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                    cnt= 1
 
-             },
-             "interfering" = {
+                    for(i in idx){
 
-                n = vector("list", ncol(spmat))
+                          utils::setTxtProgressBar(pb, cnt)
+                          spmat[ , i] = spmat[ , i] + n[[i]]
+                          cnt  = cnt + 1
 
-                n[idx] = lapply(idx, function(icol){
-                   abs(rnorm(nrow(spmat),
-                             mean(spmat[ , icol]),
-                             sd(spmat[ , icol]) * noiseFactor))
+                    }
 
-                })
+                    close(pb)
 
-                for(i in idx){
+              },
+              "spiked" = {
 
-                   # to fix: make mz as reference instead of idx
+                    idxSpike    = sample(seq(1, nrow(spmat)), numSpikedPeaks)
 
-                   # add a new mass
-                   m0      = mzAxis[i]
-                   m1      =  m0 + (fwhm / 2.355) * sigmaInterfering
-                   idxi    = findInterval(x = m1, mzAxis)
-                   mzAxis  = append(x = mzAxis, values = m1, after = idxi)
+                    n = vector("list", ncol(spmat))
 
-                   spmat   = cbind(spmat[ , seq(1:idxi)],
-                                   Matrix::Matrix(data = n[[i]], nrow = nrow(spmat), sparse = TRUE),
-                                   spmat[ , seq((idxi+1):ncol(spmat))])
+                    n[idx] = lapply(idx, function(icol){
 
-                   colnames(spmat) = as.character(mzAxis)
+                          rpois(length(idxSpike), max(.extractCol(spmat, icol), na.rm = TRUE) * 3)
 
-                }
+                    })
 
+                    #// to show progress
+                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                    cnt= 1
 
-             },
-             stop("given method is incorrect. \n"))
+                    for(i in idx){
+
+                          utils::setTxtProgressBar(pb, cnt)
+                          spmat[idxSpike , i] = spmat[idxSpike , i] + n[[i]]
+                          cnt  = cnt + 1
+
+                    }
+
+                    close(pb)
+
+              },
+              "interfering" = {
+
+                    n = vector("list", ncol(spmat))
+
+                    n[idx] = lapply(idx, function(icol){
+                          colData = .extractCol(spmat, icol)
+                          abs(rnorm(nrow(spmat),
+                                    mean(colData),
+                                    sd(colData) * noiseFactor))
+
+                    })
+
+                    #// to show progress
+                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                    cnt= 1
+
+                    for(i in idx){
+
+                          # to fix: make mz as reference instead of idx
+
+                          utils::setTxtProgressBar(pb, cnt)
+
+                          # add a new mass
+                          m0      = mzAxis[i]
+                          m1      =  m0 + (fwhm / 2.355) * sigmaInterfering
+                          idxi    = findInterval(x = m1, mzAxis)
+                          mzAxis  = append(x = mzAxis, values = m1, after = idxi)
+
+                          spmat   = cbind(spmat[ , seq(1:idxi)],
+                                          Matrix::Matrix(data = n[[i]], nrow = nrow(spmat), sparse = TRUE),
+                                          spmat[ , seq((idxi+1):ncol(spmat))])
+
+                          colnames(spmat) = as.character(mzAxis)
+
+                          cnt  = cnt + 1
+
+                    }
+
+                    close(pb)
+
+              },
+              stop("given method is incorrect. \n"))
+
 
 
       #// convert the sparse matrix to a list of MassPeaks objects
-      x        =.spmat2MassPeaks(spmat)
+      if(verbose) {cat("re-creating MS Data as a list of MassPeaks objects .. \n")}
+      x        =.spmat2MassPeaks(spmat, coords)
 
+      if(verbose) {cat("Done.\n")}
       return(x)
 
 
@@ -167,19 +215,40 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
 }
 
 
-.spmat2MassPeaks = function(spmat) {
+.spmat2MassPeaks = function(spmat, coords) {
 
-   x        = lapply(seq_len(nrow(spmat)), function(i){
+      mzAxis   = as.numeric(colnames(spmat))
+      spmat    = Matrix::t(spmat) # to keep working with column-major matrix
 
-      s     = unname(spmat[i, ])
-      nnz   = which(s > 0, useNames = FALSE)
+      x        = lapply(seq_len(ncol(spmat)), function(i){
 
-      MALDIquant::createMassPeaks(mass = as.numeric(colnames(spmat)[nnz]),
-                                  intensity = s[nnz],
-                                  metaData = list(imaging = list(pos = attr(spmat, "coordinates")[i, ])))
+            #s     = spmat[i,] # extremely slow!
+            s     = .extractCol(spmat, i)
+            nnz   = which(s > 0, useNames = FALSE)
 
-   })
+            MALDIquant::createMassPeaks(mass = mzAxis[nnz],
+                                        intensity = s[nnz],
+                                        metaData = list(imaging = list(pos = coords[i, ])))
 
-   return(x)
+      })
+
+      return(x)
 }
 
+#// custom accessor to extract row-values from Matrix::dgCMatrix
+# see https://stackoverflow.com/questions/47997184/extraction-speed-in-matrix-package-is-very-slow-compared-to-regular-matrix-class
+.extractCol  = function(m, i) {
+      # m: matrix of class Matrix::dgCMatrix
+      # i: row index
+
+      r       = numeric(ncol(m))   # set up zero vector for results
+
+      # handles empty rows
+      inds = seq(from=m@p[i]+1,
+                 to=m@p[i+1],
+                 length.out=max(0, m@p[i+1] - m@p[i]))
+
+      r[m@i[inds]+1] = m@x[inds]     # set values
+
+      return(r)
+}

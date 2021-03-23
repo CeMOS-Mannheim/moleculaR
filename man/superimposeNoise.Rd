@@ -14,7 +14,8 @@ superimposeNoise(
   searchFactor = 3L,
   sigmaInterfering = 2L,
   mzTrim = 0,
-  numSpikedPeaks = 10L
+  numSpikedPeaks = 10L,
+  verbose = FALSE
 )
 
 superimposeNoise(
@@ -27,7 +28,8 @@ superimposeNoise(
   searchFactor = 3L,
   sigmaInterfering = 2L,
   mzTrim = 0,
-  numSpikedPeaks = 10L
+  numSpikedPeaks = 10L,
+  verbose = FALSE
 )
 }
 \arguments{
