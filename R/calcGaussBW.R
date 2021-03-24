@@ -37,10 +37,13 @@ calcGaussBW                 = function(spp, win, weighted = TRUE, bw = seq(1,12,
        #// create a dataframe to hold the results
        bwdf                   = data.frame(bw = bw, area = NA_real_)
 
+       #// to show progress
+       pb                     = utils::txtProgressBar(min = 1, max = length(bw), width = 20, style = 3)
+
        cat("\n")
        for(i in 1 : length(bw)) {
 
-              cat("\r", "i = ", i, "of", length(bw), "              ")
+             utils::setTxtProgressBar(pb, i)
 
              if(weighted){ # if the model is intensity-weighted assign the weights
                    csrw       = csr$marks$intensity
@@ -83,6 +86,7 @@ calcGaussBW                 = function(spp, win, weighted = TRUE, bw = seq(1,12,
               bwdf$area[i]         = length(which(hotspotIm[,] != 0)) / prod(dim(hotspotIm))
 
        }
+       close(pb)
        cat("\n")
 
        #// compute the elbow point
