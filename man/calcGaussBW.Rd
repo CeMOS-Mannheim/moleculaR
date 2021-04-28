@@ -8,9 +8,10 @@ calcGaussBW(
   spp,
   win,
   weighted = TRUE,
-  bw = seq(1, 12, 0.5),
+  bw = seq(1, 10, 0.5),
   csr = NULL,
-  plot = TRUE
+  plot = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ calcGaussBW(
 speeds up the computation}
 
 \item{plot:}{Whether to plot.}
+
+\item{verbose:}{Whether to show progress.}
 }
 \value{
 A list ..
@@ -35,3 +38,4 @@ This function calculates the Gaussian bandwidth to be used for analyte probabili
 finding the curve infliction point for a curve that represents hotspot area as a function
 of bandwidth.
 }
+\keyword{internal}

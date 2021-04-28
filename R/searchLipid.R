@@ -9,6 +9,7 @@
 #' @param spData:    the sparse matrix containing the negative or poisitive ion mode info.
 #' @param coords:    the coordinates of spectra contained within the spData.
 #' @param mtspc:     a data frame of the metaspcae identifications.
+#' @param confirmedOnly: if \code{TRUE}, returns detections only if confirmed by metaspace.
 #' @param lipidID:   for internal use only.
 #' @param sumformula for internal use only.
 #' @param fullName   for internal use only.
@@ -21,7 +22,7 @@
 #' @export
 #'
 searchLipid          = function(m, fwhm, massAxis, spData, coords, mtspc = NA,
-                                adduct = NA, mode = NA, modeAdduct = NA,
+                                confirmedOnly = FALSE, adduct = NA, mode = NA, modeAdduct = NA,
                                 lipidID = NA, sumformula = NA,
                                 abbrev = NA, numDoubleBonds = NA) {
 
@@ -63,7 +64,12 @@ searchLipid          = function(m, fwhm, massAxis, spData, coords, mtspc = NA,
                mtspConf      = FALSE
        }
 
+      if(confirmedOnly){ # if only confirmed detections are needed
 
+            if(!mtspConf){ # and there are no confirmed detections then return empty df
+                  return(df)
+            }
+      }
 
        #// find mass against msi dataset
        idx           = MALDIquant::match.closest(m , massAxis, fiveSgma, NA)

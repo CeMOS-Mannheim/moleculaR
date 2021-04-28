@@ -11,8 +11,10 @@ probMap(
   bw = NULL,
   control = NULL,
   bwMethod = "iterative",
+  csrIntensities = "Poisson",
   csr = NULL,
-  bwPlot = FALSE
+  bwPlot = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -28,11 +30,15 @@ probMap(
 
 \item{bwPlot:}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
 
+\item{csrIntensities:}{How the intensities for the CSR model are generated, c("Poisson", "Gaussian").}
+
 \item{control:}{An spp object that is designated as the "control" or "null" alternative of \code{spp}. If supplied the
 CSR model will be generated from the intensities of this object.}
 
 \item{csr:}{Pre-computed wighted csr model corresponding to the given spp. This
 could be useful when generating generating hotspot-bw curves.}
+
+\item{verbose:}{whether to output progress.}
 }
 \value{
 A list of

@@ -22,9 +22,10 @@ elbowPointSimple(
 \item{adjRange:}{whether to adjust the range of the second derivative to match
 the range of y so it could be displayed along the original data.}
 
-\item{xQuery:}{x values, at which to evaluate the fitted spline. 
+\item{xQuery:}{x values, at which to evaluate the fitted spline.
 A list ..}
 }
 \description{
 This function creates an analyte probability map from a given spatial point pattern.
 }
+\keyword{internal}

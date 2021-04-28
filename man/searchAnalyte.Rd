@@ -4,7 +4,7 @@
 \alias{searchAnalyte}
 \title{Find an analyte in the dataset}
 \usage{
-searchAnalyte(m, fwhm, massAxis, spData, coords)
+searchAnalyte(m, fwhm, massAxis, spData, coords, wMethod = "Gaussian")
 }
 \arguments{
 \item{m:}{the mass to be queried (Da).}
@@ -16,6 +16,8 @@ searchAnalyte(m, fwhm, massAxis, spData, coords)
 \item{spData:}{the sparse matrix containing the data.}
 
 \item{coords:}{the coordinates of spectra contained within the spData.}
+
+\item{wMethod:}{wighting method; c("Gaussian", "sum", "max", "mean").}
 }
 \value{
 A dataframe containing the hits for `m` in `msData`.

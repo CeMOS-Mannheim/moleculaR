@@ -8,10 +8,12 @@
 #' @param bw:        The Gaussian bandwidth used for Kernel density estimation.
 #' @param bwMethod: The method used for computing the Gaussian bandwidth, c("iterative", "scott").
 #' @param bwPlot:    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
+#' @param csrIntensities: How the intensities for the CSR model are generated, c("Poisson", "Gaussian"). 
 #' @param control:   An spp object that is designated as the "control" or "null" alternative of \code{spp}. If supplied the
 #' CSR model will be generated from the intensities of this object.
 #' @param csr:       Pre-computed wighted csr model corresponding to the given spp. This
 #' could be useful when generating generating hotspot-bw curves.
+#' @param verbose:   whether to output progress.
 #' @return
 #' A list of
 #' cutoff: the chosen threshold above which it is a hotspot,
@@ -28,7 +30,8 @@
 #' @export
 #'
 probMap                     = function(spp, win, weighted = TRUE, bw = NULL, control = NULL,
-                                       bwMethod = "iterative", csr = NULL, bwPlot = FALSE) {
+                                       bwMethod = "iterative", csrIntensities = "Poisson", csr = NULL, bwPlot = FALSE,
+                                       verbose = TRUE) {
 
 
 
@@ -41,7 +44,14 @@ probMap                     = function(spp, win, weighted = TRUE, bw = NULL, con
 
                    csr               = spatstat::rpoispp(lambda = spatstat::intensity(spp), win = win)
                    if(weighted){
-                         csr$marks   = data.frame(intensity = rpois(csr$n, mean(spp$marks$intensity)))
+                         csr$marks   = switch(csrIntensities,
+                                                "Poisson" = {
+                                                      data.frame(intensity = rpois(csr$n, mean(spp$marks$intensity)))
+                                                },
+                                                "Gaussian"= {
+                                                      data.frame(intensity = rnorm(csr$n, mean(spp$marks$intensity),
+                                                                                    sd(spp$marks$intensity)))
+                                                })
                    }
 
              } else {
@@ -53,7 +63,15 @@ probMap                     = function(spp, win, weighted = TRUE, bw = NULL, con
                          if(is.null(control$marks$intensity) & weighted == TRUE){
                                stop("The supplied control does not contain intensity info in its marks.\n")
                                }
-                         csr$marks   = data.frame(intensity = rpois(csr$n, mean(control$marks$intensity)))
+                         csr$marks   = switch(csrIntensities,
+                                                "Poisson" = {
+                                                      data.frame(intensity = rpois(csr$n, mean(control$marks$intensity)))
+                                                },
+                                                "Gaussian"= {
+                                                      data.frame(intensity = rnorm(csr$n, mean(control$marks$intensity),
+                                                                                    sd(control$marks$intensity)))
+                                                })
+                         
                    }
               }
 
@@ -74,7 +92,8 @@ probMap                     = function(spp, win, weighted = TRUE, bw = NULL, con
               bw        = switch(bwMethod,
                                  iterative = {
                                          calcGaussBW(spp = spp, win = win, weighted = weighted,
-                                                     csr = csr, plot = bwPlot)$elbowPointData$elbowPoint
+                                                     csr = csr, plot = bwPlot,
+                                                     verbose = verbose)$elbowPointData$elbowPoint
                                  },
                                  scott = {
                                          .bw.scott.iso(spp)

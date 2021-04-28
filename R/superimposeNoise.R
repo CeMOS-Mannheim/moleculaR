@@ -16,8 +16,12 @@
 #' @param mzTrim:   numeric, this will trim the m/z axis to only include \code{[mz-mzTrim,mz+mzTrim]}. Skipped if set to \code{0}
 #' (default) or \code{length(mz) > 1}.
 #' @param numSpikedPeaks:     integer, number of spiked peaks for \code{spiked} method.
+#' @param returnMat:    if \code{TRUE} returns a sparse matrix \code{Matrix::dgCMatrix}. Otherwise, returns a list of
+#' \code{MALDIquant::MassPeaks} objects (default).
+#' @param verbose:      whether to print progress.
 #' @return
-#' A list of `MassPeaks` objects contaminated with noise.
+#' A list of `MassPeaks` objects contaminated with noise, if \code{returnMat = FALSE)} or a sparse matrix of type \code{Matrix::dgCMatrix}
+#' otherwise.
 #'
 #' @export
 #'
@@ -25,7 +29,7 @@
 
 superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noiseFactor = 1L,
                                    searchFactor = 3L, sigmaInterfering = 2L, mzTrim = 0,
-                                   numSpikedPeaks = 10L, verbose = FALSE) {
+                                   numSpikedPeaks = 10L, returnMat = FALSE, verbose = FALSE) {
 
 
       #// checks
@@ -86,11 +90,11 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
       if(any(is.na(idx))){
             warning(paste0("m/z ", idx[is.na(idx)], " was not found in the dataset.\n"))
             idx   = idx[!is.na(idx)]
+            fwhm  = fwhm[!is.na(idx)]
+            mz    = mz[!is.na(idx)]
       }
 
 
-      if(is.null(attr(spmat, "coordinates")))
-            stop("no coordinates!")
 
       # add noise to data
       if(verbose) {cat("applying noise .. \n")}
@@ -98,69 +102,97 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
       switch (method,
               "Gaussian" = {
 
+                    #n = vector("list", length(idx))
+                    n = lapply(idx, function(icol){
 
-                    # nmat = Matrix::sparseMatrix(i = r, j = i, x = .intensity,
-                    #                             dimnames = list(NULL, NULL),
-                    #                             dims = dim(spmat))
-
-
-                    n = vector("list", ncol(spmat))
-                    n[idx] = lapply(idx, function(icol){
-
-                          colData = .extractCol(spmat, icol)
-                          abs(rnorm(nrow(spmat),
-                                    mean(colData),
-                                    sd(colData) * noiseFactor))
+                        colData = .extractCol(spmat, icol)
+                        #colData = spmat[ , icol]
+                        abs(rnorm(nrow(spmat),
+                                 mean(colData),
+                                 sd(colData) * noiseFactor))
 
                     })
 
-                    #// to show progress
-                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
-                    cnt= 1
+                    nmat = Matrix::sparseMatrix(i = rep(seq_len(nrow(spmat)), times = length(idx)),
+                                                j = rep(idx, each = nrow(spmat)),
+                                                x = unlist(n, use.names = FALSE),
+                                                dimnames = list(NULL, NULL),
+                                                dims = dim(spmat))
 
-                    for(i in idx){
 
-                          utils::setTxtProgressBar(pb, cnt)
-                          spmat[ , i] = spmat[ , i] + n[[i]]
-                          cnt  = cnt + 1
+                    spmat = spmat + nmat
 
-                    }
-
-                    close(pb)
+                    # #// to show progress
+                    # pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                    # cnt= 1
+                    #
+                    # for(i in idx){
+                    #
+                    #       utils::setTxtProgressBar(pb, cnt)
+                    #       spmat[ , i] = spmat[ , i] + n[[i]]
+                    #       cnt  = cnt + 1
+                    #
+                    # }
+                    #
+                    # close(pb)
 
               },
               "spiked" = {
 
+
                     idxSpike    = sample(seq(1, nrow(spmat)), numSpikedPeaks)
 
-                    n = vector("list", ncol(spmat))
-
-                    n[idx] = lapply(idx, function(icol){
+                    n = lapply(idx, function(icol){
 
                           rpois(length(idxSpike), max(.extractCol(spmat, icol), na.rm = TRUE) * 3)
 
                     })
 
-                    #// to show progress
-                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
-                    cnt= 1
+                    nmat = Matrix::sparseMatrix(i = rep(idxSpike, times = length(idx)),
+                                                j = rep(idx, each = length(idxSpike)),
+                                                x = unlist(n, use.names = FALSE),
+                                                dimnames = list(NULL, NULL),
+                                                dims = dim(spmat))
 
-                    for(i in idx){
 
-                          utils::setTxtProgressBar(pb, cnt)
-                          spmat[idxSpike , i] = spmat[idxSpike , i] + n[[i]]
-                          cnt  = cnt + 1
+                    spmat = spmat + nmat
 
-                    }
-
-                    close(pb)
+                    # n = vector("list", ncol(spmat))
+                    #
+                    # n[idx] = lapply(idx, function(icol){
+                    #
+                    #       rpois(length(idxSpike), max(.extractCol(spmat, icol), na.rm = TRUE) * 3)
+                    #
+                    # })
+                    #
+                    # #// to show progress
+                    # pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                    # cnt= 1
+                    #
+                    # for(i in idx){
+                    #
+                    #       utils::setTxtProgressBar(pb, cnt)
+                    #       spmat[idxSpike , i] = spmat[idxSpike , i] + n[[i]]
+                    #       cnt  = cnt + 1
+                    #
+                    # }
+                    #
+                    # close(pb)
 
               },
               "interfering" = {
 
-                    n = vector("list", ncol(spmat))
+                    #n = vector("list", ncol(spmat))
 
-                    n[idx] = lapply(idx, function(icol){
+                    # n[idx] = lapply(idx, function(icol){
+                    #       colData = .extractCol(spmat, icol)
+                    #       abs(rnorm(nrow(spmat),
+                    #                 mean(colData),
+                    #                 sd(colData) * noiseFactor))
+                    #
+                    # })
+
+                    n = lapply(idx, function(icol){
                           colData = .extractCol(spmat, icol)
                           abs(rnorm(nrow(spmat),
                                     mean(colData),
@@ -168,38 +200,50 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
 
                     })
 
+
                     #// to show progress
-                    pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
-                    cnt= 1
+                    if(verbose & (length(idx) > 1)){
+                          pb = utils::txtProgressBar(min = 1, max = length(idx), width = 20, style = 3)
+                          cnt= 1
+                    }
 
-                    for(i in idx){
 
-                          # to fix: make mz as reference instead of idx
+                    for(i in 1:length(idx)){
 
-                          utils::setTxtProgressBar(pb, cnt)
+
+                          if(verbose & (length(idx) > 1)) {utils::setTxtProgressBar(pb, cnt); cnt  = cnt + 1}
 
                           # add a new mass
-                          m0      = mzAxis[i]
-                          m1      =  m0 + (fwhm / 2.355) * sigmaInterfering
+                          m0      = mz[i]
+                          m1      = m0 + (fwhm[i] / 2.355 * sigmaInterfering)
                           idxi    = findInterval(x = m1, mzAxis)
                           mzAxis  = append(x = mzAxis, values = m1, after = idxi)
 
-                          spmat   = cbind(spmat[ , seq(1:idxi)],
+                          # m0      = mzAxis[idx[i]]
+                          # m1      =  m0 + (fwhm[i] / 2.355 * sigmaInterfering)
+                          # idxi    = findInterval(x = m1, mzAxis)
+                          # mzAxis  = append(x = mzAxis, values = m1, after = idxi)
+
+                          spmat   = cbind(spmat[ , seq(1,idxi)],
                                           Matrix::Matrix(data = n[[i]], nrow = nrow(spmat), sparse = TRUE),
-                                          spmat[ , seq((idxi+1):ncol(spmat))])
+                                          spmat[ , seq((idxi+1),ncol(spmat))])
 
                           colnames(spmat) = as.character(mzAxis)
 
-                          cnt  = cnt + 1
 
                     }
 
-                    close(pb)
+                    if(verbose & (length(idx) > 1)) {close(pb)}
 
               },
               stop("given method is incorrect. \n"))
 
 
+      if(returnMat){
+            attr(spmat, "coordinates") = coords
+            if(verbose) {cat("Done.\n")}
+            return(spmat)
+      }
 
       #// convert the sparse matrix to a list of MassPeaks objects
       if(verbose) {cat("re-creating MS Data as a list of MassPeaks objects .. \n")}
@@ -241,12 +285,13 @@ superimposeNoise        = function(x = NULL, spmat = NULL, method, mz, fwhm, noi
       # m: matrix of class Matrix::dgCMatrix
       # i: row index
 
-      r       = numeric(ncol(m))   # set up zero vector for results
+      r       = numeric(nrow(m))   # set up zero vector for results
 
-      # handles empty rows
+      # handles empty columns
       inds = seq(from=m@p[i]+1,
                  to=m@p[i+1],
                  length.out=max(0, m@p[i+1] - m@p[i]))
+
 
       r[m@i[inds]+1] = m@x[inds]     # set values
 

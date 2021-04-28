@@ -11,6 +11,7 @@ searchLipid(
   spData,
   coords,
   mtspc = NA,
+  confirmedOnly = FALSE,
   adduct = NA,
   mode = NA,
   modeAdduct = NA,
@@ -38,6 +39,8 @@ searchLipid(
 \item{coords:}{the coordinates of spectra contained within the spData.}
 
 \item{mtspc:}{a data frame of the metaspcae identifications.}
+
+\item{confirmedOnly:}{if \code{TRUE}, returns detections only if confirmed by metaspace.}
 
 \item{lipidID:}{for internal use only.}
 

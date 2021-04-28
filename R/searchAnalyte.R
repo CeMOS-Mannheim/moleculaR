@@ -8,12 +8,13 @@
 #' @param massAxis: the mass axis of the whole MS dataset to be searched against. 
 #' @param spData: the sparse matrix containing the data. 
 #' @param coords: the coordinates of spectra contained within the spData.
+#' @param wMethod: wighting method; c("Gaussian", "sum", "max", "mean"). 
 #' @return
 #' A dataframe containing the hits for `m` in `msData`. 
 #'
 #' @export
 #'
-searchAnalyte     = function(m, fwhm, massAxis, spData, coords) {
+searchAnalyte     = function(m, fwhm, massAxis, spData, coords, wMethod = "Gaussian") {
        
        
        df            = data.frame(x = integer(0), 
@@ -39,13 +40,28 @@ searchAnalyte     = function(m, fwhm, massAxis, spData, coords) {
               
               
               coi           = as(spData[ , (idxlwr:idxupr), drop = FALSE], "matrix")  #columns of interest
-              gw            = gaussWeight(x = massAxis[(idxlwr:idxupr)], 
+
+              combinedCols  = switch(wMethod, 
+                     "Gaussian" = {
+                            gw = gaussWeight(x = massAxis[(idxlwr:idxupr)], 
                                           m = m, 
                                           fwhm = fwhm)
               
-              coi           = sweep(coi, MARGIN = 2, gw, "*")
+                            coi           = sweep(coi, MARGIN = 2, gw, "*")
               
-              combinedCols  = rowSums(coi)
+                            rowSums(coi)
+
+                     },
+                     "sum" = {
+                            rowSums(coi)
+                     },
+                     "mean" = {
+                            rowMeans(coi)
+                     },
+                     "max" = {
+                            apply(coi, 1, max)
+                     })
+              
               
               
               

@@ -10,11 +10,12 @@ superimposeNoise(
   method,
   mz,
   fwhm,
-  noiseFactor = 3L,
+  noiseFactor = 1L,
   searchFactor = 3L,
   sigmaInterfering = 2L,
   mzTrim = 0,
   numSpikedPeaks = 10L,
+  returnMat = FALSE,
   verbose = FALSE
 )
 
@@ -24,11 +25,12 @@ superimposeNoise(
   method,
   mz,
   fwhm,
-  noiseFactor = 3L,
+  noiseFactor = 1L,
   searchFactor = 3L,
   sigmaInterfering = 2L,
   mzTrim = 0,
   numSpikedPeaks = 10L,
+  returnMat = FALSE,
   verbose = FALSE
 )
 }
@@ -55,11 +57,17 @@ be plugged in in \code{rnorm} to generate the intensities of the Gaussian noise.
 (default) or \code{length(mz) > 1}.}
 
 \item{numSpikedPeaks:}{integer, number of spiked peaks for \code{spiked} method.}
+
+\item{returnMat:}{if \code{TRUE} returns a sparse matrix \code{Matrix::dgCMatrix}. Otherwise, returns a list of
+\code{MALDIquant::MassPeaks} objects (default).}
+
+\item{verbose:}{whether to print progress.}
 }
 \value{
 A list of `MassPeaks` objects contaminated with noise.
 
-A list of `MassPeaks` objects contaminated with noise.
+A list of `MassPeaks` objects contaminated with noise, if \code{returnMat = FALSE)} or a sparse matrix of type \code{Matrix::dgCMatrix}
+otherwise.
 }
 \description{
 This contaminates MSI data with additive noise at certain m/z locations. This is used
