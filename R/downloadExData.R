@@ -9,7 +9,6 @@
 #' Returns the path to the downloaded example data file.
 #'
 #' @export
-#' @keywords internal
 #'
 #'
 downloadExData    = function(path = tempdir()) {

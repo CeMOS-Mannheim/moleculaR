@@ -1,17 +1,20 @@
 #' Runs one of the campanion shiny apps
 #'
-#' Calls one of the shiny apps accompanying this package.
+#' Calls one of the shiny apps accompanying this package. \code{package-app} is the
+#' workhorse app of the \code{moleculaR}. \code{web-app} only load an filtered
+#' example dataset and is used only for showcasing the functionalities.
 #'
-#' @param app:    a character, name of the shiny app, c("package-app", "web-app").
+#' @param app:    a character, name of the shiny app, \code{c("package-app", "web-app")}.
 #'
 #' @return
-#' A sparse matrix, see \code{?Matrix::sparseMatrix} for more info.
+#' Has no return. To quit simply interrupt R by pressing Ctrl+c or Esc.
 #'
 #' @export
 #'
 runShiny = function(app) {
       # locate all the shiny apps that exist
-      validApps = list.files(system.file("shiny", package = "moleculaR"))
+      validApps = gsub(list.files(system.file("shiny", package = "moleculaR")),
+                       pattern = ".R$", replacement = "")
 
       validAppsMsg =
             paste0(
@@ -29,6 +32,6 @@ runShiny = function(app) {
       }
 
       # find and launch the app
-      appDir = system.file("shiny-examples", app, package = "moleculaR")
+      appDir = system.file("shiny", paste0(app, ".R"), package = "moleculaR")
       shiny::runApp(appDir, display.mode = "normal")
 }
