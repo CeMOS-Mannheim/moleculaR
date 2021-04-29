@@ -1,0 +1,4 @@
+installing package from renv-controlled package:
+https://github.com/rstudio/renv/issues/320
+
+simply step out of the current project and install the package (source or not) externally. 

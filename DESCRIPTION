@@ -1,7 +1,7 @@
 Package: moleculaR
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.0
+Version: 0.2.0
 Author: Denis Abu Sammour
 Maintainer: 
     Denis Abu Sammour <d.abu-sammour@hs-mannheim.de>
@@ -14,7 +14,8 @@ Imports:
     MALDIquant,
     MALDIquantForeign,
     Matrix,
-    spatstat
+    spatstat,
+    shiny
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

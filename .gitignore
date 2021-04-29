@@ -4,4 +4,4 @@
 .Ruserdata
 data
 data-external
-inst/*
+inst/extdata/*

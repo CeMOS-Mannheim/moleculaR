@@ -1,0 +1,67 @@
+---
+title: "Metaspace integration"
+author: "Denis Abu Sammour"
+output:
+  html_notebook:
+    fig_height: 10
+    fig_width: 15
+  html_document:
+    df_print: paged
+    code_folding: hide
+editor_options:
+  chunk_output_type: inline
+---
+
+This notebook is used as to illustrate import of datasets directly from Metaspace. To do this there are two pre-requisites; install "reticulate" package and use that to install the python-based [Metaspace module](https://github.com/metaspace2020/metaspace/tree/master/metaspace/python-client).
+
+```{r}
+library(reticulate)
+
+# create a python venv - Mind the permissions for your user
+system("python -m venv /usr/bin/pyenv-metaspace")
+#virtualenv_create(envname = "pyenv-metaspace", packages = "metaspace2020")
+
+
+#// install metaspace into the venv
+virtualenv_install(envname = "/usr/bin/pyenv-metaspace", packages = "metaspace2020")
+
+```
+
+
+
+```{r}
+#// check if metaspace is successfully installed 
+if(!py_module_available("metaspace2020"))
+      stop("metaspace module is not installed.")
+
+#// import and get file links
+use_virtualenv("/usr/bin/pyenv-metaspace", required = TRUE)
+msapi = import("metaspace") 
+#msapi = import_from_path(module = "metaspace", path = "/usr/bin/pyenv-metaspace/lib/python3.7/site-packages/")
+
+# authentication
+sm = msapi$SMInstance(host="https://metaspace2020.eu")
+
+# you can set `dataset` by `id`
+dataset_id = '2021-02-04_17h49m19s'
+dataset = sm$dataset(id=dataset_id)
+link = dataset$download_links()["files"]
+      
+str(link)
+
+
+```
+
+now download the file
+
+```{r}
+tp = tempdir()
+download.file(url = link$files[[1]]$link, destfile = file.path(tp, "metaspace-data.imzML"))
+
+file.exists(file.path(tp, "metaspace-data.imzML"))
+```
+
+```{r}
+dataset$download_to_dir(path = tp, base_name = "test")
+```
+
