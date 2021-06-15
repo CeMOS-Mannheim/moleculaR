@@ -17,4 +17,3 @@ Returns the path to the downloaded example data file.
 \description{
 This downloads an example dataset for package illustration and development.
 }
-\keyword{internal}
