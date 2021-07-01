@@ -119,7 +119,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
               bw        = switch(bwMethod,
                                  spAutoCor = {
-                                         .spAutoCorGaussBW(spp = spp, win = win,
+                                         .bw.spAutoCorr(spp = spp, win = win,
                                                            plot = bwPlot,
                                                            dists = dists,
                                                            numSim = numSim,
@@ -128,7 +128,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
                                                            verbose = verbose)
                                  },
                                  iterative = {
-                                         .calcGaussBW(spp = spp, win = win, weighted = weighted,
+                                         .bw.iterative(spp = spp, win = win, weighted = weighted,
                                                      csr = csr, plot = bwPlot,
                                                      verbose = verbose)
                                  },
@@ -218,105 +218,67 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #' This function computes the Gaussian bandwidth based on sensitivity analysis of spatial autocorrlation.
 #' This is used internally in `moleculaR::probMap`.
 #'
-#' @param spp: 	   The spatial point pattern.
-#' @param win:       The window object of type `spatstat::owin`.
-#' @param dists:     neighborhood distances at which to compute the Moran's I statisitc..
+#' @param spp: 	   The spatial point pattern, object of type `ppp`.
+#' @param bw:        bandwidth steps at which to compute density and the corresponding Moran's I statistic.
 #' @param plot:      whether to plot the result.
-#' @param numSim:    the number of Monte Carlo simulations to be done, see ?spdep::moran.mc.
-#' @param approximate:    when `TRUE`only points within a circle centered at the intensity-wighted
-#'                         centroid (center of gravity) and radius `approxRadius` are considered. This
-#'                         is used to speed up the caluclation.
-#' @param approxRadius: the radius in units (usually pixels) for the approximation circlular region.By default,
-#'                  this equates to the radius that produces a circular area which is half of the area of
-#                  the spp window.
 #' @param verbose:   whether to output progress.
 #' @return
 #' A numeric, the estimated Gaussian bandwidth.
-
 #'
 #' @export
 #' @keywords internal
 
-.spAutoCorGaussBW <- function(spp, win, dists = seq(1, 5, 0.5),
-                              plot = FALSE, numSim = 99, approximate = FALSE,
-                              approxRadius = NULL, verbose = TRUE) {
-
-      # empty df for storage of Moran's I values
-      moranI <- data.frame(d = numeric(0), moranStat = numeric(0), pvalue = numeric(0))
-
-      # to speed things up
-      if(approximate) {
-
-            # define focus area
-            centroid <- c(weighted.mean(spp$x, spp$marks$intensity), c(weighted.mean(spp$y, spp$marks$intensity)))
-            approxRadius <- ifelse(is.null(approxRadius), sqrt(spatstat::area(win)/(2*pi)), approxRadius)
-            focusWin <- spatstat::disc(radius = approxRadius, centroid)
+.bw.spAutoCorr <- function(spp, bw = seq(0.5,8,0.5),
+                           plot = FALSE, verbose = FALSE) {
 
 
-            focusppp            = spatstat::ppp(x = spp$x,
-                                                y = spp$y,
-                                                window = focusWin,
-                                                marks = spp$marks,
-                                                checkdup = FALSE)
+      #// create a dataframe to hold the results
+      bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
+      sppw        <- spp$marks$intensity
 
-            focusppp  <- spatstat::as.ppp(focusppp)
-
-            # coordinates and intensities
-            xyCoords <- as.matrix(spatstat::coords(focusppp))
-            intensities <- focusppp$marks$intensity
-
-      } else {
-            # coordinates and intensities
-            xyCoords <- as.matrix(spatstat::coords(spp))
-            intensities <- spp$marks$intensity
-
+      if(is.null(sppw)){
+            stop("spp does not have intensity weights")
       }
-
-
 
       #// to show progress
       if(verbose)
-            pb    <- utils::txtProgressBar(min = min(dists), max = max(dists), width = 20, style = 3)
+            pb    <- utils::txtProgressBar(min = min(bw), max = max(bw), width = 20, style = 3)
 
-      # loop d through the distances
 
-      moranI      <- lapply(dists, function(di){
+
+      bwdf        <- lapply(bw, function(bwi){
+
             if(verbose)
-                  utils::setTxtProgressBar(pb, di)
+                  utils::setTxtProgressBar(pb, bwi)
 
-            nb    <- spdep::dnearneigh(xyCoords, d1 = 0, d2 = di)
-            lw    <- spdep::nb2listw(nb, style = "W", zero.policy = TRUE)
-            mcs   <- spdep::moran.mc(intensities, lw, nsim = numSim, zero.policy = TRUE)
 
-            data.frame(d = di, moranStat = mcs$statistic, pvalue = mcs$p.value)
+            # create a density map for the image
+            denspp      <- spatstat::density.ppp(x = spp, sigma = bwi,
+                                                 weights = sppw,
+                                                 W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
+
+            moranSpp    <- raster::Moran(raster::raster(denspp), w = matrix(c(1,1,1,1,0,1,1,1,1), nrow=3))
+
+
+            return(data.frame(bw = bwi, moransI = moranSpp))
 
       })
 
-      moranI      <- do.call("rbind", moranI)
+      if(verbose)
+            close(pb)
 
-      if(plot){
-            plot(x = moranI$d, y = moranI$moranStat, type = "b", main = "Sensitivity analsis",
-                 xlab = "Neigghborhood distances (pixels)",
-                 ylab = "Moran's I statistic")
-
-            abline(v =  moranI$d[which.max(moranI$moranStat)], col = "chocolate1", lty ="dashed", lwd = 2)
-
-            if(approximate){
-
-                  spatstat::plot.owin(win, ylim = rev(win$yrange))
-                  spatstat::plot.ppp(focusppp, which.marks = "intensity", cols = viridis::viridis_pal(option = "inferno")(10), add = T)
-                  plot(focusWin, add = TRUE, do.col=T)
-
-            }
+      bwdf <- do.call("rbind", bwdf)
 
 
-      }
+
+      #// compute the elbow point
+      ep                <- .inflictPoint(x = bwdf$bw, y = bwdf$moransI, plot = plot)
+
 
       if(verbose)
-            close(pb); cat("Done. \n")
+            cat("done.\n")
 
-     #return(list(moranIStats = moranI, bw = moranI$d[which.max(moranI$moranStat)]))
-      return(c(bw = moranI$d[which.max(moranI$moranStat)]))
+      return(c(bw = ep$inflictPoint))
 
 }
 
@@ -328,7 +290,6 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #' of bandwidth. This is used internally in `moleculaR::probMap`.
 #'
 #' @param spp: 	The spatial point pattern.
-#' @param win:       The window object of type `spatstat::owin`.
 #' @param weighted:  Whether the intensities are inlcude into the computation. Switch off for Collective Projections.
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
 #' @param csr:       Pre-computed wighted csr model corresponding to the given spp. This
@@ -342,15 +303,15 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #' @keywords internal
 #'
 
-.calcGaussBW                 = function(spp, win, weighted = TRUE, bw = seq(1,5,0.5), csr = NULL,
-                                       plot = TRUE, verbose = TRUE) {
+.bw.iterative                 = function(spp, weighted = TRUE, bw = seq(0.5,8,0.5), csr = NULL,
+                                       plot = FALSE, verbose = FALSE) {
 
 
 
        if(is.null(csr)) {
 
              ## craete a complete spatial randomness point pattern with the same number of points and window ----
-             csr               = spatstat::rpoint(n = spp$n, win = win)
+             csr               = spatstat::rpoint(n = spp$n, win = spp$window)
              if(weighted){
                    csr$marks   = data.frame(intensity = sample(spp$marks$intensity))
              }
@@ -390,16 +351,12 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
              # create a density map for csr
              denCsr               = spatstat::density.ppp(x = csr, sigma = bwi,
                                                           weights = csrw,
-                                                          W = spatstat::as.mask(win,
-                                                                                dimyx=c(diff(win$yrange) + 1,
-                                                                                        diff(win$xrange) + 1)))
+                                                          W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
 
              # create a density map for the image
              denspp               = spatstat::density.ppp(x = spp, sigma = bwi,
                                                           weights = sppw,
-                                                          W = spatstat::as.mask(win,
-                                                                                dimyx=c(diff(win$yrange) + 1,
-                                                                                        diff(win$xrange) + 1)))
+                                                          W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
 
              # calculate the probability function Fxy by normalizing denHeme to denCsr
              Fxy                  = (denspp - mean(denCsr)) / sd(denCsr)
@@ -419,13 +376,13 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
              if(plot){
                    par(mfrow = c(1,1))
-                   spatstat::plot.owin(win, ylim = rev(win$yrange), add = FALSE, main = paste0("BW = ",bwi))
+                   spatstat::plot.owin(spp$window, ylim = rev(spp$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
                    spatstat::plot.owin(hotspotWin, col = rgb(0,1,0,1), add = TRUE)
              }
 
 
              #return(length(which(hotspotIm[,] != 0)) / prod(dim(hotspotIm)))
-             return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(win))
+             return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(spp$window))
 
        })
 
@@ -443,36 +400,12 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
              return(c(bw = 3)) # arbitrary bw
        }
 
-       ep                          = .inflictPoint(x = bwdf$bw, y = bwdf$area)
+       ep                          = .inflictPoint(x = bwdf$bw, y = bwdf$area,
+                                                   plot = plot, ylabel = "Relative Area")
 
 
-      if(plot) {
-
-             plot(x = bwdf$bw, y = bwdf$area, type = "p", main = "MPM significance area to total tissue area",
-                  xlab = "Gaussian Bandwidth",
-                  ylab = "MPM area / total area")
-
-             lines(x = ep$x, y = ep$spl, lty = "solid" ,  col = rgb(0,0,0,0.5), lwd = 2)
-             lines(x = ep$x, y = ep$deriv2,lty = "solid" ,  col = rgb(0,0,1,0.5), lwd = 2)
-             abline(v =  ep$inflictPoint, col = "chocolate1", lty ="dashed", lwd = 2)
-
-             legend("bottomright",
-                    legend = c("area(bw)", "2nd-derivative",
-                               paste0("optimum bw=", round(ep$inflictPoint, 2))#,
-                               #paste0("ppl bw=", round(bwppl, 2)),
-                               #paste0("scott bw=", round(bwscott, 2))
-                               ),
-                    col = c("black", "blue", "chocolate1"#,
-                            #"green",
-                            #"red"
-                            ),
-                    lty = c("solid", "solid","dashed"#,
-                            #"dashed", "dashed"
-                            ))
-
-      }
-
-       cat("done.\n")
+       if(verbose)
+             cat("done.\n")
 
        # return(list(bwdf = bwdf,
        #             inflictPointData = ep))
@@ -493,41 +426,131 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #' @param df:        degrees of freedom for the smoothing spline.
 #' @param adjRange:  whether to adjust the range of the second derivative to match
 #' the range of y so it could be displayed along the original data.
+#' @param plot:   whether to plot the result.
 #' @param xQuery:    x values, at which to evaluate the fitted spline.
 #' A list ..
 #'
 #' @export
 #' @keywords internal
 #'
-.inflictPoint     = function(x, y, df = 7, adjRange = TRUE,
-                        xQuery = seq(range(x)[1], range(x)[2], 0.1)) {
+.inflictPoint     = function(x, y, df = 7, adjRange = TRUE, plot = FALSE,
+                             xQuery = seq(range(x)[1], range(x)[2], 0.1),
+                             ylabel = "Moran's I") {
 
 
 
-       # fit a smoothing spline and fine the 2nd derivative.
-       smoothspl      = smooth.spline(x = x, y = y, df = df)
+      # fit a smoothing spline and fine the 2nd derivative.
+      smoothspl      = smooth.spline(x = x, y = y, df = df)
 
 
-       deriv2        = predict(smoothspl, x = xQuery, deriv = 2)$y
-       spl           = predict(smoothspl, x = xQuery)$y
+      deriv        = predict(smoothspl, x = xQuery, deriv = 1)$y
+      spl           = predict(smoothspl, x = xQuery)$y
 
 
-       if(adjRange) { # adjust the range of the 2nd derivative to be able to plot it alongside x
+      if(adjRange) { # adjust the range of the  derivative to be able to plot it alongside x
 
-              linMap <- function(x, a, b) approxfun(range(x), c(a, b))(x)
+            linMap <- function(i, a, b) approxfun(range(i), c(a, b))(i)
 
-              deriv2   = linMap(deriv2, range(y)[1],  range(y)[2])
+            deriv   = linMap(deriv, range(spl)[1],  range(spl)[2])
 
-       }
+      }
 
-       return(list(inflictPoint = xQuery[which.min(deriv2)],
-                   x = xQuery,
-                   deriv2 = deriv2,
-                   spl = spl))
+      mxCurve = .getMaxCurve(xQuery, deriv)
+
+      if(plot){
+            plot(x = xQuery, y = spl, type = "b", main = "Maximum Curvature",
+                 xlab = "bw",
+                 ylab = ylabel)
+
+            lines(x = xQuery, y = deriv, lty = "solid" ,  col = rgb(0,0,1,0.5), lwd = 2)
+            abline(v = mxCurve, col = "chocolate1", lty ="dashed", lwd = 2)
+
+            legend("right", bty = "n",
+                   legend = c(paste0(ylabel," (bw)"), "1st-derivative",
+                              paste0("infliction=", round(mxCurve, 2))
+                   ),
+                   col = c("black", "blue", "chocolate1"
+                   ),
+                   lty = c("solid", "solid","dashed"
+                   ))
+      }
+
+      return(list(inflictPoint = mxCurve,
+                  x = xQuery,
+                  deriv = deriv,
+                  spl = spl))
 
 
 
 
+}
+
+
+
+#'  Maximum curvature
+#'
+#' Finds the maximum curvature (elbow point) of vector of values representing a curve by finding the maximum distance from the
+#' curve to the line drawn between the peak and tail of that curve.
+#'
+#' @param x:    a numeric vector.
+#' @param plot: a logical to plot the result for validation purposes. Defaults to FALSE.
+#'
+#'
+#' @return Returns the maximum curvature threshold (elbow point) of `x`.
+#'
+#' @export
+#' @keywords internal
+#'
+#' @author Denis Abu Sammour, \email{d.abu-sammour@hs-mannheim.de}
+#'
+#' @references \url{https://en.wikipedia.org/wiki/Unimodal_thresholding}
+#' @references \url{https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line}
+#'
+#'
+
+.getMaxCurve                      = function(x, y, plot = FALSE)
+{
+
+      if(length(x) != length(y))
+            stop("x and y have different lengths.")
+
+      #// find the coordinates of the max bin (peak) and the last bin (tail)
+      pIdx                        = which.max(y)
+      tIdx                        = length(y)
+
+      peak                        = c(x = x[pIdx], y = y[pIdx])
+      tail                        = c(x = x[tIdx], y = y[tIdx])
+
+      allPoints                   = data.frame(x = x, y = y)
+
+      searchSpace                 = unname(unlist(apply(allPoints,
+                                                        1,
+                                                        FUN = function(x, p1 = peak, p2 = tail)
+                                                        {
+                                                              # ref: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line #
+                                                              # suppose you have a line defined by two points P1 and P2, the the
+                                                              # distance from point x to the line is defined (in 2D) by
+
+                                                              abs(((p2[2] - p1[2]) * x[1]) - ((p2[1] - p1[1]) * x[2]) + (p2[1] * p1[2]) - (p2[2] * p1[1]) /
+                                                                        sqrt(sum((p2 - p1) ** 2)))
+
+                                                        })))
+
+      searchSpace[1 : pIdx]       = NA
+      maxCurveIdx                 = which.max(searchSpace)
+
+      r                            = x[maxCurveIdx]
+
+
+      if(plot)
+      {
+            points(rbind(peak, tail, data.frame(x = r, y = y[maxCurveIdx])),
+                   col = c("red", "red", "green"), cex = 1, pch = 19)
+            lines(x = rbind(peak, tail), col = "red", lty = 2)
+      }
+
+
+      return(r)
 }
 
 
