@@ -9,7 +9,9 @@
   y,
   df = 7,
   adjRange = TRUE,
-  xQuery = seq(range(x)[1], range(x)[2], 0.1)
+  plot = FALSE,
+  xQuery = seq(range(x)[1], range(x)[2], 0.1),
+  ylabel = "Moran's I"
 )
 }
 \arguments{
@@ -21,6 +23,8 @@
 
 \item{adjRange:}{whether to adjust the range of the second derivative to match
 the range of y so it could be displayed along the original data.}
+
+\item{plot:}{whether to plot the result.}
 
 \item{xQuery:}{x values, at which to evaluate the fitted spline.
 A list ..}

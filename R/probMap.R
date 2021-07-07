@@ -3,18 +3,12 @@
 #' This function creates molecular probability maps from a given spatial point pattern representation.
 #'
 #' @param spp: 	   The spatial point pattern.
-#' @param win:       The window object of type `spatstat::owin`.
 #' @param weighted:  Whether the intensities are inlcude into the computation.
-#' @param bw:        The Gaussian bandwidth used for Kernel density estimation.
+#' @param bw:        The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
+#' then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
+#' will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
+#' see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.
 #' @param bwMethod: The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
-#' @param dists:     for `bwMethod="spAutoCor"`, these are neighborhood distances at which to compute the Moran's I statisitc.
-#' for `bwMethod="iterative"` these are the Gaussian bandwidth upon which to iterate.
-#' @param numSim:    the number of Monte Carlo simulations to be done for Moran's I, see ?spdep::moran.mc.
-#'   (only relevant with `bwMethod="spAutoCor"`).
-#' @param approximate:    for `bwMethod="spAutoCor"`, when `TRUE`only points within a circle centered at the intensity-wighted
-#' centroid (center of gravity) and radius `approxRadius` are considered. This is used to speed up the caluclation.
-#' @param approxRadius: for `bwMethod="spAutoCor"`, the radius in units (usually pixels) for the approximation circlular region.By default,
-#' this equates to the radius that produces a circular area which is half of the area of the spp window.
 #' @param bwPlot:    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
 #' @param csrIntensities: How the intensities for the CSR model are generated, c("resample", "Poisson", "Gaussian").
 #' @param control:   An spp object that is designated as the "control" or "null" alternative of \code{spp}. If supplied the
@@ -37,9 +31,8 @@
 #'
 #' @export
 #'
-probMap                     = function(spp, win, weighted = TRUE, control = NULL,
-                                       bw = NULL, bwMethod = "spAutoCor", dists = seq(1, 5, 0.5),
-                                       numSim = 99, approximate = FALSE, approxRadius = NULL,
+probMap                     = function(spp, weighted = TRUE, control = NULL,
+                                       bw = seq(1, 10, 1), bwMethod = "spAutoCor",
                                        csrIntensities = "resample", csr = NULL, bwPlot = FALSE,
                                        verbose = TRUE) {
 
@@ -52,7 +45,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
              if(is.null(control)){ # if control is not supplied generate the csr model from spp
 
-                   csr              = spatstat::rpoint(n = spp$n, win = win)
+                   csr              = spatstat::rpoint(n = spp$n, win = spp$window)
 
                    if(weighted){
                          csr$marks   = switch(csrIntensities,
@@ -71,8 +64,8 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
              } else {
 
                    if(!(spatstat::is.ppp(control))) {stop("Supplied control is not an ppp object. \n")}
-                   csr               = spatstat::rpoispp(lambda = spatstat::intensity(control), win = win)
-                   #csr              = spatstat::rpoint(n = spp$n, win = win)
+                   #csr               = spatstat::rpoispp(lambda = spatstat::intensity(control), win = spp$window)
+                   csr              = spatstat::rpoint(n = spp$n, win = spp$window)
 
 
                    if(weighted){
@@ -93,11 +86,11 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
                                               },
                                               "Poisson" = {
-                                                    data.frame(intensity = rpois(csr$n, mean(spp$marks$intensity)))
+                                                    data.frame(intensity = rpois(csr$n, mean(control$marks$intensity)))
                                               },
                                               "Gaussian"= {
-                                                    data.frame(intensity = rnorm(csr$n, mean(spp$marks$intensity),
-                                                                                 sd(spp$marks$intensity)))
+                                                    data.frame(intensity = rnorm(csr$n, mean(control$marks$intensity),
+                                                                                 sd(control$marks$intensity)))
                                               })
 
                    }
@@ -114,27 +107,28 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
 
        # compute kernel density bandwidth
-       if(is.null(bw))
+       if(length(bw) > 1)
        {
+             if(any(diff(bw) < 0))
+                   stop("supplied bw must be either a single numeric of a vector of numerics of increasing order.\n")
 
               bw        = switch(bwMethod,
                                  spAutoCor = {
-                                         .bw.spAutoCorr(spp = spp, win = win,
+                                         .bw.spAutoCorr(spp = spp,
                                                            plot = bwPlot,
-                                                           dists = dists,
-                                                           numSim = numSim,
-                                                           approximate = approximate,
-                                                           approxRadius = approxRadius,
+                                                           bw = bw,
                                                            verbose = verbose)
                                  },
                                  iterative = {
-                                         .bw.iterative(spp = spp, win = win, weighted = weighted,
-                                                     csr = csr, plot = bwPlot,
-                                                     verbose = verbose)
+                                         .bw.iterative(spp = spp, weighted = weighted,
+                                                       bw = bw,
+                                                       csr = csr, plot = bwPlot,
+                                                       verbose = verbose)
                                  },
                                  scott = {
                                          .bw.scott.iso2(spp)
-                                 })
+                                 },
+                                 stop("wrong bwMethd specified, must be one of c('spAutoCor','iterative','scott')"))
 
 
 
@@ -149,37 +143,39 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
             sppw       = NULL
       }
 
+       win = spatstat::as.mask(spp$window,
+                              dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
+
        # create a density map for csr
-       denCsr               = spatstat::density.ppp(x = csr, sigma = bw,
-                                                    weights = csrw,
-                                                    W = spatstat::as.mask(win,
-                                                                          dimyx=c(diff(win$yrange) + 1,
-                                                                                  diff(win$xrange) + 1)))
+       denCsr           = spatstat::density.ppp(x = csr, sigma = bw,
+                                                weights = csrw, W = win, positive = TRUE)
+
+       #W = spatstat::as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange)))
+       #W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y))
+
        # scale such that sum{pixels} <= 1 i.e. a probability density function
        denCsr           = denCsr/sum(denCsr)
 
        # create a density map for the image
-       denspp               = spatstat::density.ppp(x = spp, sigma = bw,
-                                                    weights = sppw,
-                                                    W = spatstat::as.mask(win,
-                                                                          dimyx=c(diff(win$yrange) + 1,
-                                                                                  diff(win$xrange) + 1)))
+       denspp           = spatstat::density.ppp(x = spp, sigma = bw,
+                                                weights = sppw, W = win, positive = TRUE)
+
        # scale such that sum{pixels} <= 1 i.e. a probability density function
        denspp           = denspp/sum(denspp)
 
        # calculate the probability function Fxy by normalizing denHeme to denCsr
-       Fxy                  = (denspp - mean(denCsr)) / sd(denCsr)
+       Fxy              = (denspp - mean(denCsr)) / sd(denCsr)
 
        # cut-off based on inverse standrard normal cumulative density function
-       cutoff               = qnorm(0.05, lower.tail = F)
+       cutoff           = qnorm(0.05, lower.tail = F)
 
        # with Bonferroni correction
-       cutoff               = qnorm(0.05/spp$n, lower.tail = F)
+       cutoff           = qnorm(0.05/spp$n, lower.tail = F)
 
 
 
-       hotspotIm            = spatstat::eval.im(Fxy * (Fxy >= cutoff))
-       nonHotspotMask       = hotspotIm
+       hotspotIm        = spatstat::eval.im(Fxy * (Fxy >= cutoff))
+       nonHotspotMask   = hotspotIm
        nonHotspotMask[nonHotspotMask > 0] = NA
 
 
@@ -235,6 +231,8 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
       sppw        <- spp$marks$intensity
+      win         <- spatstat::as.mask(spp$window, dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
+
 
       if(is.null(sppw)){
             stop("spp does not have intensity weights")
@@ -252,10 +250,12 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
                   utils::setTxtProgressBar(pb, bwi)
 
 
+
+
             # create a density map for the image
             denspp      <- spatstat::density.ppp(x = spp, sigma = bwi,
                                                  weights = sppw,
-                                                 W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
+                                                 W = win)
 
             moranSpp    <- raster::Moran(raster::raster(denspp), w = matrix(c(1,1,1,1,0,1,1,1,1), nrow=3))
 
@@ -293,8 +293,9 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #' @param weighted:  Whether the intensities are inlcude into the computation. Switch off for Collective Projections.
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
 #' @param csr:       Pre-computed wighted csr model corresponding to the given spp. This
-#' speeds up the computation
-#' @param plot:      Whether to plot.
+#' speeds up the computation and is mostly used for troubleshooting.
+#' @param plot:      Whether to plot the hotspot area as function of bandwidth.
+#' @param plotEach:  whether to plot the resulting significance area of each bandwidth iteration.
 #' @param verbose:   Whether to show progress.
 #' @return
 #' A list ..
@@ -304,7 +305,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 #'
 
 .bw.iterative                 = function(spp, weighted = TRUE, bw = seq(0.5,8,0.5), csr = NULL,
-                                       plot = FALSE, verbose = FALSE) {
+                                         plot = FALSE, plotEach = FALSE, verbose = FALSE) {
 
 
 
@@ -332,7 +333,8 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
       }
 
        #// create a dataframe to hold the results
-       bwdf                   = data.frame(bw = bw, area = NA_real_)
+       bwdf             = data.frame(bw = bw, area = NA_real_)
+       win              = spatstat::as.mask(spp$window, dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
 
 
        #// to show progress
@@ -351,12 +353,20 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
              # create a density map for csr
              denCsr               = spatstat::density.ppp(x = csr, sigma = bwi,
                                                           weights = csrw,
-                                                          W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
+                                                          W = win)
+
+             # scale such that sum{pixels} <= 1 i.e. a probability density function
+             denCsr           = denCsr/sum(denCsr)
+
 
              # create a density map for the image
              denspp               = spatstat::density.ppp(x = spp, sigma = bwi,
                                                           weights = sppw,
-                                                          W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y)))
+                                                          W = win)
+
+             # scale such that sum{pixels} <= 1 i.e. a probability density function
+             denspp           = denspp/sum(denspp)
+
 
              # calculate the probability function Fxy by normalizing denHeme to denCsr
              Fxy                  = (denspp - mean(denCsr)) / sd(denCsr)
@@ -374,7 +384,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
              hotspotIm[hotspotIm == 0] = NA # set zeros to NA to create a window
              hotspotWin          = spatstat::as.polygonal(spatstat::as.owin(hotspotIm))
 
-             if(plot){
+             if(plotEach){
                    par(mfrow = c(1,1))
                    spatstat::plot.owin(spp$window, ylim = rev(spp$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
                    spatstat::plot.owin(hotspotWin, col = rgb(0,1,0,1), add = TRUE)
@@ -443,7 +453,8 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
       smoothspl      = smooth.spline(x = x, y = y, df = df)
 
 
-      deriv        = predict(smoothspl, x = xQuery, deriv = 1)$y
+      #deriv1        = predict(smoothspl, x = xQuery, deriv = 1)$y
+      #deriv2        = predict(smoothspl, x = xQuery, deriv = 2)$y
       spl           = predict(smoothspl, x = xQuery)$y
 
 
@@ -451,33 +462,50 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
             linMap <- function(i, a, b) approxfun(range(i), c(a, b))(i)
 
-            deriv   = linMap(deriv, range(spl)[1],  range(spl)[2])
+            #deriv1   = linMap(deriv1, range(spl)[1],  range(spl)[2])
+            #deriv2   = linMap(deriv2, range(spl)[1],  range(spl)[2])
 
       }
 
-      mxCurve = .getMaxCurve(xQuery, deriv)
+      mxCurve = .getMaxCurve(xQuery, spl)
+      #mxCurve = .getMaxCurve(xQuery, deriv1)
+      #mxCurve = .getMaxCurve(xQuery, deriv2)
+
+
 
       if(plot){
             plot(x = xQuery, y = spl, type = "b", main = "Maximum Curvature",
                  xlab = "bw",
                  ylab = ylabel)
 
-            lines(x = xQuery, y = deriv, lty = "solid" ,  col = rgb(0,0,1,0.5), lwd = 2)
+
+            #lines(x = xQuery, y = deriv1, lty = "solid" ,  col = rgb(0,0,1,0.5), lwd = 2)
+            #lines(x = xQuery, y = deriv2, lty = "solid" ,  col = rgb(0,1,0,0.5), lwd = 2)
+
             abline(v = mxCurve, col = "chocolate1", lty ="dashed", lwd = 2)
 
             legend("right", bty = "n",
-                   legend = c(paste0(ylabel," (bw)"), "1st-derivative",
+                   legend = c(paste0(ylabel," (bw)"),
+                              #"1st-derivative",
+                              #"2nd-derivative",
                               paste0("infliction=", round(mxCurve, 2))
                    ),
-                   col = c("black", "blue", "chocolate1"
+                   col = c("black",
+                           #"blue",
+                           #"green",
+                           "chocolate1"
                    ),
-                   lty = c("solid", "solid","dashed"
+                   lty = c("solid",
+                           #"solid",
+                           #"solid",
+                           "dashed"
                    ))
       }
 
       return(list(inflictPoint = mxCurve,
                   x = xQuery,
-                  deriv = deriv,
+                  #deriv1 = deriv1,
+                  #deriv2 = deriv2,
                   spl = spl))
 
 
@@ -515,17 +543,17 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
             stop("x and y have different lengths.")
 
       #// find the coordinates of the max bin (peak) and the last bin (tail)
-      pIdx                        = which.max(y)
-      tIdx                        = length(y)
+      hpIdx                        = which.max(y) # high point in y
+      lpIdx                        = which.min(y) # low point in y
 
-      peak                        = c(x = x[pIdx], y = y[pIdx])
-      tail                        = c(x = x[tIdx], y = y[tIdx])
+      hp                          = c(x = x[hpIdx], y = y[hpIdx])
+      lp                          = c(x = x[lpIdx], y = y[lpIdx])
 
       allPoints                   = data.frame(x = x, y = y)
 
       searchSpace                 = unname(unlist(apply(allPoints,
                                                         1,
-                                                        FUN = function(x, p1 = peak, p2 = tail)
+                                                        FUN = function(x, p1 = hp, p2 = lp)
                                                         {
                                                               # ref: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line #
                                                               # suppose you have a line defined by two points P1 and P2, the the
@@ -536,7 +564,7 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
                                                         })))
 
-      searchSpace[1 : pIdx]       = NA
+      #searchSpace[1 : pIdx]       = NA
       maxCurveIdx                 = which.max(searchSpace)
 
       r                            = x[maxCurveIdx]
@@ -544,9 +572,9 @@ probMap                     = function(spp, win, weighted = TRUE, control = NULL
 
       if(plot)
       {
-            points(rbind(peak, tail, data.frame(x = r, y = y[maxCurveIdx])),
+            points(rbind(hp, lp, data.frame(x = r, y = y[maxCurveIdx])),
                    col = c("red", "red", "green"), cex = 1, pch = 19)
-            lines(x = rbind(peak, tail), col = "red", lty = 2)
+            lines(x = rbind(hp, lp), col = "red", lty = 2)
       }
 
 
