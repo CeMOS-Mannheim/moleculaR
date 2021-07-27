@@ -10,6 +10,7 @@
   bw = seq(0.5, 8, 0.5),
   csr = NULL,
   plot = FALSE,
+  plotEach = FALSE,
   verbose = FALSE
 )
 }
@@ -21,9 +22,11 @@
 \item{bw:}{A vector, The gaussian band width pool used for Kernel density estimation.}
 
 \item{csr:}{Pre-computed wighted csr model corresponding to the given spp. This
-speeds up the computation}
+speeds up the computation and is mostly used for troubleshooting.}
 
-\item{plot:}{Whether to plot.}
+\item{plot:}{Whether to plot the hotspot area as function of bandwidth.}
+
+\item{plotEach:}{whether to plot the resulting significance area of each bandwidth iteration.}
 
 \item{verbose:}{Whether to show progress.}
 }

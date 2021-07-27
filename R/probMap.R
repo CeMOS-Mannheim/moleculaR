@@ -2,7 +2,7 @@
 #'
 #' This function creates molecular probability maps from a given spatial point pattern representation.
 #'
-#' @param spp: 	   The spatial point pattern.
+#' @param sppMoi: 	   The spatial point pattern.
 #' @param weighted:  Whether the intensities are inlcude into the computation.
 #' @param bw:        The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
 #' then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
@@ -10,86 +10,100 @@
 #' see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.
 #' @param bwMethod: The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
 #' @param bwPlot:    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
-#' @param csrIntensities: How the intensities for the CSR model are generated, c("resample", "Poisson", "Gaussian").
-#' @param control:   An spp object that is designated as the "control" or "null" alternative of \code{spp}. If supplied the
-#' CSR model will be generated from the intensities of this object.
-#' @param csr:       Pre-computed wighted csr model corresponding to the given spp. This
+#' @param csrIntensities: How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").
+#' @param sqrtTansform: whether to apply square root transformation to the intensities of `sppMoi`. This is an important
+#' consideration, only set to `FALSE` if the data is known to have been sqrt- or log-transformed.
+#' @param control:   An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
+#' csrMoi model will be generated from the intensities of this object.
+#' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 #' could be useful when generating generating hotspot-bw curves.
 #' @param verbose:   whether to output progress.
 #' @return
 #' A list of
-#' cutoff: the chosen threshold above which it is a hotspot,
+#' cutoffUpr: a numeric, the chosen threshold above which it is a hotspot,
+#' cutoffLwr: a numeric, the chosen threshold below which it is a coldspot,
 #' GausBW: calculated Gaussian bandwidth,
-#' csrspp: calculated complete spatial randomness model for the input spp,
-#' denspp: density image of the input point pattern spp,
-#' denCsr: density image of the computed csr pattern,
-#' hotspotpp: the remaining points which lie within the hotspot mask as a spatial point pattern,
-#' hotspotIm: the hotspot image,
-#' hotspotMask: the hotspot mask of type owin.mask,
-#' nonHotspotMask: the non-hotspot areas, to be used to mask the non hotspot areas.
-
+#' csrMoi: calculated complete spatial randomness model for the input sppMoi,
+#' rhoMoi: density image of the input point pattern sppMoi,
+#' rhoCsr: density image of the computed csrMoi pattern,
+#' hotspotpp: the remaining points (type 'ppp') which lie within the hotspot mask as a spatial point pattern,
+#' hotspotIm: the hotspot image of type 'im',
+#' hotspotMask: the hotspot mask of type 'owin',
+#' coldspotpp: the remaining points (type 'ppp') which lie within the coldspot mask as a spatial point pattern,
+#' coldspotIm: the coldspot image of type 'im',
+#' coldspotMask: the hotspot mask of type 'owin'.
 #'
 #' @export
 #'
-probMap                     = function(spp, weighted = TRUE, control = NULL,
+probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
                                        bw = seq(1, 10, 1), bwMethod = "spAutoCor",
-                                       csrIntensities = "resample", csr = NULL, bwPlot = FALSE,
+                                       csrIntensities = "resample", sqrtTansform = FALSE,
+                                       csrMoi = NULL, bwPlot = FALSE,
                                        verbose = TRUE) {
 
 
 
 
-       if(is.null(csr)) {
+       if(is.null(csrMoi)) {
 
-              ## craete a complete spatial randomness point pattern with the same number of points and window ----
 
-             if(is.null(control)){ # if control is not supplied generate the csr model from spp
+             if(sqrtTansform){
+                   sppMoi$marks$intensity = sqrt(sppMoi$marks$intensity)
+             }
 
-                   csr              = spatstat::rpoint(n = spp$n, win = spp$window)
+             if(is.null(control)){ # if control is not supplied generate the csrMoi model from sppMoi
+
+                   csrMoi              = spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
 
                    if(weighted){
-                         csr$marks   = switch(csrIntensities,
+                         csrMoi$marks   = switch(csrIntensities,
                                                 "resample" = {
-                                                      data.frame(intensity = sample(spp$marks$intensity))
+                                                      data.frame(intensity = sample(sppMoi$marks$intensity))
                                                 },
                                                 "Poisson" = {
-                                                      data.frame(intensity = rpois(csr$n, mean(spp$marks$intensity)))
+                                                      data.frame(intensity = rpois(csrMoi$n, mean(sppMoi$marks$intensity)))
                                                 },
                                                 "Gaussian"= {
-                                                      data.frame(intensity = rnorm(csr$n, mean(spp$marks$intensity),
-                                                                                    sd(spp$marks$intensity)))
+                                                      data.frame(intensity = rnorm(csrMoi$n, mean(sppMoi$marks$intensity),
+                                                                                    sd(sppMoi$marks$intensity)))
                                                 })
                    }
 
              } else {
 
                    if(!(spatstat::is.ppp(control))) {stop("Supplied control is not an ppp object. \n")}
-                   #csr               = spatstat::rpoispp(lambda = spatstat::intensity(control), win = spp$window)
-                   csr              = spatstat::rpoint(n = spp$n, win = spp$window)
+
+                   if(sqrtTansform){
+                         sppMoi$marks$intensity = sqrt(sppMoi$marks$intensity)
+                         control$marks$intensity = sqrt(control$marks$intensity)
+                   }
+
+                   #csrMoi               = spatstat::rpoisppMoi(lambda = spatstat::intensity(control), win = sppMoi$window)
+                   csrMoi              = spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
 
 
                    if(weighted){
                          if(is.null(control$marks$intensity) & weighted == TRUE){
                                stop("The supplied control does not contain intensity info in its marks.\n")
                                }
-                         csr$marks   = switch(csrIntensities,
+                         csrMoi$marks   = switch(csrIntensities,
                                               "resample" = {
-                                                    if(control$n >= csr$n){
+                                                    if(control$n >= csrMoi$n){
                                                           data.frame(intensity = sample(control$marks$intensity,
-                                                                                        size = csr$n,
+                                                                                        size = csrMoi$n,
                                                                                         replace = FALSE))
                                                     } else {
                                                           data.frame(intensity = sample(control$marks$intensity,
-                                                                                        size = csr$n,
+                                                                                        size = csrMoi$n,
                                                                                         replace = TRUE))
                                                     }
 
                                               },
                                               "Poisson" = {
-                                                    data.frame(intensity = rpois(csr$n, mean(control$marks$intensity)))
+                                                    data.frame(intensity = rpois(csrMoi$n, mean(control$marks$intensity)))
                                               },
                                               "Gaussian"= {
-                                                    data.frame(intensity = rnorm(csr$n, mean(control$marks$intensity),
+                                                    data.frame(intensity = rnorm(csrMoi$n, mean(control$marks$intensity),
                                                                                  sd(control$marks$intensity)))
                                               })
 
@@ -98,10 +112,10 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
 
 
-       } else { # if csr is supplied check if intensity-marks are supplied if 'weighted == TRUE'
+       } else { # if csrMoi is supplied check if intensity-marks are supplied if 'weighted == TRUE'
 
-             if(is.null(csr$marks$intensity) & weighted == TRUE)
-                   stop("The supplied csr model does not contain intensity info in its marks. Consider switching 'weighted' to FALSE.\n")
+             if(is.null(csrMoi$marks$intensity) & weighted == TRUE)
+                   stop("The supplied csrMoi model does not contain intensity info in its marks. Consider switching 'weighted' to FALSE.\n")
 
        }
 
@@ -114,19 +128,19 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
               bw        = switch(bwMethod,
                                  spAutoCor = {
-                                         .bw.spAutoCorr(spp = spp,
+                                         .bw.spAutoCorr(sppMoi = sppMoi,
                                                            plot = bwPlot,
                                                            bw = bw,
                                                            verbose = verbose)
                                  },
                                  iterative = {
-                                         .bw.iterative(spp = spp, weighted = weighted,
+                                         .bw.iterative(sppMoi = sppMoi, weighted = weighted,
                                                        bw = bw,
-                                                       csr = csr, plot = bwPlot,
+                                                       csrMoi = csrMoi, plot = bwPlot,
                                                        verbose = verbose)
                                  },
                                  scott = {
-                                         .bw.scott.iso2(spp)
+                                         .bw.scott.iso2(sppMoi)
                                  },
                                  stop("wrong bwMethd specified, must be one of c('spAutoCor','iterative','scott')"))
 
@@ -136,72 +150,89 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
 
       if(weighted){ # if the model is intensity-weighted assign the weights
-            csrw       = csr$marks$intensity
-            sppw       = spp$marks$intensity
+            csrMoiw       = csrMoi$marks$intensity
+            sppMoiw       = sppMoi$marks$intensity
       } else { # otherwise switch weights off
-            csrw       = NULL
-            sppw       = NULL
+            csrMoiw       = NULL
+            sppMoiw       = NULL
       }
 
-       win = spatstat::as.mask(spp$window,
-                              dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
+       win = spatstat::as.mask(sppMoi$window,
+                              dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
-       # create a density map for csr
-       denCsr           = spatstat::density.ppp(x = csr, sigma = bw,
-                                                weights = csrw, W = win, positive = TRUE)
 
-       #W = spatstat::as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange)))
-       #W = spatstat::as.mask(spp$window, xy = list(x = spp$x, y = spp$y))
+       # create a density map for csrMoi
+       rhoCsr           = spatstat::density.ppp(x = csrMoi, sigma = bw,
+                                                weights = csrMoiw, W = win, positive = TRUE)
+
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
-       denCsr           = denCsr/sum(denCsr)
+       rhoCsr           = rhoCsr/sum(rhoCsr)
 
        # create a density map for the image
-       denspp           = spatstat::density.ppp(x = spp, sigma = bw,
-                                                weights = sppw, W = win, positive = TRUE)
+       rhoMoi           = spatstat::density.ppp(x = sppMoi, sigma = bw,
+                                                weights = sppMoiw, W = win, positive = TRUE)
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
-       denspp           = denspp/sum(denspp)
+       rhoMoi           = rhoMoi/sum(rhoMoi)
 
-       # calculate the probability function Fxy by normalizing denHeme to denCsr
-       Fxy              = (denspp - mean(denCsr)) / sd(denCsr)
 
-       # cut-off based on inverse standrard normal cumulative density function
-       cutoff           = qnorm(0.05, lower.tail = F)
 
        # with Bonferroni correction
-       cutoff           = qnorm(0.05/spp$n, lower.tail = F)
+       numPoints = spatstat::unique.ppp(x = sppMoi, rule = "unmark")$n
+       mucsrMoi            = mean(rhoCsr, na.rm = TRUE)
+       sigmacsrMoi         = sd(rhoCsr, na.rm = TRUE)
 
+       cutoffUpr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
+       cutoffLwr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = TRUE)
 
+       ## __ hotspot __ ##
 
-       hotspotIm        = spatstat::eval.im(Fxy * (Fxy >= cutoff))
-       nonHotspotMask   = hotspotIm
-       nonHotspotMask[nonHotspotMask > 0] = NA
-
-
+       hotspotIm        = spatstat::eval.im(rhoMoi * (rhoMoi >= cutoffUpr))
 
        # filter out points lying outside the computed hotspot
-       tmpIm                = hotspotIm
+       tmpIm            = hotspotIm
        tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] = NA # manually set zero pixels to NA to remove them from mask
-       hotspotMask          = spatstat::as.owin(tmpIm)
+       hotspotMask      = spatstat::as.owin(tmpIm)
 
 
-       hotspotpp            = spatstat::ppp(x = spp$x,
-                                            y = spp$y,
-                                            window = spatstat::as.polygonal(hotspotMask),
-                                            marks = spp$marks,
-                                            checkdup = FALSE)
+       hotspotpp        = spatstat::ppp(x = sppMoi$x,
+                                        y = sppMoi$y,
+                                        window = spatstat::as.polygonal(hotspotMask),
+                                        marks = sppMoi$marks,
+                                        checkdup = FALSE)
 
 
-       return(list(cutoff = cutoff, # the chosen threshold above which it is a hotspot
+       ## __ coldspot __ ##
+
+       coldspotIm        = spatstat::eval.im(rhoMoi * (rhoMoi <= cutoffLwr))
+
+       # filter out points lying outside the computed coldspot
+       tmpIm             = coldspotIm
+       tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] = NA # manually set zero pixels to NA to remove them from mask
+       coldspotMask      = spatstat::as.owin(tmpIm)
+
+
+       coldspotpp        = spatstat::ppp(x = sppMoi$x,
+                                         y = sppMoi$y,
+                                         window = spatstat::as.polygonal(coldspotMask),
+                                         marks = sppMoi$marks,
+                                         checkdup = FALSE)
+
+
+       return(list(cutoffUpr = cutoffUpr, # the chosen threshold above which it is a hotspot
+                   cutoffLwr = cutoffLwr, # the chosen threshold below which it is a coldspot
                    GausBW = bw,		# calculated Gaussian bandwidth
-                   csrspp = csr,
-                   denspp = denspp,	# density image of the input point pattern
-                   denCsr = denCsr,	# density image of the computed csr pattern
+                   csrMoi = csrMoi,
+                   rhoMoi = rhoMoi,	# density image of the input point pattern
+                   rhoCsr = rhoCsr,	# density image of the computed csrMoi pattern
                    hotspotpp = hotspotpp, # the remaining points which lie within the hotspot mask
                    hotspotIm = hotspotIm, # the hotspot image
                    hotspotMask = hotspotMask, # the hotspot mask of type owin.mask
-                   nonHotspotMask = nonHotspotMask)) # the non hotspot areas, to be used to hide the non hotspot areas
+                   coldspotpp = coldspotpp, # the remaining points which lie within the coldspot mask
+                   coldspotIm = coldspotIm, # the coldspot image
+                   coldspotMask = coldspotMask # the coldspot mask of type owin.mask
+                   ))
 
 
 
@@ -214,7 +245,7 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 #' This function computes the Gaussian bandwidth based on sensitivity analysis of spatial autocorrlation.
 #' This is used internally in `moleculaR::probMap`.
 #'
-#' @param spp: 	   The spatial point pattern, object of type `ppp`.
+#' @param sppMoi: 	   The spatial point pattern, object of type `ppp`.
 #' @param bw:        bandwidth steps at which to compute density and the corresponding Moran's I statistic.
 #' @param plot:      whether to plot the result.
 #' @param verbose:   whether to output progress.
@@ -224,18 +255,18 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 #' @export
 #' @keywords internal
 
-.bw.spAutoCorr <- function(spp, bw = seq(0.5,8,0.5),
+.bw.spAutoCorr <- function(sppMoi, bw = seq(0.5,8,0.5),
                            plot = FALSE, verbose = FALSE) {
 
 
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
-      sppw        <- spp$marks$intensity
-      win         <- spatstat::as.mask(spp$window, dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
+      sppMoiw        <- sppMoi$marks$intensity
+      win         <- spatstat::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
 
-      if(is.null(sppw)){
-            stop("spp does not have intensity weights")
+      if(is.null(sppMoiw)){
+            stop("sppMoi does not have intensity weights")
       }
 
       #// to show progress
@@ -253,14 +284,14 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
 
             # create a density map for the image
-            denspp      <- spatstat::density.ppp(x = spp, sigma = bwi,
-                                                 weights = sppw,
+            rhoMoi      <- spatstat::density.ppp(x = sppMoi, sigma = bwi,
+                                                 weights = sppMoiw,
                                                  W = win)
 
-            moranSpp    <- raster::Moran(raster::raster(denspp), w = matrix(c(1,1,1,1,0,1,1,1,1), nrow=3))
+            moransppMoi    <- raster::Moran(raster::raster(rhoMoi), w = matrix(c(1,1,1,1,0,1,1,1,1), nrow=3))
 
 
-            return(data.frame(bw = bwi, moransI = moranSpp))
+            return(data.frame(bw = bwi, moransI = moransppMoi))
 
       })
 
@@ -289,10 +320,10 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 #' finding the curve infliction point for a curve that represents hotspot area as a function
 #' of bandwidth. This is used internally in `moleculaR::probMap`.
 #'
-#' @param spp: 	The spatial point pattern.
+#' @param sppMoi: 	The spatial point pattern.
 #' @param weighted:  Whether the intensities are inlcude into the computation. Switch off for Collective Projections.
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
-#' @param csr:       Pre-computed wighted csr model corresponding to the given spp. This
+#' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 #' speeds up the computation and is mostly used for troubleshooting.
 #' @param plot:      Whether to plot the hotspot area as function of bandwidth.
 #' @param plotEach:  whether to plot the resulting significance area of each bandwidth iteration.
@@ -304,37 +335,37 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 #' @keywords internal
 #'
 
-.bw.iterative                 = function(spp, weighted = TRUE, bw = seq(0.5,8,0.5), csr = NULL,
+.bw.iterative                 = function(sppMoi, weighted = TRUE, bw = seq(0.5,8,0.5), csrMoi = NULL,
                                          plot = FALSE, plotEach = FALSE, verbose = FALSE) {
 
 
 
-       if(is.null(csr)) {
+       if(is.null(csrMoi)) {
 
              ## craete a complete spatial randomness point pattern with the same number of points and window ----
-             csr               = spatstat::rpoint(n = spp$n, win = spp$window)
+             csrMoi               = spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
              if(weighted){
-                   csr$marks   = data.frame(intensity = sample(spp$marks$intensity))
+                   csrMoi$marks   = data.frame(intensity = sample(sppMoi$marks$intensity))
              }
-       } else { # if csr is supplied check if intensity-marks are supplied if 'weighted == TRUE'
+       } else { # if csrMoi is supplied check if intensity-marks are supplied if 'weighted == TRUE'
 
-             if(is.null(csr$marks$intensity) & weighted == TRUE)
-                   stop("The supplied csr model does not contain intensity info in its marks. Consider switching 'weighted' to FALSE.\n")
+             if(is.null(csrMoi$marks$intensity) & weighted == TRUE)
+                   stop("The supplied csrMoi model does not contain intensity info in its marks. Consider switching 'weighted' to FALSE.\n")
 
        }
 
 
       if(weighted){ # if the model is intensity-weighted assign the weights
-            csrw       = csr$marks$intensity
-            sppw       = spp$marks$intensity
+            csrMoiw       = csrMoi$marks$intensity
+            sppMoiw       = sppMoi$marks$intensity
       } else { # otherwise switch weights off
-            csrw       = NULL
-            sppw       = NULL
+            csrMoiw       = NULL
+            sppMoiw       = NULL
       }
 
        #// create a dataframe to hold the results
        bwdf             = data.frame(bw = bw, area = NA_real_)
-       win              = spatstat::as.mask(spp$window, dimyx=c(diff(spp$window$yrange),diff(spp$window$xrange)))
+       win              = spatstat::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
 
        #// to show progress
@@ -350,49 +381,48 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
 
 
-             # create a density map for csr
-             denCsr               = spatstat::density.ppp(x = csr, sigma = bwi,
-                                                          weights = csrw,
+             # create a density map for csrMoi
+             rhoCsr               = spatstat::density.ppp(x = csrMoi, sigma = bwi,
+                                                          weights = csrMoiw,
                                                           W = win)
 
              # scale such that sum{pixels} <= 1 i.e. a probability density function
-             denCsr           = denCsr/sum(denCsr)
+             rhoCsr           = rhoCsr/sum(rhoCsr)
 
 
              # create a density map for the image
-             denspp               = spatstat::density.ppp(x = spp, sigma = bwi,
-                                                          weights = sppw,
+             rhoMoi               = spatstat::density.ppp(x = sppMoi, sigma = bwi,
+                                                          weights = sppMoiw,
                                                           W = win)
 
              # scale such that sum{pixels} <= 1 i.e. a probability density function
-             denspp           = denspp/sum(denspp)
+             rhoMoi           = rhoMoi/sum(rhoMoi)
 
 
-             # calculate the probability function Fxy by normalizing denHeme to denCsr
-             Fxy                  = (denspp - mean(denCsr)) / sd(denCsr)
-
-             # cut-off based on inverse standrard normal cumulative density function
-             cutoff               = qnorm(0.05, lower.tail = F)
 
              # with Bonferroni correction
-             cutoff               = qnorm(0.05/spp$n, lower.tail = F)
+             numPoints = spatstat::unique.ppp(x = sppMoi, rule = "unmark")$n
+             mucsrMoi            = mean(rhoCsr, na.rm = TRUE)
+             sigmacsrMoi         = sd(rhoCsr, na.rm = TRUE)
+
+             cutoffUpr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
 
 
 
-             hotspotIm            = spatstat::eval.im(Fxy * (Fxy >= cutoff))
+             hotspotIm            = spatstat::eval.im(rhoMoi * (rhoMoi >= cutoff))
 
              hotspotIm[hotspotIm == 0] = NA # set zeros to NA to create a window
              hotspotWin          = spatstat::as.polygonal(spatstat::as.owin(hotspotIm))
 
              if(plotEach){
                    par(mfrow = c(1,1))
-                   spatstat::plot.owin(spp$window, ylim = rev(spp$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
+                   spatstat::plot.owin(sppMoi$window, ylim = rev(sppMoi$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
                    spatstat::plot.owin(hotspotWin, col = rgb(0,1,0,1), add = TRUE)
              }
 
 
              #return(length(which(hotspotIm[,] != 0)) / prod(dim(hotspotIm)))
-             return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(spp$window))
+             return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(sppMoi$window))
 
        })
 
@@ -564,7 +594,22 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
                                                         })))
 
-      #searchSpace[1 : pIdx]       = NA
+      if(lpIdx < hpIdx){
+
+            if(lpIdx != 1)
+                  searchSpace[1:lpIdx] = NA
+            if(hpIdx != length(x))
+                  searchSpace[hpIdx:length(x)] = NA
+
+      } else {
+
+            if(hpIdx != 1)
+                  searchSpace[1:hpIdx] = NA
+            if(lpIdx != length(x))
+                  searchSpace[lpIdx:length(x)] = NA
+
+      }
+
       maxCurveIdx                 = which.max(searchSpace)
 
       r                            = x[maxCurveIdx]
@@ -572,6 +617,8 @@ probMap                     = function(spp, weighted = TRUE, control = NULL,
 
       if(plot)
       {
+            plot(x = x, y = y, type = "l", main = "Maximum Curvature",
+                 xlab = "x", ylab = "y")
             points(rbind(hp, lp, data.frame(x = r, y = y[maxCurveIdx])),
                    col = c("red", "red", "green"), cex = 1, pch = 19)
             lines(x = rbind(hp, lp), col = "red", lty = 2)

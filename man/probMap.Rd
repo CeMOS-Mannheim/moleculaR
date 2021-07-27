@@ -6,15 +6,10 @@
 \usage{
 probMap(
   spp,
-  win,
   weighted = TRUE,
   control = NULL,
-  bw = NULL,
+  bw = seq(1, 10, 1),
   bwMethod = "spAutoCor",
-  dists = seq(1, 5, 0.5),
-  numSim = 99,
-  approximate = FALSE,
-  approxRadius = NULL,
   csrIntensities = "resample",
   csr = NULL,
   bwPlot = FALSE,
@@ -24,25 +19,14 @@ probMap(
 \arguments{
 \item{spp:}{The spatial point pattern.}
 
-\item{win:}{The window object of type `spatstat::owin`.}
-
 \item{weighted:}{Whether the intensities are inlcude into the computation.}
 
-\item{bw:}{The Gaussian bandwidth used for Kernel density estimation.}
+\item{bw:}{The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
+then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
+will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
+see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
 
 \item{bwMethod:}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
-
-\item{dists:}{for `bwMethod="spAutoCor"`, these are neighborhood distances at which to compute the Moran's I statisitc.
-for `bwMethod="iterative"` these are the Gaussian bandwidth upon which to iterate.}
-
-\item{numSim:}{the number of Monte Carlo simulations to be done for Moran's I, see ?spdep::moran.mc.
-(only relevant with `bwMethod="spAutoCor"`).}
-
-\item{approximate:}{for `bwMethod="spAutoCor"`, when `TRUE`only points within a circle centered at the intensity-wighted
-centroid (center of gravity) and radius `approxRadius` are considered. This is used to speed up the caluclation.}
-
-\item{approxRadius:}{for `bwMethod="spAutoCor"`, the radius in units (usually pixels) for the approximation circlular region.By default,
-this equates to the radius that produces a circular area which is half of the area of the spp window.}
 
 \item{bwPlot:}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
 
