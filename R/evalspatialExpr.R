@@ -6,6 +6,7 @@
 #' @param expr: 	   An unquoted (unwrapped) expression of 'ppp' objects listed in 'dataList'.
 #' @param dataList:  A named list containing the 'ppp' objects involved in 'expr'.
 #' @param ppwin:     The window 'spatstat::owin' object which all elements of 'dataList' share.
+#' @param sqrtTransform: Optional square root transofmation of the 'ppp' objects in 'dataList'.
 #'
 #' @return
 #' A list containing 'spatstat::im' and the corresponding 'spatstat::ppp' objects resulting of
@@ -14,7 +15,7 @@
 #' @export
 #'
 
-evalSpatialExpr <- function(exprn, dataList, ppwin, bw, sqrtTransform = FALSE){
+evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
       e <- parse(text = exprn)
 
