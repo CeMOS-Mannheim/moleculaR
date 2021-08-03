@@ -11,18 +11,19 @@
 #' @param bwMethod: The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
 #' @param bwPlot:    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
 #' @param csrIntensities: How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").
-#' @param sqrtTansform: whether to apply square root transformation to the intensities of `sppMoi`. This is an important
-#' consideration, only set to `FALSE` if the data is known to have been sqrt- or log-transformed.
+#' @param sqrtTansform: whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
+#' 'sppMoi' cotains a set of different analytes as in the case of collective projection maps.
 #' @param control:   An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
 #' csrMoi model will be generated from the intensities of this object.
 #' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
-#' could be useful when generating generating hotspot-bw curves.
+#' could be useful when generating hotspot-bw curves.
+#' @param pvalThreshold: The p-value threshold to be used for the hypothesis testing.
+#' @param pvalCorrection: The method used for p-values correction, see '?p.adjust' for more details.
 #' @param verbose:   whether to output progress.
 #' @return
 #' A list of
-#' cutoffUpr: a numeric, the chosen threshold above which it is a hotspot,
-#' cutoffLwr: a numeric, the chosen threshold below which it is a coldspot,
 #' GausBW: calculated Gaussian bandwidth,
+#' sppMoi: the input spp with intensities sqrt-transformed if 'sqrtTransform == TRUE'
 #' csrMoi: calculated complete spatial randomness model for the input sppMoi,
 #' rhoMoi: density image of the input point pattern sppMoi,
 #' rhoCsr: density image of the computed csrMoi pattern,
@@ -38,8 +39,8 @@
 probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
                                        bw = seq(1, 10, 1), bwMethod = "spAutoCor",
                                        csrIntensities = "resample", sqrtTansform = FALSE,
-                                       csrMoi = NULL, bwPlot = FALSE,
-                                       verbose = TRUE) {
+                                       csrMoi = NULL, pvalThreshold = 0.05, pvalCorrection = "bonferroni",
+                                       bwPlot = FALSE, verbose = TRUE) {
 
 
 
@@ -171,24 +172,41 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 
        # create a density map for the image
        rhoMoi           = spatstat::density.ppp(x = sppMoi, sigma = bw,
-                                                weights = sppMoiw, W = win, positive = TRUE)
+                                                 weights = sppMoiw, W = win, positive = TRUE)
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
        rhoMoi           = rhoMoi/sum(rhoMoi)
 
 
 
-       # with Bonferroni correction
-       numPoints = spatstat::unique.ppp(x = sppMoi, rule = "unmark")$n
+
+       ## __ statistical testing and pvalue correction __ #
+
+       # null hypothesis
        mucsrMoi            = mean(rhoCsr, na.rm = TRUE)
        sigmacsrMoi         = sd(rhoCsr, na.rm = TRUE)
 
-       cutoffUpr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
-       cutoffLwr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = TRUE)
+       # convert to data.frame
+       rhoMoidf <- spatstat::as.data.frame.im(x = rhoMoi)
+       pvalsLwr <- rhoMoidf
+       pvalsUpr <- rhoMoidf
+
+       # generate p-values - lower tail & upper tail
+       pvalsLwr$value <- pnorm(rhoMoidf$value, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = TRUE)
+       pvalsUpr$value <- pnorm(rhoMoidf$value, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
+
+       # correction
+       pvalsLwr$value <- p.adjust(p = pvalsLwr$value, method = pvalCorrection)
+       pvalsUpr$value <- p.adjust(p = pvalsUpr$value, method = pvalCorrection)
+
+       # convert back to image
+       pvalsLwr <- spatstat::as.im.data.frame(pvalsLwr)
+       pvalsUpr <- spatstat::as.im.data.frame(pvalsUpr)
+
 
        ## __ hotspot __ ##
 
-       hotspotIm        = spatstat::eval.im(rhoMoi * (rhoMoi >= cutoffUpr))
+       hotspotIm        = spatstat::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
 
        # filter out points lying outside the computed hotspot
        tmpIm            = hotspotIm
@@ -205,7 +223,7 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 
        ## __ coldspot __ ##
 
-       coldspotIm        = spatstat::eval.im(rhoMoi * (rhoMoi <= cutoffLwr))
+       coldspotIm        = spatstat::eval.im(rhoMoi * (pvalsLwr <= pvalThreshold))
 
        # filter out points lying outside the computed coldspot
        tmpIm             = coldspotIm
@@ -220,10 +238,9 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
                                          checkdup = FALSE)
 
 
-       return(list(cutoffUpr = cutoffUpr, # the chosen threshold above which it is a hotspot
-                   cutoffLwr = cutoffLwr, # the chosen threshold below which it is a coldspot
-                   GausBW = bw,		# calculated Gaussian bandwidth
-                   csrMoi = csrMoi,
+       return(list(GausBW = bw,		# calculated Gaussian bandwidth
+                   sppMoi = sppMoi,       # the input spp with intensiteis sqrt-transfomed if sqrtTransform = TRUE
+                   csrMoi = csrMoi,       # the created CSR model of the input spp
                    rhoMoi = rhoMoi,	# density image of the input point pattern
                    rhoCsr = rhoCsr,	# density image of the computed csrMoi pattern
                    hotspotpp = hotspotpp, # the remaining points which lie within the hotspot mask
@@ -255,7 +272,7 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 #' @export
 #' @keywords internal
 
-.bw.spAutoCorr <- function(sppMoi, bw = seq(0.5,8,0.5),
+.bw.spAutoCorr <- function(sppMoi, bw = seq(1, 10, 1),
                            plot = FALSE, verbose = FALSE) {
 
 
@@ -650,7 +667,7 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 #// the following function is already available in recent spatstat versions.
 .bw.scott2 <- function(X, isotropic=FALSE, d = NULL) {
 
-       if(is.null(d)) { d <- spatstat::spatdim(X) } else check.1.integer(d)
+       if(is.null(d)) { d <- spatstat::spatdim(X) } else spatstat.utils::check.1.integer(d)
        nX <- spatstat::npoints(X)
        cX <- spatstat::coords(X, spatial=TRUE, temporal=FALSE, local=FALSE)
        sdX <- apply(cX, 2, sd)

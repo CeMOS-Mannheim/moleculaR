@@ -14,30 +14,32 @@
 #' @export
 #'
 
-evalSpatialExpr <- function(exprn, dataList, ppwin){
+evalSpatialExpr <- function(exprn, dataList, ppwin, bw, sqrtTransform = FALSE){
 
       e <- parse(text = exprn)
 
       vars <- all.vars(e)
+
+      if(sqrtTransform){
+            dataList <- lapply(dataList, function(i) {
+                  i$marks$intensity <- sqrt(i$marks$intensity)
+                  return(i)
+            })
+      }
 
 
       for(ivar in vars){
             if(!(ivar %in% names(dataList)))
                   stop(paste0(ivar, " is not found in 'dataList'. \n"))
 
-            # assign(ivar, spatstat::pixellate(dataList[[ivar]],
-            #                                  weights = dataList[[ivar]]$marks$intensity,
-            #                                  W = spatstat::as.mask(ppwin,
-            #                                                        dimyx=c(diff(ppwin$yrange),
-            #                                                                diff(ppwin$xrange))),
-            #                                  padzero = FALSE, savemap = F))
 
-            dataList[[ivar]] = spatstat::pixellate(dataList[[ivar]],
-                                                   weights = dataList[[ivar]]$marks$intensity,
-                                                   W = spatstat::as.mask(ppwin,
-                                                                         dimyx=c(diff(ppwin$yrange),
-                                                                                 diff(ppwin$xrange))),
-                                                   padzero = FALSE, savemap = F)
+            # create a pixellated image and assign back
+            dataList[[ivar]] <- spatstat::pixellate(dataList[[ivar]],
+                                      weights = dataList[[ivar]]$marks$intensity,
+                                      W = spatstat::as.mask(ppwin,
+                                                            dimyx=c(diff(ppwin$yrange),
+                                                                    diff(ppwin$xrange))),
+                                      padzero = FALSE, savemap = FALSE)
 
 
       }
@@ -48,6 +50,10 @@ evalSpatialExpr <- function(exprn, dataList, ppwin){
 
       # convert back to ppp
       imdf <- spatstat::as.data.frame.im(x = res)
+
+      if(any(is.infinite(imdf$value))){
+            imdf <- imdf[which(!is.infinite(imdf$value)), ]
+      }
 
       exprppp <- spatstat::ppp(x = imdf$x, y = imdf$y,
                                marks = data.frame(intensity = imdf$value),
