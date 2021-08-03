@@ -5,23 +5,23 @@
 \title{Calculate Gaussian Bandwidth - `iterative`}
 \usage{
 .bw.iterative(
-  spp,
+  sppMoi,
   weighted = TRUE,
   bw = seq(0.5, 8, 0.5),
-  csr = NULL,
+  csrMoi = NULL,
   plot = FALSE,
   plotEach = FALSE,
   verbose = FALSE
 )
 }
 \arguments{
-\item{spp:}{The spatial point pattern.}
+\item{sppMoi:}{The spatial point pattern.}
 
 \item{weighted:}{Whether the intensities are inlcude into the computation. Switch off for Collective Projections.}
 
 \item{bw:}{A vector, The gaussian band width pool used for Kernel density estimation.}
 
-\item{csr:}{Pre-computed wighted csr model corresponding to the given spp. This
+\item{csrMoi:}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 speeds up the computation and is mostly used for troubleshooting.}
 
 \item{plot:}{Whether to plot the hotspot area as function of bandwidth.}

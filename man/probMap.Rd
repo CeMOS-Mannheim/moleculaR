@@ -5,19 +5,22 @@
 \title{Calculate molecular probablity maps}
 \usage{
 probMap(
-  spp,
+  sppMoi,
   weighted = TRUE,
   control = NULL,
   bw = seq(1, 10, 1),
   bwMethod = "spAutoCor",
   csrIntensities = "resample",
-  csr = NULL,
+  sqrtTansform = FALSE,
+  csrMoi = NULL,
+  pvalThreshold = 0.05,
+  pvalCorrection = "bonferroni",
   bwPlot = FALSE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{spp:}{The spatial point pattern.}
+\item{sppMoi:}{The spatial point pattern.}
 
 \item{weighted:}{Whether the intensities are inlcude into the computation.}
 
@@ -30,27 +33,36 @@ see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
 
 \item{bwPlot:}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
 
-\item{csrIntensities:}{How the intensities for the CSR model are generated, c("resample", "Poisson", "Gaussian").}
+\item{csrIntensities:}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
 
-\item{control:}{An spp object that is designated as the "control" or "null" alternative of \code{spp}. If supplied the
-CSR model will be generated from the intensities of this object.}
+\item{sqrtTansform:}{whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
+'sppMoi' cotains a set of different analytes as in the case of collective projection maps.}
 
-\item{csr:}{Pre-computed wighted csr model corresponding to the given spp. This
-could be useful when generating generating hotspot-bw curves.}
+\item{control:}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
+csrMoi model will be generated from the intensities of this object.}
+
+\item{csrMoi:}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
+could be useful when generating hotspot-bw curves.}
+
+\item{pvalThreshold:}{The p-value threshold to be used for the hypothesis testing.}
+
+\item{pvalCorrection:}{The method used for p-values correction, see '?p.adjust' for more details.}
 
 \item{verbose:}{whether to output progress.}
 }
 \value{
 A list of
-cutoff: the chosen threshold above which it is a hotspot,
 GausBW: calculated Gaussian bandwidth,
-csrspp: calculated complete spatial randomness model for the input spp,
-denspp: density image of the input point pattern spp,
-denCsr: density image of the computed csr pattern,
-hotspotpp: the remaining points which lie within the hotspot mask as a spatial point pattern,
-hotspotIm: the hotspot image,
-hotspotMask: the hotspot mask of type owin.mask,
-nonHotspotMask: the non-hotspot areas, to be used to mask the non hotspot areas.
+sppMoi: the input spp with intensities sqrt-transformed if 'sqrtTransform == TRUE'
+csrMoi: calculated complete spatial randomness model for the input sppMoi,
+rhoMoi: density image of the input point pattern sppMoi,
+rhoCsr: density image of the computed csrMoi pattern,
+hotspotpp: the remaining points (type 'ppp') which lie within the hotspot mask as a spatial point pattern,
+hotspotIm: the hotspot image of type 'im',
+hotspotMask: the hotspot mask of type 'owin',
+coldspotpp: the remaining points (type 'ppp') which lie within the coldspot mask as a spatial point pattern,
+coldspotIm: the coldspot image of type 'im',
+coldspotMask: the hotspot mask of type 'owin'.
 }
 \description{
 This function creates molecular probability maps from a given spatial point pattern representation.

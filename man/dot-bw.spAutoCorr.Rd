@@ -4,10 +4,10 @@
 \alias{.bw.spAutoCorr}
 \title{Calculate Gaussian bandwidth based on spatial autocorrelation - `spAutoCor`}
 \usage{
-.bw.spAutoCorr(spp, bw = seq(0.5, 8, 0.5), plot = FALSE, verbose = FALSE)
+.bw.spAutoCorr(sppMoi, bw = seq(1, 10, 1), plot = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{spp:}{The spatial point pattern, object of type `ppp`.}
+\item{sppMoi:}{The spatial point pattern, object of type `ppp`.}
 
 \item{bw:}{bandwidth steps at which to compute density and the corresponding Moran's I statistic.}
 
