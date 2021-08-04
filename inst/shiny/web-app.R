@@ -407,7 +407,7 @@ server <- function(input, output, session) {
 
                                     #// plotting
 
-                                    probImg              = probMap(rv$go_mz$hitsppp, win = spwin, bwMethod = input$mz_bandwith)
+                                    probImg              = probMap(rv$go_mz$hitsppp, bwMethod = input$mz_bandwith)
 
                                     spatstat::plot.im(probImg$denspp,
                                                       main = paste0("m/z ", round(rv$go_mz$label,4), " +/- ", round((fwhmFun(rv$go_mz$label) / 2.355) * 3, 4)),
@@ -439,7 +439,7 @@ server <- function(input, output, session) {
 
 
 
-                                    probImg              = probMap(rv$go_lipid$hitsppp, win = spwin, bwMethod = input$lipid_bandwith)
+                                    probImg              = probMap(rv$go_lipid$hitsppp, bwMethod = input$lipid_bandwith)
 
 
                                     spatstat::plot.im(probImg$denspp,
@@ -482,7 +482,7 @@ server <- function(input, output, session) {
 
                                     else {
 
-                                          probImg              = probMap(subsetppp, win = spwin, bwMethod = input$lipid_bandwith)
+                                          probImg              = probMap(subsetppp,  bwMethod = input$lipid_bandwith)
 
 
                                           spatstat::plot.im(probImg$denspp,

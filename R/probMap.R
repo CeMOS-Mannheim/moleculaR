@@ -342,6 +342,8 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
 #' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 #' speeds up the computation and is mostly used for troubleshooting.
+#' @param pvalThreshold: The p-value threshold to be used for the hypothesis testing.
+#' @param pvalCorrection: The method used for p-values correction, see '?p.adjust' for more details.
 #' @param plot:      Whether to plot the hotspot area as function of bandwidth.
 #' @param plotEach:  whether to plot the resulting significance area of each bandwidth iteration.
 #' @param verbose:   Whether to show progress.
@@ -352,7 +354,8 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
 #' @keywords internal
 #'
 
-.bw.iterative                 = function(sppMoi, weighted = TRUE, bw = seq(0.5,8,0.5), csrMoi = NULL,
+.bw.iterative                 = function(sppMoi, weighted = TRUE, bw = seq(1, 10, 1), csrMoi = NULL,
+                                         pvalThreshold = 0.05, pvalCorrection = "bonferroni",
                                          plot = FALSE, plotEach = FALSE, verbose = FALSE) {
 
 
@@ -416,20 +419,32 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
              rhoMoi           = rhoMoi/sum(rhoMoi)
 
 
+             ## __ statistical testing and pvalue correction __ #
 
-             # with Bonferroni correction
-             numPoints = spatstat::unique.ppp(x = sppMoi, rule = "unmark")$n
+             # null hypothesis
              mucsrMoi            = mean(rhoCsr, na.rm = TRUE)
              sigmacsrMoi         = sd(rhoCsr, na.rm = TRUE)
 
-             cutoffUpr        = qnorm(0.05/numPoints, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
+             # convert to data.frame
+             rhoMoidf = spatstat::as.data.frame.im(x = rhoMoi)
+             pvalsUpr = rhoMoidf
+
+             # generate p-values -  upper tail
+             pvalsUpr$value = pnorm(rhoMoidf$value, mean = mucsrMoi, sd = sigmacsrMoi, lower.tail = FALSE)
+
+             # correction
+             pvalsUpr$value = p.adjust(p = pvalsUpr$value, method = pvalCorrection)
+
+             # convert back to image
+             pvalsUpr = spatstat::as.im.data.frame(pvalsUpr)
 
 
+             ## __ hotspot __ ##
 
-             hotspotIm            = spatstat::eval.im(rhoMoi * (rhoMoi >= cutoff))
+             hotspotIm        = spatstat::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
 
              hotspotIm[hotspotIm == 0] = NA # set zeros to NA to create a window
-             hotspotWin          = spatstat::as.polygonal(spatstat::as.owin(hotspotIm))
+             hotspotWin       = spatstat::as.polygonal(spatstat::as.owin(hotspotIm))
 
              if(plotEach){
                    par(mfrow = c(1,1))
@@ -438,7 +453,6 @@ probMap                     = function(sppMoi, weighted = TRUE, control = NULL,
              }
 
 
-             #return(length(which(hotspotIm[,] != 0)) / prod(dim(hotspotIm)))
              return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(sppMoi$window))
 
        })

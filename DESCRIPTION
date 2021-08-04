@@ -17,6 +17,7 @@ Imports:
     MALDIquantForeign,
     Matrix,
     spatstat,
+    raster,
     shiny
 Encoding: UTF-8
 LazyData: true

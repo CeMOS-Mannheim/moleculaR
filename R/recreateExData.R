@@ -6,7 +6,7 @@
 #' @param pathToSingleSpctr:  path to the single spectrum tsv file.
 #' @param pathToSldb:         path to the swisslipids database tsv file.
 #' @param pathToMtspc:        path to the Metaspace annotation csv file.
-#' @param shrink:             whether to shring the msData to only retain the identified m/z in
+#' @param shrink:             whether to shrink the msData to only retain the identified m/z in
 #' the Metaspace annotation file.
 #' @return
 #' Saves a RData file of the example data.

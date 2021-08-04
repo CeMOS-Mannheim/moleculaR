@@ -15,11 +15,13 @@
 
 readCentrData     = function(path, verbose = FALSE){
 
-      # -- To do -- #
+      #// test if imzML of type processed, if not through an error
+      # read the imzml part as a text -  this makes it faster
+      txt         = readLines(con = path)
 
-      #// test if imzML of type processed, if not through an error, use XML package
-
-      # ---------- #
+      if(any(grepl(pattern = "continuous", x = txt[3:length(txt)]))){
+            stop("The input file must be of type 'processed' i.e. a centroided imzML.\n")
+      }
 
 
       MALDIquantForeign::importImzMl(path = path, centroided = TRUE, verbose = verbose)
