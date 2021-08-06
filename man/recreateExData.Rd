@@ -9,7 +9,8 @@ recreateExData(
   pathToSingleSpctr = NULL,
   pathToSldb = NULL,
   pathToMtspc = NULL,
-  shrink = TRUE
+  shrink = TRUE,
+  saveTo = getwd()
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ recreateExData(
 
 \item{shrink:}{whether to shrink the msData to only retain the identified m/z in
 the Metaspace annotation file.}
+
+\item{saveTo:}{where to save the resulting example data.}
 }
 \value{
 Saves a RData file of the example data.
