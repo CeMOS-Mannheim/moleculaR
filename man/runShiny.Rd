@@ -7,13 +7,13 @@
 runShiny(app)
 }
 \arguments{
-\item{app:}{a character, name of the shiny app, \code{c("package-app", "web-app")}.}
+\item{app:}{a character, name of the shiny app, \code{c("package-app", "example-app")}.}
 }
 \value{
 Has no return. To quit simply interrupt R by pressing Ctrl+c or Esc.
 }
 \description{
 Calls one of the shiny apps accompanying this package. \code{package-app} is the
-workhorse app of the \code{moleculaR}. \code{web-app} only load an filtered
+workhorse app of the \code{moleculaR}. \code{example-app} only load an filtered
 example dataset and is used only for showcasing the functionalities.
 }

@@ -51,18 +51,20 @@ could be useful when generating hotspot-bw curves.}
 \item{verbose:}{whether to output progress.}
 }
 \value{
-A list of
-GausBW: calculated Gaussian bandwidth,
-sppMoi: the input spp with intensities sqrt-transformed if 'sqrtTransform == TRUE'
-csrMoi: calculated complete spatial randomness model for the input sppMoi,
-rhoMoi: density image of the input point pattern sppMoi,
-rhoCsr: density image of the computed csrMoi pattern,
-hotspotpp: the remaining points (type 'ppp') which lie within the hotspot mask as a spatial point pattern,
-hotspotIm: the hotspot image of type 'im',
-hotspotMask: the hotspot mask of type 'owin',
-coldspotpp: the remaining points (type 'ppp') which lie within the coldspot mask as a spatial point pattern,
-coldspotIm: the coldspot image of type 'im',
-coldspotMask: the hotspot mask of type 'owin'.
+#' A list of \cr
+\itemize{
+  \item GausBW: calculated Gaussian bandwidth.
+  \item sppMoi: the input spp with intensities sqrt-transformed if 'sqrtTransform == TRUE'.
+  \item csrMoi: calculated complete spatial randomness model for the input sppMoi.
+  \item rhoMoi: density image of the input point pattern sppMoi.
+  \item rhoCsr: density image of the computed csrMoi pattern.
+  \item hotspotpp: the remaining points (type 'ppp') which lie within the hotspot mask as a spatial point pattern.
+  \item hotspotIm: the hotspot image of type 'im'.
+  \item hotspotMask: the hotspot mask of type 'owin'.
+  \item coldspotpp: the remaining points (type 'ppp') which lie within the coldspot mask as a spatial point pattern.
+  \item coldspotIm: the coldspot image of type 'im'.
+  \item coldspotMask: the hotspot mask of type 'owin'.
+}
 }
 \description{
 This function creates molecular probability maps from a given spatial point pattern representation.

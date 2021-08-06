@@ -8,6 +8,7 @@
 #' @param pathToMtspc:        path to the Metaspace annotation csv file.
 #' @param shrink:             whether to shrink the msData to only retain the identified m/z in
 #' the Metaspace annotation file.
+#' @param saveTo:             where to save the resulting example data.
 #' @return
 #' Saves a RData file of the example data.
 #'
@@ -16,7 +17,7 @@
 #'
 recreateExData     = function(pathToImzml, pathToSingleSpctr = NULL,
                               pathToSldb = NULL, pathToMtspc = NULL,
-                              shrink = TRUE) {
+                              shrink = TRUE, saveTo = getwd()) {
 
 
 
@@ -79,7 +80,7 @@ recreateExData     = function(pathToImzml, pathToSingleSpctr = NULL,
 
       #// shrink msData
       if(shrink){
-            msData= shrinkData(x = msData, mzKeep = as.numeric(mtspc$mz), fwhmFun = fwhm$fwhmFun)
+            msData= .shrinkData(x = msData, mzKeep = as.numeric(mtspc$mz), fwhmFun = fwhm$fwhmFun)
 
       }
 
@@ -90,11 +91,57 @@ recreateExData     = function(pathToImzml, pathToSingleSpctr = NULL,
 
       #// save image to working dir
       save(list = c("msData", "sldb", "mtspc", "fwhm", "spwin"),
-           file = "processed-example-Data.RData", compress = TRUE)
+           file = file.path(saveTo, "processed-example-Data.RData"), compress = TRUE)
 
 
       cat("Done. \n")
       return(NULL)
+
+}
+
+
+#' Shrink data
+#'
+#' This function is for internal use only. It tries to shrink MSI data (in terms of size) for including it within
+#' a package.
+#'
+#' @param x: 	   Dataset, a list of \code{MALDIquant::MassPeaks} objects.
+#' @param mzKeep: numeric vector, m/z values to retain.
+#' @param fwhmFun: a function, fwhm as a function of m/s axis. See \code{?moleculaR::estimateFwhm}.
+#' @return
+#' Filtered list of \code{MALDIquant::MassPeaks} objects.
+#'
+#' @export
+#' @keywords internal
+#'
+.shrinkData     = function(x, mzKeep, fwhmFun) {
+
+   if(!MALDIquant::isMassPeaksList(x)) {
+      stop("Error in CreateSparseMat; x must be a list of MassPeaks objects.\n")
+   }
+
+   mzKeep      = sort(mzKeep)
+   x           = lapply(x, FUN = function(i) {
+
+      xm       = MALDIquant::mass(i)
+      xkpIdx   = MALDIquant::match.closest(x = mzKeep,
+                                           table = xm,
+                                           tolerance = fwhmFun(mzKeep))
+      xkpIdx   = xkpIdx[!is.na(xkpIdx)]
+
+      mt       = list()
+      mt$imaging$pos = MALDIquant::metaData(i)$imaging$pos # keep only pixel coordinates
+
+
+      MALDIquant::createMassPeaks(mass = xm[xkpIdx],
+                                  intensity = MALDIquant::intensity(i)[xkpIdx],
+                                  snr = MALDIquant::snr(i)[xkpIdx],
+                                  metaData = mt)
+
+   })
+
+
+   return(x)
 
 }
 

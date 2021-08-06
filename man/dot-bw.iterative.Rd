@@ -7,8 +7,10 @@
 .bw.iterative(
   sppMoi,
   weighted = TRUE,
-  bw = seq(0.5, 8, 0.5),
+  bw = seq(1, 10, 1),
   csrMoi = NULL,
+  pvalThreshold = 0.05,
+  pvalCorrection = "bonferroni",
   plot = FALSE,
   plotEach = FALSE,
   verbose = FALSE
@@ -23,6 +25,10 @@
 
 \item{csrMoi:}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 speeds up the computation and is mostly used for troubleshooting.}
+
+\item{pvalThreshold:}{The p-value threshold to be used for the hypothesis testing.}
+
+\item{pvalCorrection:}{The method used for p-values correction, see '?p.adjust' for more details.}
 
 \item{plot:}{Whether to plot the hotspot area as function of bandwidth.}
 

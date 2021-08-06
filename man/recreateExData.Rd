@@ -21,7 +21,7 @@ recreateExData(
 
 \item{pathToMtspc:}{path to the Metaspace annotation csv file.}
 
-\item{shrink:}{whether to shring the msData to only retain the identified m/z in
+\item{shrink:}{whether to shrink the msData to only retain the identified m/z in
 the Metaspace annotation file.}
 }
 \value{
