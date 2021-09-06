@@ -90,8 +90,7 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
 
                           )),
                  tabPanel("About",
-                          p("This is an example web app with a preloaded sample MSI data of a wild-type Glioblastoma Multiform tissue sample.
-                            MSI Data is restricted to Metaspace-confirmed lipids (SwissLipids DB) at 0.2 FDR in the positive ion mode.
+                          p("This is a web app that processes MSI data.
                             moleculaR is an open-source R package available at github.com/CeMOS/molecularR.",
                             style = "font-size:16px"))
 )
