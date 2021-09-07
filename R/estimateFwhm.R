@@ -3,7 +3,7 @@
 #' This creates a linear interpolator function that approximats fwhm as a function
 #' of m/z for the given single s.
 #'
-#' @param s: 	      a spectrum of \code{MALDIquant::Masss} type.
+#' @param s: 	      a spectrum of \code{MALDIquant::MassSpectrum} type.
 #' @param sampling:  an integer specifying how many detected p to consider for fwhm estimation.
 #' @param plot:      whether to plot the result
 #' @param savePlot:  either \code{NULL} or file path to save a plot as svg.

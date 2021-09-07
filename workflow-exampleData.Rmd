@@ -36,19 +36,24 @@ For more info on how to properly include data into packages check [this page](ht
 **[GUI Inputs]**    
 *single analyte case*  
 **queryMass**     numeric-insert, m/z value.  
-**probMapMethod** method used to generate the molecular probability map method.  
+**bwMethod**      No need to specify this anymore, let's keep it simple and leave it at default value (as in the paper)
+**p-value**       The p-value threshold to be used for the hypothesis testing. Defaults to 0.05. 
+**correction**    The method used for p-values correction, drop down -> c("bonferroni", "BH")
+
 *collective projections case*   
 **lipidClass**  string-dropdown, values = `searchList$allClasses`      
 
 
 **[GUI Outputs]**  
-**plot**          fwhm as a function of m/z, generated after loading the single spectrum.   
+**plot**          fwhm as a function of m/z, generated after loading the single spectrum. 
+
 *single analyte case*
 **image**         ion image of the `queryMass`.   
-**image**         ion probability map of the `queryMass`.   
+**image**         MPM of the `queryMass`.
+
 *collective projections case*  
 **image**         collective projection of confirmed instances of the chosen `lipidClass`.  
-**image**         collective probability map of confirmed instances of the chosen `lipidClass`.  
+**image**         CPM of `lipidClass`.  
 
 
 ## Workflow for example data + web-hosted app 
@@ -88,52 +93,32 @@ lines(x = qp, y = fwhmFun(qp), col = "green", lwd = 2)
 
 ```{r}
 #// input by m/z value
-queryMass         = 496.33972                                   # <-- input, numeric m/z value, use this as default value for exmaple
-bwMethod          = "iterative"                                 # <-- input, c("iterative", "scott")
+queryMass         = 788.5447                                   # <-- input, numeric m/z value, use this as default value for exmaple
 
-# NOTE: would be better to have two bwMethod inputs; one for one analyte case (defaults to "iterative") and one for 
-# collective projection case (defaults to "scott").  
+# NOTE: let's fix the bwMethod inputs; "spAutoCor" for MPM case (single analyte) and "scott" for multiple analytes (CPM).   
 
 ```
 
 
-```{r fig.width=8}
-#// output::ion image
-s                 = MALDIquant::msiSlices(x = msData, center = queryMass, 
-                                          tolerance = (fwhmFun(queryMass) / 2.355) * 3)
+This should be the plotting output - everything together
 
-if(sum(s, na.rm = T) == 0){
-      par(mfrow = c(1, 1))
-      #// image without masking
-      spatstat::plot.owin(spwin, 
-                  main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"), 
-                  ylim = rev(range(spwin$y)), 
-                  box = FALSE)
-} else {
-      
-    MALDIquant::plotMsiSlice(x = s,  
-                             colRamp = colorRamp(viridis::viridis_pal(option = "inferno")(100)), 
-                             interpolate = F)
-  
-}
-```
+```{r fig.width=10, fig.height=12}
 
+#________________________________________________ compute the regular ion image
 
-```{r fig.width=8}
-#// output::molecular probability map
 .uniqueMass       = as.numeric(spmat@Dimnames[[2]])
 
-
-hits              = searchAnalyte(m = queryMass, 
+hitsIonImage      = searchAnalyte(m = queryMass, 
                                   fwhm = fwhmFun(queryMass), 
                                   massAxis = .uniqueMass, 
                                   spData = spmat, 
-                                  coords = MALDIquant::coordinates(msData))
+                                  coords = MALDIquant::coordinates(msData), 
+                                  wMethod = "sum")
 
 
 
 #// check if hits is empty
-if(nrow(hits) == 0)
+if(nrow(hitsIonImage) == 0)
 {
   
   par(mfrow = c(1, 1))
@@ -143,52 +128,183 @@ if(nrow(hits) == 0)
                   ylim = rev(range(spwin$y)), 
                   box = FALSE)
   
-} else {
+} else{ # if there are hits then proceed with MPM computations
   
-  par(mfrow = c(1, 1))
+  
+  mpmHits      = searchAnalyte(m = queryMass, 
+                                  fwhm = fwhmFun(queryMass), 
+                                  massAxis = .uniqueMass, 
+                                  spData = spmat, 
+                                  coords = MALDIquant::coordinates(msData), 
+                                  wMethod = "sum")
 
   
   #// create the spatial point pattern
-  hitsppp              = spatstat::ppp(x = hits$x,
-                                       y = hits$y,
+  sppMpm            = spatstat::ppp(x = mpmHits$x,
+                                       y = mpmHits$y,
                                        window = spwin,
-                                       marks = hits[ , -c(1, 2)])
+                                       marks = mpmHits[ , -c(1, 2)])
+  
+  sppMpm            = spatstat::as.ppp(sppMpm)
   
   
-  #// plotting
+  # raster image - ion
+  imgMpm  = spatstat::pixellate(sppMpm,
+                                weights = sppMpm$marks$intensity,
+                                W = spatstat::as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange))),
+                                padzero = FALSE, savemap = FALSE)
+
+  #// plotting - for illustration
   
-  probImg              = probMap(hitsppp, win = spwin, bwMethod = bwMethod)
+  probImg              = probMap(sppMpm)
   
   
-  spatstat::plot.im(probImg$denspp,
-                    main = paste0("m/z ", round(queryMass, 4), " +/- ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
-                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+
+  
+  
+  
+  par(mfrow = c(3, 2))
+
+# _________________________________________________ part one: CSR
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$csrMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$csrMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("CSR at m/z ", round(queryMass, 4), " ± ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$csrMoi$marks$intensity))) # colors according to intensity
+
+# _________________________________________________ part two: SPP
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(sppMpm$marks$intensity))
+
+spatstat::plot.ppp(sppMpm, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("SPP at m/z ", round(queryMass, 4), " ± ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(sppMpm$marks$intensity))) # colors according to intensity
+
+
+
+# _________________________________________________ part three: rho of csr
+
+spatstat::plot.im(probImg$rhoCsr,
+                  main = expression(paste(rho["CSR"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoCs, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+# _________________________________________________ part four: rho of MOI
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = expression(paste(rho["MOI"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+
+# _________________________________________________ part five : regular ion image
+
+#// create the spatial point pattern
+sppIonImage            = spatstat::ppp(x = hitsIonImage$x,
+                                   y = hitsIonImage$y,
+                                   window = spwin,
+                                   marks = hitsIonImage[ , -c(1, 2)])
+
+sppIonImage            = spatstat::as.ppp(sppIonImage)
+  
+
+# raster image - ion
+imgIon  = spatstat::pixellate(sppIonImage,
+                                weights = sppIonImage$marks$intensity,
+                                W = spatstat::as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange))),
+                                padzero = FALSE, savemap = FALSE)
+ 
+  
+spatstat::plot.im(imgIon,
+                main = paste0("Ion Image at m/z ", round(queryMass, 4), " ± ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
+              col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgIon, na.rm = T)),
+              ylim = rev(range(spwin$y)),
+              box = FALSE)
+
+  
+
+
+
+
+# _________________________________________________ part six : MPM
+
+spatstat::plot.im(imgMpm,
+                  main = paste0("MPM at m/z ", round(queryMass, 4)," ± ", round((fwhmFun(queryMass) / 2.355) * 3, 4)),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
                   ylim = rev(range(spwin$y)),
                   box = FALSE)
-  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
   
-    
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+
+legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"), 
+       col = c("red", "blue"), bty = "n", horiz = TRUE, inset = c(-0.5,0))
   
   
   
 }
+
+
+
 ```
+
 
 ## Collective projection case - lipid classes
 
 ```{r fig.width=8}
+
+
+
 #// load swiss lipid database - 
-# -- loaded -- 
+# -- loaded -- #
+
+#// filter sldb
+Hidx = MALDIquant::match.closest(x = sldb$`Exact m/z of [M+H]+`, 
+                                 table = sort(as.numeric(mtspc$mz)), 
+                                 tolerance = fwhmFun(sldb$`Exact m/z of [M+H]+`))
+
+Naidx = MALDIquant::match.closest(x = sldb$`Exact m/z of [M+Na]+`, 
+                                 table = sort(as.numeric(mtspc$mz)), 
+                                 tolerance = fwhmFun(sldb$`Exact m/z of [M+Na]+`))
+
+kidx = MALDIquant::match.closest(x = sldb$`Exact m/z of [M+K]+`, 
+                                 table = sort(as.numeric(mtspc$mz)), 
+                                 tolerance = fwhmFun(sldb$`Exact m/z of [M+K]+`))
+
+
+
+idxToKeep = c(which(!is.na(Hidx)), which(!is.na(Naidx)), which(!is.na(kidx)))
+
+sldb = sldb[idxToKeep, ]
 
 #// initialize the swisslipids database
 searchList           = initLipidSearch(swissdb = sldb)
-
-
-#// choose one lipid species
-lipidClass         = "PI(x:x)"                        # <-- Input, selection from drop-down, values = searchList$allClasses
-bwMethod          = "scott"                           # <-- input, c("iterative", "scott")
-# NOTE: would be better to have two bwMethod inputs; one for one analyte case (defaults to "iterative") and one for 
-# collective projection case (defaults to "scott").  
 
 
 #// load metaspace identification list
@@ -200,10 +316,18 @@ bwMethod          = "scott"                           # <-- input, c("iterative"
 #// find peaks
 .uniqueMass       = as.numeric(spmat@Dimnames[[2]])
 
+# ofInterest = c("FA(x:x)", "LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)",
+#                "LPI(x:x)", "LPS(x:x)", "PA(x:x)", "PC(x:x)", "PE(x:x)",
+#                "PG(x:x)", "PI(x:x)", "PS(x:x)", "DG(x:x)", "TG(x:x)", 
+#                "PGP(x:x)", "PIP2(x:x)", "PIP(x:x)", "PIP3(x:x)")
 
 
+for(lipidClass in names(searchList$lipidHits)){
+  
+  #if(!(lipidClass %in% ofInterest)) {next}
+  
 searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchList$swissList[[lipidClass]])), 
-                                                          mc.cores = 5, FUN = function(i) {
+                                                          mc.cores = 1, FUN = function(i) {
        
        
        df            = data.frame(x = integer(0), 
@@ -222,6 +346,9 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
        
        msCoordinates = MALDIquant::coordinates(msData)
        
+                              
+   
+       
        #// protonated ----
        lipTmp        = searchList$swissList[[lipidClass]]$`Exact m/z of [M+H]+`[i]
        
@@ -235,6 +362,7 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
                                                   spData = spmat, 
                                                   coords = msCoordinates,
                                                   mtspc = mtspc, # <--
+                                                  confirmedOnly = TRUE,
                                                   adduct = "H1",  # <--
                                                   mode = "positive",  # <--
                                                   modeAdduct = "M+H",  # <--
@@ -242,6 +370,8 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
                                                   sumformula = searchList$swissList[[lipidClass]]$`Formula (pH7.3)`[i], 
                                                   abbrev = searchList$swissList[[lipidClass]]$`Abbreviation*`[i], 
                                                   numDoubleBonds = searchList$swissList[[lipidClass]]$numDoubleBond[i]))
+                       
+                      
   
 
               }
@@ -261,6 +391,7 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
                                                   spData = spmat, 
                                                   coords = msCoordinates,
                                                   mtspc = mtspc, # <--
+                                                  confirmedOnly = TRUE,
                                                   adduct = "Na1",  # <--
                                                   mode = "positive",  # <--
                                                   modeAdduct = "M+Na",  # <--
@@ -287,6 +418,7 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
                                                   spData = spmat, 
                                                   coords = msCoordinates,
                                                   mtspc = mtspc, # <--
+                                                  confirmedOnly = TRUE,
                                                   adduct = "K1",  # <--
                                                   mode = "positive",  # <--
                                                   modeAdduct = "M+K",  # <--
@@ -307,128 +439,448 @@ searchList$lipidHits[[lipidClass]] = parallel::mclapply(X = seq(1, nrow(searchLi
 
 #// merge
 searchList$lipidHits[[lipidClass]] = do.call("rbind", searchList$lipidHits[[lipidClass]])
-
+}
 
 #// added check 
-if(nrow(searchList$lipidHits[[lipidClass]]) == 0) {
+# if(nrow(searchList$lipidHits[[lipidClass]]) == 0) {
+# 
+#   par(mfrow = c(1, 1))
+# 
+#   #// empty window
+#   spatstat::plot.owin(spwin,
+#                   main = paste0("No insances of ", lipidClass, " were detected"),
+#                   ylim = rev(range(spwin$y)),
+#                   box = FALSE)
+# 
+#   detectionsExist = FALSE
+# 
+# 
+# } else {
+#   detectionsExist = TRUE
+# }
+# 
+# #// create the spatial point pattern
+# if(detectionsExist){
+# 
+#   hitsppp              = spatstat::ppp(x = searchList$lipidHits[[lipidClass]]$x,
+#                                      y = searchList$lipidHits[[lipidClass]]$y,
+#                                      window = spwin,
+#                                      marks = searchList$lipidHits[[lipidClass]][ , -c(1, 2)])
+# 
+# }
+
+
+
+
+
+```
+
+
+plotting all detections of a chosen lipid class
+
+```{r fig.width=12, fig.height=10}
+#// choose one lipid species
+lipidClass         = "PA(x:x)"                        # <-- Input, selection from drop-down, values = searchList$allClasses
+bwMethod          = "scott"                           # fix that 
+
+
+
+if(is.null(searchList$lipidHits[[lipidClass]])) {
   
-  par(mfrow = c(1, 1))
   
+  
+   par(mfrow = c(1, 1))
+
   #// empty window
-  spatstat::plot.owin(spwin, 
-                  main = paste0("No insances of ", lipidClass, " were detected"), 
-                  ylim = rev(range(spwin$y)), 
+  spatstat::plot.owin(spwin,
+                  main = paste0("No insances of ", lipidClass, " were detected"),
+                  ylim = rev(range(spwin$y)),
                   box = FALSE)
-  
-  detectionsExist = FALSE
   
   
 } else {
-  detectionsExist = TRUE
-}
 
-#// create the spatial point pattern
-if(detectionsExist){
-  
-  hitsppp              = spatstat::ppp(x = searchList$lipidHits[[lipidClass]]$x,
+
+  sppCpm              = spatstat::ppp(x = searchList$lipidHits[[lipidClass]]$x,
                                      y = searchList$lipidHits[[lipidClass]]$y,
                                      window = spwin,
-                                     marks = searchList$lipidHits[[lipidClass]][ , -c(1, 2)])
+                                     marks = searchList$lipidHits[[lipidClass]][ , -c(1, 2)], 
+                                     checkdup = FALSE)
 
-}
+  sppCpm              = spatstat::as.ppp(sppCpm)
 
-
-if(detectionsExist) {
-  
-  tmpm                 = unique(searchList$lipidHits[[lipidClass]]$mass) # stores unique detected masses
-tmpc                 = unique(searchList$lipidHits[[lipidClass]][c("mass", "confirmed", "modeAdduct")])
-
-cat("\nConfirmed(metaspace) | Detected(in dataset) | Total(swisslipids) = ", 
-   length(which(tmpc$confirmed)),
-   " | ",
-   length(tmpm),
-   " | ",
-   nrow(searchList$swissList[[lipidClass]]) * 4, # because each entry has 4 different adducts
-   "\n")
-cat(" M+H  detected = ", length(which(tmpc$modeAdduct == "M+H") ),
-   " | ",
-   "M+H  confirmed = ", length(which(tmpc$modeAdduct == "M+H" & tmpc$confirmed)),
-   "\n",
-   "M-H  detected = ", length(which(tmpc$modeAdduct == "M-H") ),
-   " | ",
-   "M-H  confirmed = ", length(which(tmpc$modeAdduct == "M-H" & tmpc$confirmed)),
-   "\n",
-   "M+Na detected = ", length(which(tmpc$modeAdduct == "M+Na") ),
-   " | ",
-   "M+Na confirmed = ", length(which(tmpc$modeAdduct == "M+Na" & tmpc$confirmed == TRUE)),"\n",
-   "M+K  detected = ", length(which(tmpc$modeAdduct == "M+K") ),
-   " | ",
-   "M+K  confirmed = ", length(which(tmpc$modeAdduct == "M+K" & tmpc$confirmed)),
-   "\n",
-   "\n\n\n")
-}
-
-
-```
-
-
-plotting all detections
-
-```{r fig.width=12}
-
-if(detectionsExist) {
-
-
-
-  probImg              = probMap(hitsppp, win = spwin, bwMethod = bwMethod)
+  probImg              = probMap(sppCpm, bwMethod = "scott", sqrtTansform = TRUE) # fixed arguments
   
   
-  spatstat::plot.im(probImg$denspp,
-                    main =  paste0(lipidClass, " - all ", length(tmpm), " detections"),
-                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+
+  
+  par(mfrow = c(3, 2))
+
+# _________________________________________________ part one: CSR
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$csrMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$csrMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("CSR of ", lipidClass),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$csrMoi$marks$intensity))) # colors according to intensity
+
+# _________________________________________________ part two: SPP
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$sppMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$sppMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("SPP of ", lipidClass),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$sppMoi$marks$intensity))) # colors according to intensity
+
+
+
+# _________________________________________________ part three: rho of csr
+
+spatstat::plot.im(probImg$rhoCsr,
+                  main = expression(paste(rho["CSR"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoCs, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+# _________________________________________________ part four: rho of MOI
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = expression(paste(rho["MOIs"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+
+
+
+# _________________________________________________ part five : CPM
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = paste0("CPM of ", lipidClass),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
                   ylim = rev(range(spwin$y)),
                   box = FALSE)
-  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
+  
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+
+legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"), 
+       col = c("red", "blue"), bty = "n", horiz = TRUE)
+
 
 }
 
 
 ```
 
-plotting confirmed/verified detections
+## ion milieus
 
-```{r fig.width=12}
-if(detectionsExist) {
-  
-  subsetppp            = spatstat::subset.ppp(hitsppp, confirmed == TRUE)
+```{r fig.width=12, fig.height=10}
+hitsList            = setNames(vector("list", 4), c("all", "M+K", "M+Na", "M+H"))
 
-#// check if empty
-if(subsetppp$n == 0) {
+ionAdduct           = "" # input, dropdown
+
+
+
+hitsList[["all"]]   = do.call("rbind", searchList$lipidHits[c("PC(x:x)",  
+                                                        "PE(x:x)", 
+                                                        "PI(x:x)",
+                                                        "PS(x:x)", 
+                                                        "LPC(x:x)",  
+                                                        "LPE(x:x)", 
+                                                        "LPI(x:x)",
+                                                        "LPS(x:x)")])
+
+
+#hitsList[["all"]]   = hitsList[["all"]][hitsList[["all"]]$confirmed == TRUE, ]
+
+hitsList[["all"]]   = spatstat::ppp(x = hitsList[["all"]]$x,
+                                   y = hitsList[["all"]]$y,
+                                   window = spwin,
+                                   marks = hitsList[["all"]][ , -c(1, 2)], 
+                                   checkdup = FALSE)
+
+hitsList[["all"]]   = spatstat::as.ppp(hitsList[["all"]])
+
+hitsList[["M+K"]]     = spatstat::subset.ppp(hitsList[["all"]], modeAdduct == "M+K")
+hitsList[["M+Na"]]    = spatstat::subset.ppp(hitsList[["all"]], modeAdduct == "M+Na")
+hitsList[["M+H"]]     = spatstat::subset.ppp(hitsList[["all"]], modeAdduct == "M+H")
+
+lipidSpecies         = "alkali-(lyso)GPLs"
+
+
+```
+
+input for the specific adduct
+
+```{r fig.width=12, fig.height=10}
+      
+igroup              = "M+K" # <- input, dropdown
+
+
+if(hitsList[[igroup]]$n == 0) {
   
-  par(mfrow = c(1, 1))
-  spatstat::plot.owin(spwin, 
-                    main = paste0(lipidClass, " - ", "no confirmed detections"), 
-                    ylim = rev(range(spwin$y)), 
-                    box = FALSE)
+  
+  
+   par(mfrow = c(1, 1))
+
+  #// empty window
+  spatstat::plot.owin(spwin,
+                  main = paste0("No insances of ", igroup, " were detected"),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
   
   
 } else {
   
- 
-  
-  probImg              = probMap(subsetppp, win = spwin, bwMethod = bwMethod)
-  
-  
-  spatstat::plot.im(probImg$denspp,
-                    main = paste0(lipidClass, " - ", length(which(tmpc$confirmed)), " confirmed detections"),
-                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$denspp, na.rm = T)),
+probImg    = probMap(hitsList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+
+
+
+
+par(mfrow = c(3, 2))
+
+# _________________________________________________ part one: CSR
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$csrMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$csrMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("CSR of ", igroup),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$csrMoi$marks$intensity))) # colors according to intensity
+
+# _________________________________________________ part two: SPP
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$sppMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$sppMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("SPP of ", igroup),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$sppMoi$marks$intensity))) # colors according to intensity
+
+
+
+# _________________________________________________ part three: rho of csr
+
+spatstat::plot.im(probImg$rhoCsr,
+                  main = expression(paste(rho["CSR"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoCs, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+# _________________________________________________ part four: rho of MOI
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = expression(paste(rho["MOIs"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+
+
+
+# _________________________________________________ part five : CPM
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = paste0("CPM of ", igroup),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
                   ylim = rev(range(spwin$y)),
                   box = FALSE)
-  spatstat::plot.im(probImg$nonHotspotMask, col = rgb(0,0,0,0.3), add = TRUE)
+  
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+
+legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"), 
+       col = c("red", "blue"), bty = "n", horiz = TRUE)
 
 }
-}
+```
+
+
+
+## lipid saturation
+
+```{r fig.width=12, fig.height=10}
+hitsList            = setNames(vector("list", 5), c("all", "sat.", "mono.", "di.", "poly."))
+
+
+
+hitsList[["all"]]   = do.call("rbind", searchList$lipidHits[c("PC(x:x)",  
+                                                        "PE(x:x)", 
+                                                        "PI(x:x)",
+                                                        "PS(x:x)", 
+                                                        "LPC(x:x)",  
+                                                        "LPE(x:x)", 
+                                                        "LPI(x:x)",
+                                                        "LPS(x:x)")])
+
+
+hitsList[["all"]]   = spatstat::ppp(x = hitsList[["all"]]$x,
+                                   y = hitsList[["all"]]$y,
+                                   window = spwin,
+                                   marks = hitsList[["all"]][ , -c(1, 2)], 
+                                   checkdup = FALSE)
+
+hitsList[["all"]]   = spatstat::as.ppp(hitsList[["all"]])
+
+hitsList[["sat."]]  = spatstat::subset.ppp(hitsList[["all"]], numDoubleBonds == 0L)
+hitsList[["mono."]]  = spatstat::subset.ppp(hitsList[["all"]], numDoubleBonds == 1L)
+hitsList[["di."]]  = spatstat::subset.ppp(hitsList[["all"]], numDoubleBonds == 2L)
+hitsList[["poly."]]  = spatstat::subset.ppp(hitsList[["all"]], numDoubleBonds > 2L)
+
+lipidSpecies         = "satrtn-(lyso)GPLs"
 
 
 
 ```
+
+input for the specific adduct
+
+```{r fig.width=12, fig.height=10}
+      
+igroup              = "mono." # <- input, dropdown
+
+
+if(hitsList[[igroup]]$n == 0) {
+  
+  
+  
+   par(mfrow = c(1, 1))
+
+  #// empty window
+  spatstat::plot.owin(spwin,
+                  main = paste0("No insances of ", igroup, " were detected"),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
+  
+  
+} else {
+  
+probImg    = probMap(hitsList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+
+
+
+  par(mfrow = c(3, 2))
+
+# _________________________________________________ part one: CSR
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$csrMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$csrMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("CSR of ", igroup),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$csrMoi$marks$intensity))) # colors according to intensity
+
+# _________________________________________________ part two: SPP
+
+colfun        = spatstat::colourmap(col = spatstat::to.transparent((viridis::viridis_pal(option = "inferno")(100)), 0.7), 
+                                      range = range(probImg$sppMoi$marks$intensity))
+
+spatstat::plot.ppp(probImg$sppMoi, use.marks = TRUE, which.marks = "intensity", 
+                   ylim = rev(spwin$yrange), 
+                   #cols = viridis::viridis_pal(option = "inferno")(100), 
+                   #markscale = 0.000004,
+                   #zap = 0.0,
+                   #chars = 21,
+                   main = paste0("SPP of ", igroup),
+                   symap = spatstat::symbolmap(pch = 19, 
+                                   cols = colfun,
+                                   size = 0.4,
+                                   range = range(probImg$sppMoi$marks$intensity))) # colors according to intensity
+
+
+
+# _________________________________________________ part three: rho of csr
+
+spatstat::plot.im(probImg$rhoCsr,
+                  main = expression(paste(rho["CSR"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoCs, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+# _________________________________________________ part four: rho of MOI
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = expression(paste(rho["MOIs"], "(x,y)")),
+                col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
+                ylim = rev(range(spwin$y)),
+                box = FALSE)
+
+
+
+
+
+# _________________________________________________ part five : CPM
+
+spatstat::plot.im(probImg$rhoMoi,
+                  main = paste0("CPM of ", igroup),
+                  col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(probImg$rhoMoi, na.rm = T)),
+                  ylim = rev(range(spwin$y)),
+                  box = FALSE)
+  
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+spatstat::plot.owin(probImg$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+
+legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"), 
+       col = c("red", "blue"), bty = "n", horiz = TRUE)
+}
+
+```
+
+

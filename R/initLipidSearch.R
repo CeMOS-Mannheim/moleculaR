@@ -29,11 +29,14 @@ initLipidSearch     = function(swissdb) {
        #
 
 
+       allAbbrevsUnpunct   = gsub("\\(|\\)", " ", allAbbrevs)
+
        for(i in allGroups)
        {
 
-              #idx           = grep(pattern = paste0("^", i, "$"), x = allAbbrevs, ignore.case = FALSE)
-              idx           = grep(pattern = i, x = allAbbrevs, fixed = TRUE)
+              ix            = gsub("\\(|\\)", " ", i)
+              idx           = grep(pattern = paste0("^", ix, "$"), x = allAbbrevsUnpunct)
+              #idx           = grep(pattern = i, x = allAbbrevs, fixed = TRUE)
 
               swissList[[i]]= swissdb[idx, ]
 
