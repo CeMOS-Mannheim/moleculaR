@@ -14,8 +14,7 @@ readCentrData(path, verbose = FALSE, ...)
 \item{...:}{other arguments passed to \code{MALDIquantForeign::importImzMl}.}
 }
 \value{
-A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processed' type or
-a list of \code{MALDIquant::MassSpectrum} objects if the input file is of 'continuous' type.
+A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processed' type.
 }
 \description{
 A wrapper for \code{MALDIquantForeign::importImzMl} for reading centroided (i.e. processed)

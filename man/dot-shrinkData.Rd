@@ -4,14 +4,14 @@
 \alias{.shrinkData}
 \title{Shrink data}
 \usage{
-.shrinkData(x, mzKeep, fwhmFun)
+.shrinkData(x, mzKeep, fwhmObj)
 }
 \arguments{
 \item{x:}{Dataset, a list of \code{MALDIquant::MassPeaks} objects.}
 
 \item{mzKeep:}{numeric vector, m/z values to retain.}
 
-\item{fwhmFun:}{a function, fwhm as a function of m/s axis. See \code{?moleculaR::estimateFwhm}.}
+\item{fwhmObj:}{the 'fwhm' S3 object. See \code{?moleculaR::estimateFwhm}.}
 }
 \value{
 Filtered list of \code{MALDIquant::MassPeaks} objects.

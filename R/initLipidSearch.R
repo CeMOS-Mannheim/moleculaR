@@ -4,51 +4,45 @@
 #'
 #' @param swissdb: 	The swiss lipids db as dataframe.
 #' @return
-#' a list of two entreis; a list containing segmented lipid
-#' species into individual entries and an additional empty list
-#' with the same structure and naming to store the search results.
+#' an S3 object with three entreis; a list containing lipid entries
+#' organized into lipid classes, an additional empty 'hitslist'
+#' with the same structure and naming to store the search results and
+#' a character verctor summarizing all lipid classes in the first entry.
 #'
 #' @export
 #'
-initLipidSearch     = function(swissdb) {
+initLipidSearch     <- function(swissdb) {
 
 
 
-       allAbbrevs           = strsplit(x = swissdb$`Abbreviation*`, split = "\\(")
-       allAbbrevs           = sapply(allAbbrevs, FUN = function(i) paste0(c(i[1], "(", gsub("[[:digit:]]", "", i[[2]])), collapse = ""))
-       allAbbrevs           = strsplit(allAbbrevs, ":")
-       allAbbrevs           = sapply(allAbbrevs, FUN = function(i) paste0(i[1], "x:x" , i[2], collapse = ""))
+       allAbbrevs           <- strsplit(x = swissdb$`Abbreviation*`, split = "\\(")
+       allAbbrevs           <- sapply(allAbbrevs, FUN = function(i) paste0(c(i[1], "(", gsub("[[:digit:]]", "", i[[2]])), collapse = ""))
+       allAbbrevs           <- strsplit(allAbbrevs, ":")
+       allAbbrevs           <- sapply(allAbbrevs, FUN = function(i) paste0(i[1], "x:x" , i[2], collapse = ""))
 
 
-       allGroups            = unique(allAbbrevs)
-       swissList            = setNames(object = vector("list", length = length(allGroups)), nm = allGroups)
-       lipidHits            = setNames(object = vector("list", length = length(allGroups)), nm = allGroups)
-
-       # #// focus on the alphanumeric part of the abbreviation
-       # allAbbrevs           = gsub(pattern = "[^[:alpha:]]", replacement = "", x = swissdb$`Abbreviation*`)
-       #
+       allGroups            <- unique(allAbbrevs)
+       swissList            <- setNames(object = vector("list", length = length(allGroups)), nm = allGroups)
+       lipidHits            <- setNames(object = vector("list", length = length(allGroups)), nm = allGroups)
 
 
-       allAbbrevsUnpunct   = gsub("\\(|\\)", " ", allAbbrevs)
+
+       allAbbrevsUnpunct   <- gsub("\\(|\\)", " ", allAbbrevs)
 
        for(i in allGroups)
        {
 
-              ix            = gsub("\\(|\\)", " ", i)
-              idx           = grep(pattern = paste0("^", ix, "$"), x = allAbbrevsUnpunct)
-              #idx           = grep(pattern = i, x = allAbbrevs, fixed = TRUE)
+              ix            <- gsub("\\(|\\)", " ", i)
+              idx           <- grep(pattern = paste0("^", ix, "$"), x = allAbbrevsUnpunct)
 
-              swissList[[i]]= swissdb[idx, ]
+              swissList[[i]]<- swissdb[idx, ]
 
        }
 
-       # O- -> ethers || nothing of a- -> acyl groups or esters
 
 
-
-       return(list(swissList = swissList,
-                   lipidHits = lipidHits,
-                   allClasses = allGroups))
-
+       return(lipidSearchList(lipidList = swissList,
+                              hitsList = lipidHits,
+                              allClasses = allGroups))
 }
 

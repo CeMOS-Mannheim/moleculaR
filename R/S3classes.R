@@ -10,21 +10,21 @@
 # to document this -> https://r-pkgs.org/man.html#man-functions
 
 
-#' fwhmData Class Constructor
+#' fwhm Class Constructor
 #'
-#' This constructs a 'fwhmData' object which stores information about the calculated full width half maximum.
+#' This constructs a 'fwhm' object which stores information about the calculated full width half maximum.
 #'
 #' @param fwhmInterpolator A function that is used to find fwhm value for any given m/z.
 #' @param  peaks  The m/z values of the peaks of a single spectrum.
 #' @param  fwhmVals   The corresponding fwhm values in Da.
 #'
 #' @return
-#' An S3 object 'fwhmData'.
+#' An S3 object 'fwhm'.
 #'
 #' @export
 #'
 
-fwhmData <- function(fwhmInterpolator, peaks = NA_real_, fwhmVals = NA_real_) {
+fwhm <- function(fwhmInterpolator, peaks = NA_real_, fwhmVals = NA_real_) {
 
       # definition
       obj <- list(fwhmInterpolator = fwhmInterpolator, peaks = peaks, fwhmVals = fwhmVals)
@@ -39,24 +39,24 @@ fwhmData <- function(fwhmInterpolator, peaks = NA_real_, fwhmVals = NA_real_) {
       }
 
 
-      class(obj) <- "fwhmData"
+      class(obj) <- "fwhm"
 
       return(obj)
 
 }
 
-print.fwhmData <- function(obj) {
+print.fwhm <- function(obj) {
 
-      cat("S3 object 'fwhmData' holding fwhm data of a certain mass spectrum. \n ")
+      cat("S3 object 'fwhm' holding fwhm data of a certain mass spectrum. \n ")
       cat("fwhm data is based on ", length(obj$peaks), "fwhm values,.\n")
 
 }
 
-fwhm <- function(obj, mzVals) {
-      UseMethod("fwhm")
+getFwhm <- function(obj, mzVals) {
+      UseMethod("getFwhm")
 }
 
-fwhm.fwhmData <- function(obj, mzVals){
+getFwhm.fwhm <- function(obj, mzVals){
       obj$fwhmInterpolator(mzVals)
 }
 
@@ -132,6 +132,7 @@ print.sparseIntensityMatrix <- function(obj) {
 #' analytes) with marks being a data.frame of one column c("intensity").
 #'
 #' @param spp a spatial point pattern of type 'spatstat::ppp'.
+#' @param x,y,intensity,win optional, either these arguments or 'spp' have to be supplied.
 #' @param mzVals a numeric vector holding the m/z values that represent the analyte under study.
 #'
 #' @return
@@ -141,28 +142,42 @@ print.sparseIntensityMatrix <- function(obj) {
 #'
 #'
 
-analytePointPattern <- function(spp, mzVals) {
-
+analytePointPattern <- function(spp = NA, x = NA, y = NA, intensity = NA, win = NA, mzVals) {
 
 
       # integrity checks
-      if(class(spp) != "ppp"){
-         stop("slot 'spp' must be of type 'spatstat::ppp' \n")
+      if(all(is.na(spp), any(is.na(x, y, intensity, win)))){
+         stop("either 'spp' or 'x,y,intensity,win' must be supplied. \n")
       }
 
       if(length(mzVals) < 1){
             stop("'mzVals' slot length must be more than one.\n")
       }
 
+      if(class(spp) != "ppp"){
+         stop("slot 'spp' must be of type 'spatstat::ppp' \n")
+      }
+
       if(class(spp$marks) != "data.frame"){
-            stop("marks of 'spp' must contain a data.frame of single column named 'intensity'. \n")
+         stop("marks of 'spp' must contain a data.frame of single column named 'intensity'. \n")
       }
 
       if(identical(colnames(spp$marks), "intensity")){
-            stop("marks of 'spp' must contain a data.frame of single column named 'intensity'. \n")
+         stop("marks of 'spp' must contain a data.frame of single column named 'intensity'. \n")
       }
 
+
       # definition
+      if(is.na(spp)){
+
+
+         spp <- spatstat::ppp(x = x, y = y,
+                              marks = data.frame(intensity = intensity),
+                              window = win, checkdup = FALSE, drop = FALSE)
+
+
+      }
+
       spp$mzVals <- mzVals
       class(spp) <- c(class(spp), "analytePointPattern")
 
@@ -204,11 +219,11 @@ molProbMap <- function(bw, sppMoi, csrMoi, rhoMoi, rhoCsr, hotspotpp, hotspotIm,
                   coldspotpp = coldspotpp, coldspotIm = coldspotIm, coldspotMask = coldspotMask)
 
       # integrity checks
-      if(class(obj$sppMoi) != "analytePointPattern"){
-            stop("slot 'sppMoi' must be of type 'analytePointPattern' \n")
+      if(!("analytePointPattern" %in% class(obj$sppMoi))){
+            stop("slot 'sppMoi' must be of type 'ppp' and 'analytePointPattern' \n")
       }
 
-      if(class(obj$csrMoi) != "analytePointPattern"){
+      if(!("analytePointPattern" %in% class(obj$csrMoi))){
          stop("slot 'csrMoi' must be of type 'analytePointPattern' \n")
       }
 
@@ -220,7 +235,7 @@ molProbMap <- function(bw, sppMoi, csrMoi, rhoMoi, rhoCsr, hotspotpp, hotspotIm,
          stop("slot 'rhoCsr' must be of type 'im' from 'spaststat' \n")
       }
 
-      if(class(obj$hotspotpp) != "analytePointPattern"){
+      if(!("analytePointPattern" %in% class(obj$hotspotpp))){
          stop("slot 'hotspotpp' must be of type 'analytePointPattern' \n")
       }
 
@@ -232,7 +247,7 @@ molProbMap <- function(bw, sppMoi, csrMoi, rhoMoi, rhoCsr, hotspotpp, hotspotIm,
          stop("slot 'hotspotMask' must be of type 'owin' from 'spaststat' \n")
       }
 
-      if(class(obj$coldspotpp) != "analytePointPattern"){
+      if(!("analytePointPattern" %in% class(obj$coldspotpp))){
          stop("slot 'coldspotpp' must be of type 'analytePointPattern' \n")
       }
 
@@ -255,5 +270,33 @@ print.molProbMap <- function(obj) {
       cat("S3 object 'molProbMap' holding molecular probability maps of a given analyte in an MSI dataset. \n ")
       cat("spp: spatial point pattern of type 'spatstat::ppp' with ", obj$spp$n, " points/events.\n")
       cat("mzVals: m/z values that represent the analyte under study = ", round(object$mzVals, 4), " .\n")
+
+}
+
+
+#' lipidSearchList Class Constructor
+#'
+#' A class to re-arrange lipid listings in the SwissLipid database to facilitate computational
+#' serach. It splits the full database into lipid class-oriented lists.
+#'
+#' @param lipidList a data.frame which lists entries of lipids.
+#' @param hitsList a data.frame holding the lipids that were detected.
+#' @param allClasses a character vector summarizing all classes taking part in the lipid search.
+#'
+#' @return
+#' An S3 object of type 'lipidSearchList' .
+#'
+#' @export
+#'
+#'
+
+lipidSearchList <- function(lipidList, hitsList, allClasses) {
+
+
+   # definition
+   l <- list(lipidList = lipidList, hitsList = hitsList, allClasses = allClasses)
+   class(l) <- "lipidSearchList"
+
+   return(l)
 
 }

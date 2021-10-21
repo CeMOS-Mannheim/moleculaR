@@ -6,7 +6,6 @@
 \usage{
 probMap(
   sppMoi,
-  weighted = TRUE,
   control = NULL,
   bw = seq(1, 10, 1),
   bwMethod = "spAutoCor",
@@ -20,40 +19,38 @@ probMap(
 )
 }
 \arguments{
-\item{sppMoi:}{The spatial point pattern.}
+\item{sppMoi}{The spatial point pattern.}
 
-\item{weighted:}{Whether the intensities are inlcude into the computation.}
+\item{control}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
+csrMoi model will be generated from the intensities of this object.}
 
-\item{bw:}{The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
+\item{bw}{The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
 then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
 will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
 see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
 
-\item{bwMethod:}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
+\item{bwMethod}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
 
-\item{bwPlot:}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
+\item{csrIntensities}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
 
-\item{csrIntensities:}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
-
-\item{sqrtTansform:}{whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
+\item{sqrtTansform}{whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
 'sppMoi' cotains a set of different analytes as in the case of collective projection maps.}
 
-\item{control:}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
-csrMoi model will be generated from the intensities of this object.}
-
-\item{csrMoi:}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
+\item{csrMoi}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 could be useful when generating hotspot-bw curves.}
 
-\item{pvalThreshold:}{The p-value threshold to be used for the hypothesis testing.}
+\item{pvalThreshold}{The p-value threshold to be used for the hypothesis testing.}
 
-\item{pvalCorrection:}{The method used for p-values correction, see '?p.adjust' for more details.}
+\item{pvalCorrection}{The method used for p-values correction, see '?p.adjust' for more details.}
 
-\item{verbose:}{whether to output progress.}
+\item{bwPlot}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
+
+\item{verbose}{whether to output progress.}
 }
 \value{
-#' A list of \cr
+#' An S3 object of type molProbMap with the following entries \cr
 \itemize{
-  \item GausBW: calculated Gaussian bandwidth.
+  \item bw: calculated Gaussian bandwidth.
   \item sppMoi: the input spp with intensities sqrt-transformed if 'sqrtTransform == TRUE'.
   \item csrMoi: calculated complete spatial randomness model for the input sppMoi.
   \item rhoMoi: density image of the input point pattern sppMoi.

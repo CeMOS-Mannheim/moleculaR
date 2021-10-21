@@ -8,8 +8,7 @@
 #' @param ...: other arguments passed to \code{MALDIquantForeign::importImzMl}.
 #'
 #' @return
-#' A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processed' type or
-#' a list of \code{MALDIquant::MassSpectrum} objects if the input file is of 'continuous' type.
+#' A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processed' type.
 #'
 #' @export
 #'
@@ -23,9 +22,7 @@ readCentrData     = function(path, verbose = FALSE, ...){
 
       if(any(grepl(pattern = "continuous", x = txt[3:length(txt)]))){
 
-         cat("Input dataset is of type 'continuous'. This could lead to high memory consumption. \n")
-
-         MALDIquantForeign::importImzMl(path = path, centroided = FALSE, verbose = verbose, ...)
+         stop("Input dataset is of type 'continuous'. Only 'processed' type is supported so far. \n")
 
       } else {
 

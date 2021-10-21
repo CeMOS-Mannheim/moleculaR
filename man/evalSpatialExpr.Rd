@@ -7,7 +7,7 @@
 evalSpatialExpr(exprn, dataList, ppwin, sqrtTransform = FALSE)
 }
 \arguments{
-\item{expr:}{An unquoted (unwrapped) expression of 'ppp' objects listed in 'dataList'.}
+\item{expr:}{A character vector representing tha arithmetic expression of 'ppp' objects listed in 'dataList'.}
 
 \item{dataList:}{A named list containing the 'ppp' objects involved in 'expr'.}
 
@@ -16,7 +16,7 @@ evalSpatialExpr(exprn, dataList, ppwin, sqrtTransform = FALSE)
 \item{sqrtTransform:}{Optional square root transofmation of the 'ppp' objects in 'dataList'.}
 }
 \value{
-A list containing 'spatstat::im' and the corresponding 'spatstat::ppp' objects resulting of
+An object of type 'spatstat::ppp' and 'moleculaR::analytePointPattern' holding the result of
 the applied expression 'expr'.
 }
 \description{

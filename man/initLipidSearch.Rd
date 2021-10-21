@@ -10,9 +10,10 @@ initLipidSearch(swissdb)
 \item{swissdb:}{The swiss lipids db as dataframe.}
 }
 \value{
-a list of two entreis; a list containing segmented lipid
-species into individual entries and an additional empty list
-with the same structure and naming to store the search results.
+an S3 object with three entreis; a list containing lipid entries
+organized into lipid classes, an additional empty 'hitslist'
+with the same structure and naming to store the search results and
+a character verctor summarizing all lipid classes in the first entry.
 }
 \description{
 This function initializes some lists for lipid search.

@@ -15,72 +15,72 @@
 #' @export
 #' @keywords internal
 #'
-recreateExData     = function(pathToImzml, pathToSingleSpctr = NULL,
+recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
                               pathToSldb = NULL, pathToMtspc = NULL,
                               shrink = TRUE, saveTo = getwd()) {
 
 
 
       #// read the file into R
-      msData      = readCentrData(path = pathToImzml)
+      msData      <- readCentrData(path = pathToImzml)
 
 
       #// single spectrum -  load a local tsv file
       if(is.null(pathToSingleSpctr)){
-            pathToSingleSpctr = system.file("extdata",
+            pathToSingleSpctr <- system.file("extdata",
                                             "pos-XIII-82492-singleSpectrum.tsv",
                                             package = "moleculaR",
                                             mustWork = TRUE)
 
       }
-      msSpectr    = readSingleSpect(pathToSingleSpctr)
+      msSpectr    <- readSingleSpect(pathToSingleSpctr)
 
 
       #// load the processed swisslipids db internally
       if(is.null(pathToSldb)){
-            pathToSldb = system.file("extdata", "swisslipids-speciesOnly-sep2020.tsv",
+            pathToSldb <- system.file("extdata", "swisslipids-speciesOnly-sep2020.tsv",
                                      package = "moleculaR", mustWork = TRUE)
 
       }
-      sldb        = loadSwissDB(pathToSldb)
+      sldb        <- loadSwissDB(pathToSldb)
 
 
       #// load the metaspace annotations file
       if(is.null(pathToMtspc)) {
-            pathToMtspc = system.file("extdata", "metaspace_annotations.csv",
+            pathToMtspc <- system.file("extdata", "metaspace_annotations.csv",
                                       package = "moleculaR", mustWork = TRUE)
       }
-      mtspc       = read.csv(file = pathToMtspc, skip = 2,header = TRUE, colClasses = "character")
+      mtspc       <- read.csv(file = pathToMtspc, skip = 2,header = TRUE, colClasses = "character")
 
 
       #// pre-processing
 
       #// estimate fwhm from msSpectr ----
-      fwhm        = estimateFwhm(s = msSpectr, plot = FALSE)
+      fwhmObj        <- estimateFwhm(s = msSpectr, plot = FALSE)
 
 
       # bin peaks
-      msData      =  MALDIquant::binPeaks(msData,
-                                          tolerance = fwhmFun(400)/400, #focusing on lipids
+      msData      <-  MALDIquant::binPeaks(msData,
+                                          tolerance = fwhm(fwhmObj, 400)/400, #focusing on lipids
                                           method = "relaxed")
 
 
       # filter out peaks which occur in less than 1% of the time - the
       # built-in function of MALDIquant crashes for bigger datasets
-      msData      = filterPeaks(x = msData, minFreq = 0.01)
+      msData      <- filterPeaks(x = msData, minFreq = 0.01)
 
 
       # normalization
-      #msData     = foldChangeNorm(msData) <-- this is optional
+      #msData     <- foldChangeNorm(msData) <-- this is optional
 
 
       #// create spatial window
-      spwin       = spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
-      spwin$bdry  = spwin$bdry[-2] # fix the small glitch
+      spwin       <- spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+      spwin$bdry  <- spwin$bdry[-2] # fix the small glitch
 
       #// shrink msData
       if(shrink){
-            msData= .shrinkData(x = msData, mzKeep = as.numeric(mtspc$mz), fwhmFun = fwhm$fwhmFun)
+            msData<- .shrinkData(x = msData, mzKeep = as.numeric(mtspc$mz), fwhmObj = fwhmObj)
 
       }
 
@@ -107,30 +107,30 @@ recreateExData     = function(pathToImzml, pathToSingleSpctr = NULL,
 #'
 #' @param x: 	   Dataset, a list of \code{MALDIquant::MassPeaks} objects.
 #' @param mzKeep: numeric vector, m/z values to retain.
-#' @param fwhmFun: a function, fwhm as a function of m/s axis. See \code{?moleculaR::estimateFwhm}.
+#' @param fwhmObj: the 'fwhm' S3 object. See \code{?moleculaR::estimateFwhm}.
 #' @return
 #' Filtered list of \code{MALDIquant::MassPeaks} objects.
 #'
 #' @export
 #' @keywords internal
 #'
-.shrinkData     = function(x, mzKeep, fwhmFun) {
+.shrinkData     <- function(x, mzKeep, fwhmObj) {
 
    if(!MALDIquant::isMassPeaksList(x)) {
       stop("Error in CreateSparseMat; x must be a list of MassPeaks objects.\n")
    }
 
-   mzKeep      = sort(mzKeep)
-   x           = lapply(x, FUN = function(i) {
+   mzKeep      <- sort(mzKeep)
+   x           <- lapply(x, FUN = function(i) {
 
-      xm       = MALDIquant::mass(i)
-      xkpIdx   = MALDIquant::match.closest(x = mzKeep,
+      xm       <- MALDIquant::mass(i)
+      xkpIdx   <- MALDIquant::match.closest(x = mzKeep,
                                            table = xm,
-                                           tolerance = fwhmFun(mzKeep))
-      xkpIdx   = xkpIdx[!is.na(xkpIdx)]
+                                           tolerance = getFwhm(mzKeep))
+      xkpIdx   <- xkpIdx[!is.na(xkpIdx)]
 
-      mt       = list()
-      mt$imaging$pos = MALDIquant::metaData(i)$imaging$pos # keep only pixel coordinates
+      mt       <- list()
+      mt$imaging$pos <- MALDIquant::metaData(i)$imaging$pos # keep only pixel coordinates
 
 
       MALDIquant::createMassPeaks(mass = xm[xkpIdx],

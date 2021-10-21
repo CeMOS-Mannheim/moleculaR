@@ -13,7 +13,7 @@ estimateFwhm(
 )
 }
 \arguments{
-\item{s:}{a single spectrum or a list of single spectra of \code{MALDIquant::MassSpectrum} type. In the latter
+\item{s:}{a single spectrum or a list of single spectra of 'MALDIquant::MassSpectrum' type. In the latter
 case, a single spectrum is randomly chosen to base the computations on.}
 
 \item{sampling:}{an integer specifying how many detected peaks to consider for fwhm estimation, the lower the faster.}
@@ -21,14 +21,12 @@ case, a single spectrum is randomly chosen to base the computations on.}
 \item{plot:}{whether to plot the result}
 
 \item{savePlot:}{either \code{NULL} or file path to save a plot as svg.}
-
-\item{returnValues:}{if set to \code{TRUE}, returns additionally the calculated fwhm values.}
 }
 \value{
-Returns a linear interplotor function fwhm(m/z). If \code{returnValues = TRUE} a list is returned
-storing the fwhm(m/z) interpolating function in addition to the calculated fwhm values.
+Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
+m/z values of the peaks and their corresponding fwhm values.
 }
 \description{
 This creates a linear interpolator function that approximats fwhm as a function
-of m/z for the given single s.
+of m/z for the given single spectrum or a list of mass spectra.
 }

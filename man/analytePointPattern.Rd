@@ -4,10 +4,12 @@
 \alias{analytePointPattern}
 \title{analytePointPattern Class Constructor}
 \usage{
-analytePointPattern(spp, mzVals)
+analytePointPattern(spp = NA, x = NA, y = NA, intensity = NA, win = NA, mzVals)
 }
 \arguments{
 \item{spp}{a spatial point pattern of type 'spatstat::ppp'.}
+
+\item{x, y, intensity, win}{optional, either these arguments or 'spp' have to be supplied.}
 
 \item{mzVals}{a numeric vector holding the m/z values that represent the analyte under study.}
 }

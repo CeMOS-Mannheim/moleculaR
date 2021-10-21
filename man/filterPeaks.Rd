@@ -15,5 +15,7 @@ filterPeaks(x, minFreq = 0.01)
 Filtered list of `MassPeaks` objects.
 }
 \description{
-This function filters out peaks which occur in less than \code{minFreq} percent of all pixels.
+This function filters out peaks which occur in less than 'minFreq' percent of all pixels.
+This is similar to 'MALDIquant::filterPeaks' but is more memory friendly as it relies on
+sparse data representation.
 }

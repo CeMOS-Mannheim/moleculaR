@@ -9,14 +9,14 @@
 #' Returns the path to the downloaded example data file.
 #'
 #' @export
+#' @keywords internal
 #'
-#'
-downloadExData    = function(path = tempdir()) {
+downloadExData    <- function(path = tempdir()) {
 
       #// imzml + ibd
-      imzmlUrl    = scan(system.file("extdata", "dataUrl-imzml.txt", package = "moleculaR", mustWork = TRUE),
+      imzmlUrl    <- scan(system.file("extdata", "dataUrl-imzml.txt", package = "moleculaR", mustWork = TRUE),
                          what = "character", sep = " ")
-      ibdUrl      = scan(system.file("extdata", "dataUrl-ibd.txt", package = "moleculaR", mustWork = TRUE),
+      ibdUrl      <- scan(system.file("extdata", "dataUrl-ibd.txt", package = "moleculaR", mustWork = TRUE),
                          what = "character", sep = " ")
 
       #// download

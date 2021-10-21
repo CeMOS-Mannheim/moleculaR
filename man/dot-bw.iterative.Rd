@@ -6,7 +6,6 @@
 \usage{
 .bw.iterative(
   sppMoi,
-  weighted = TRUE,
   bw = seq(1, 10, 1),
   csrMoi = NULL,
   pvalThreshold = 0.05,
@@ -18,8 +17,6 @@
 }
 \arguments{
 \item{sppMoi:}{The spatial point pattern.}
-
-\item{weighted:}{Whether the intensities are inlcude into the computation. Switch off for Collective Projections.}
 
 \item{bw:}{A vector, The gaussian band width pool used for Kernel density estimation.}
 

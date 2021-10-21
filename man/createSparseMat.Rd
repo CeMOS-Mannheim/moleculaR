@@ -2,7 +2,7 @@
 % Please edit documentation in R/createSparseMat.R
 \name{createSparseMat}
 \alias{createSparseMat}
-\title{Creates a sparse matrix from a list of \code{MassPeaks} objects}
+\title{Creates a sparse matrix from a list of 'MassPeaks' objects}
 \usage{
 createSparseMat(x)
 }
@@ -10,9 +10,12 @@ createSparseMat(x)
 \item{x:}{a list of \code{MassPeaks objects}.}
 }
 \value{
-A sparse matrix, see \code{?Matrix::sparseMatrix} for more info.
+An S3 class 'sparseIntensityMatrix' with three slots; 'spmat' - sparse matrix
+of type 'Matrix::dgCMatrix' holding the spectral intensities (see \code{?Matrix::sparseMatrix}),
+'mzAxis' - a numeric holding all m/z bins (in Da) and, finally, 'coordinates' - a two-column matrix
+holding the coordinates of the spectra which are stored in rows of 'spmat'.
 }
 \description{
-The sparse matrix is created via \code{Matrix::sparseMatrix}.
+The sparse matrix is created via 'Matrix::sparseMatrix'. This type
+of representation speeds-up computation compared to 'MALDIquant::MassPeaks'.
 }
-\keyword{internal}

@@ -15,22 +15,23 @@ gaussWeight(
 )
 }
 \arguments{
-\item{x:}{mass shift; the distance (in Da) from the theoretical mass that is being searched to the measured masses in a spectrum.}
+\item{x}{mass shift; the distance (in Da) from the theoretical mass that is being searched to the measured masses in a spectrum.}
 
-\item{m:}{a numeric, the theoretical mass.}
+\item{m}{a numeric, the theoretical mass.}
 
-\item{fwhm:}{a numeric, the estimated fwhm as a function of m/z, see `?estimateFwhm`.}
+\item{fwhm}{a numeric, the estimated fwhm as a function of m/z, see `?estimateFwhm`.}
 
-\item{plot:}{whether to plot.}
+\item{plot}{whether to plot.}
 
-\item{savePlot:}{whether to save a plot as svg.}
+\item{savePlot}{whether to save a plot as svg.}
 
-\item{path:}{path to the saved plot `paste0(lipidSearch-m.svg)`}
+\item{path}{path to the saved plot.}
 }
 \value{
 Returns a numeric vector of the same length as x, representing the corresponding weights.
 }
 \description{
-This function is used to estimate the appropriate Gaussian weighting to scale the intensities to be used with the lipid search method. 
-The Gausiian is constructed from knowing the fwhm.
+This function is used to estimate the appropriate Gaussian weighting to scale the
+intensities to be used with the lipid search method. The Gausian is constructed
+based on fwhm(m).
 }

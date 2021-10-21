@@ -17,7 +17,7 @@ Intensity-normalized list of \code{MassPeaks} objects.
 \description{
 This normalizes spectral intensities such that for every spectrum a median
 fold-change of peak intensities is calculated with reference to the mean spectrum
-and normalizes based on that.
+which is then taken as a normalization factor for that particular spectrum.
 }
 \references{
 Veselkov, Kirill, et al. "BASIS: High-performance bioinformatics platform for processing of large-scale mass

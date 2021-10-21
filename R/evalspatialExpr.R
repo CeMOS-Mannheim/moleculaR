@@ -3,13 +3,13 @@
 #' This evaluates an arbitrary expression involving spatial point pattern objects 'spatstat::ppp' which encode
 #' analyte distributions of MSI data.
 #'
-#' @param expr: 	   An unquoted (unwrapped) expression of 'ppp' objects listed in 'dataList'.
+#' @param expr: 	   A character vector representing tha arithmetic expression of 'ppp' objects listed in 'dataList'.
 #' @param dataList:  A named list containing the 'ppp' objects involved in 'expr'.
 #' @param ppwin:     The window 'spatstat::owin' object which all elements of 'dataList' share.
 #' @param sqrtTransform: Optional square root transofmation of the 'ppp' objects in 'dataList'.
 #'
 #' @return
-#' A list containing 'spatstat::im' and the corresponding 'spatstat::ppp' objects resulting of
+#' An object of type 'spatstat::ppp' and 'moleculaR::analytePointPattern' holding the result of
 #' the applied expression 'expr'.
 #'
 #' @export
@@ -56,18 +56,14 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
             imdf <- imdf[which(!is.infinite(imdf$value)), ]
       }
 
-      exprppp <- spatstat::ppp(x = imdf$x, y = imdf$y,
-                               marks = data.frame(intensity = imdf$value),
-                               window = ppwin, checkdup = FALSE, drop = FALSE)
 
-      exprim <- spatstat::pixellate(exprppp,
-                                    weights = exprppp$marks$intensity,
-                                    W = spatstat::as.mask(ppwin,
-                                                          dimyx=c(diff(ppwin$yrange) + 0,
-                                                                  diff(ppwin$xrange) + 0)),
-                                    padzero = FALSE, savemap = FALSE)
+      exprppp <- analytePointPattern(x = imdf$x, y = imdf$y,
+                                     intensity = imdf$value,
+                                     win = ppwin)
 
-      return(list(exprim = exprim, exprppp = exprppp))
+
+
+      return(exprppp)
 
 
 

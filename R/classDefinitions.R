@@ -1,6 +1,6 @@
-# ##__ S4 class definitions for future versions __##
+# ##__ S4 class definitions for future versions, see S3classes.R instead __##
 #
-# ## issue: spatstat does not export ppp, owin and im classes.
+# ## issue: spatstat does not export ppp, owin and im classes (these are S3 classes).
 # ## solutions: check the most recent versions.
 #
 #
