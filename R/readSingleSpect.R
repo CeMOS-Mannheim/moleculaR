@@ -3,7 +3,7 @@
 #' This reads a single spectrum from a tsv file containing two columnd for m/z and intensity,
 #' respectively.
 #'
-#' @param path: 	character string, path to the imzML file which should be read in.
+#' @param path: 	character string, path to the tsv file which should be read in.
 #'
 #' @return
 #' A \code{MALDIquant::MassSpectrum} object.

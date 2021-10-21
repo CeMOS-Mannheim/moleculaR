@@ -13,9 +13,10 @@ estimateFwhm(
 )
 }
 \arguments{
-\item{s:}{a spectrum of \code{MALDIquant::Masss} type.}
+\item{s:}{a single spectrum or a list of single spectra of \code{MALDIquant::MassSpectrum} type. In the latter
+case, a single spectrum is randomly chosen to base the computations on.}
 
-\item{sampling:}{an integer specifying how many detected p to consider for fwhm estimation.}
+\item{sampling:}{an integer specifying how many detected peaks to consider for fwhm estimation, the lower the faster.}
 
 \item{plot:}{whether to plot the result}
 

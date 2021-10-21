@@ -22,13 +22,25 @@ createSparseMat             = function(x) {
         r                    = rep.int(seq_along(x), n)
         i                    = findInterval(.mass, .uniqueMass)
 
+        # spmat                = Matrix::sparseMatrix(i = r, j = i, x = .intensity,
+        #                                             dimnames = list(NULL, .uniqueMass),
+        #                                             dims = c(length(x), length(.uniqueMass)))
+        #
         spmat                = Matrix::sparseMatrix(i = r, j = i, x = .intensity,
-                                                    dimnames = list(NULL, .uniqueMass),
+                                                    dimnames = list(NULL, NULL),
                                                     dims = c(length(x), length(.uniqueMass)))
 
-        attr(spmat, "coordinates") = MALDIquant::coordinates(x) # could used later to rectreate a list of MassPeaks objects
 
-       return(spmat)
+
+       return(new("sparseIntensityMatrix",
+                  i = spmat@i,
+                  p = spmat@p,
+                  Dim = spmat@Dim,
+                  Dimnames = spmat@Dimnames,
+                  x = spmat@x,
+                  factors = spmat@factors,
+                  mzAxis = .uniqueMass,
+                  coordinates = MALDIquant::coordinates(x)))
 
 }
 

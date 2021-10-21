@@ -2,19 +2,22 @@
 % Please edit documentation in R/readCentrData.R
 \name{readCentrData}
 \alias{readCentrData}
-\title{Read Centroided imzML}
+\title{Read imzML data}
 \usage{
-readCentrData(path, verbose = FALSE)
+readCentrData(path, verbose = FALSE, ...)
 }
 \arguments{
 \item{path:}{character string, path to the imzML file which should be read in.}
 
 \item{verbose:}{logical, verbose output?}
+
+\item{...:}{other arguments passed to \code{MALDIquantForeign::importImzMl}.}
 }
 \value{
-A list of \code{MALDIquant::MassPeaks} objects.
+A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processed' type or
+a list of \code{MALDIquant::MassSpectrum} objects if the input file is of 'continuous' type.
 }
 \description{
 A wrapper for \code{MALDIquantForeign::importImzMl} for reading centroided (i.e. processed)
-imzML data.
+and continuous imzML data.
 }

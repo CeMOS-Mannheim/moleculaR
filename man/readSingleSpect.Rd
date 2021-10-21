@@ -7,7 +7,7 @@
 readSingleSpect(path)
 }
 \arguments{
-\item{path:}{character string, path to the imzML file which should be read in.}
+\item{path:}{character string, path to the tsv file which should be read in.}
 }
 \value{
 A \code{MALDIquant::MassSpectrum} object.

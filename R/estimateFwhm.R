@@ -3,8 +3,9 @@
 #' This creates a linear interpolator function that approximats fwhm as a function
 #' of m/z for the given single s.
 #'
-#' @param s: 	      a spectrum of \code{MALDIquant::MassSpectrum} type.
-#' @param sampling:  an integer specifying how many detected p to consider for fwhm estimation.
+#' @param s: 	      a single spectrum or a list of single spectra of \code{MALDIquant::MassSpectrum} type. In the latter
+#' case, a single spectrum is randomly chosen to base the computations on.
+#' @param sampling:  an integer specifying how many detected peaks to consider for fwhm estimation, the lower the faster.
 #' @param plot:      whether to plot the result
 #' @param savePlot:  either \code{NULL} or file path to save a plot as svg.
 #' @param returnValues: if set to \code{TRUE}, returns additionally the calculated fwhm values.
@@ -17,6 +18,17 @@
 #'
 estimateFwhm      = function(s, sampling = 1000L, plot = FALSE, savePlot = NULL, returnValues = FALSE) {
 
+
+      if(is.list(s)){
+
+         if(!MALDIquant::isMassSpectrumList(s)) {
+            stop("Input is not a list of MassSpectrum objects. See ?MALDIquant::MassSpectrum.\n")
+         }
+
+         idx      = sample(x = seq_along(s), size = 1)
+         s        = s[[idx]]
+
+      }
       #// detect peaks
       p           = MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = 3)
 
