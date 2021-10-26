@@ -77,19 +77,14 @@ plot.fwhm <- function(obj, ...) {
 #' @param obj S3 object of type `fwhm`.
 #' @param mzVals m/z value (Da) at which to estimate the fwhm.
 #'
-#'
-#' @rdname getFwhm
-#' @export getFwhm
-getFwhm <- function(obj, mzVals) {
-      UseMethod("getFwhm")
-}
-
 #' @return returns a numeric, estimated fwhm at the given m/z.
 #'
-#' @rdname getFwhm
-#' @method getFwhm fwhm
-getFwhm.fwhm <- function(obj, mzVals){
-      obj$fwhmInterpolator(mzVals)
+#' @export
+getFwhm <- function(obj, mzVals) {
+   if(class(obj) != "fwhm")
+      stop("obj must be an S3 object of type 'fwhm'\n")
+
+   obj$fwhmInterpolator(mzVals)
 }
 
 
@@ -242,8 +237,8 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       spp <- spatstat::as.ppp(spp)
 
       # metaData object
-      mtdt <- data.frame(idx = idx, mzVals = mzVals)
-      spp$metaData <- cbind(mtdt, as.data.frame(metaData))
+      mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
+      spp$metaData <- cbind(mtdt, as.data.frame(metaData, stringsAsFactors  = FALSE))
 
       class(spp) <- c(class(spp), "analytePointPattern")
 

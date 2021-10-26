@@ -2,6 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
-data
 data-external
-inst/extdata/*
+Metaspace-integration.nb.html
+Metaspace-integration.Rmd
+moleculaR-Vignette.html
+moleculaR-Vignette.Rmd
+workflow-exampleData.nb.html
+workflow-exampleData.Rmd
+workflow-packageApp.nb.html
+workflow-packageApp.Rmd

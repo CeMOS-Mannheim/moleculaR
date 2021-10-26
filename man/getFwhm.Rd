@@ -2,12 +2,9 @@
 % Please edit documentation in R/S3classes.R
 \name{getFwhm}
 \alias{getFwhm}
-\alias{getFwhm.fwhm}
 \title{Get fwhm for a given m/z value}
 \usage{
 getFwhm(obj, mzVals)
-
-\method{getFwhm}{fwhm}(obj, mzVals)
 }
 \arguments{
 \item{obj}{S3 object of type `fwhm`.}

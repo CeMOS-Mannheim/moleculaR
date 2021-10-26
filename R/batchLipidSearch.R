@@ -74,7 +74,7 @@ batchLipidSearch <- function(spData, fwhmObj, sldb, adduct = c("M-H", "M+H", "M+
       #                "PGP(x:x)", "PIP2(x:x)", "PIP(x:x)", "PIP3(x:x)")
 
       if(verbose){
-            pb <- utils::txtProgressBar(min = 1, max = length(names(searchList$hitsList)), style = 3, width = 10)
+            pb <- utils::txtProgressBar(min = 1, max = length(names(searchList$hitsList)), style = 3, width = 20)
             count <- 1
       }
 

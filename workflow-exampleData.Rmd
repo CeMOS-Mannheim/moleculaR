@@ -62,7 +62,7 @@ For more info on how to properly include data into packages check [this page](ht
 ### Load data 
 
 ```{r}
-#library(moleculaR)
+library(moleculaR)
 
 #// load saved image
 data("processed-example-Data")
