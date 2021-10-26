@@ -4,21 +4,39 @@
 \alias{analytePointPattern}
 \title{analytePointPattern Class Constructor}
 \usage{
-analytePointPattern(spp = NA, x = NA, y = NA, intensity = NA, win = NA, mzVals)
+analytePointPattern(
+  spp = NA,
+  x = NA,
+  y = NA,
+  win = NA,
+  intensity = NA,
+  mzVals,
+  metaData = list()
+)
 }
 \arguments{
-\item{spp}{a spatial point pattern of type 'spatstat::ppp'.}
+\item{spp}{a spatial point pattern of type 'spatstat::ppp' with its `marks` being a dataframe with
+two columns `idx`and `intensity`.}
 
 \item{x, y, intensity, win}{optional, either these arguments or 'spp' have to be supplied.}
 
-\item{mzVals}{a numeric vector holding the m/z values that represent the analyte under study.}
+\item{metaData}{a named list having additional attributes describing the individual masses in `mzVals`.}
 }
 \value{
-An S3 object of type 'ppp' and 'analytePointPattern'.
+An S3 object of type 'ppp' and 'analytePointPattern' with the following entries \cr
+\itemize{
+  \item regular `ppp` entries: see `spatstat` documentation for `ppp` class.
+  \item metaData: A data frame with meta data describing the points in `spp$marks`.
+}
 }
 \description{
 This is a class to extend 'spatstat::ppp' class only enforcing specific point-marks. It also
-adds an 'mzVals' slot to declare which analytes are constructing a given 'analytePointPattern' object.
+adds a 'metaData' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 It represents the spatial point pattern of an analyte (or set of
-analytes) with marks being a data.frame of one column c("intensity").
+analytes) with marks being a data.frame of two columns c('idx', 'intensity').
+}
+\details{
+`mzVals` and `metaData` are combined into a data.frame which becomes a class slot `metaData`.
+This contains the `mzVals` and possible other meta data with each row having a unique identifier `idx`
+which then link `metaData` with `spp$marks`.
 }

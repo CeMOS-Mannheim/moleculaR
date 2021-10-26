@@ -59,7 +59,7 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
       exprppp <- analytePointPattern(x = imdf$x, y = imdf$y,
                                      intensity = imdf$value,
-                                     win = ppwin)
+                                     win = ppwin, mzVals = "expr")
 
 
 

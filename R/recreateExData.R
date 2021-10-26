@@ -22,7 +22,9 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
 
 
       #// read the file into R
+      cat("loading imzML data .. \n")
       msData      <- readCentrData(path = pathToImzml)
+
 
 
       #// single spectrum -  load a local tsv file
@@ -33,6 +35,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
                                             mustWork = TRUE)
 
       }
+      cat("reading single spectrum  .. \n")
       msSpectr    <- readSingleSpect(pathToSingleSpctr)
 
 
@@ -42,6 +45,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
                                      package = "moleculaR", mustWork = TRUE)
 
       }
+      cat("loading SwissLipids data .. \n")
       sldb        <- loadSwissDB(pathToSldb)
 
 
@@ -56,17 +60,20 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
       #// pre-processing
 
       #// estimate fwhm from msSpectr ----
+      cat("preprocessing: fwhm estimation .. \n")
       fwhmObj        <- estimateFwhm(s = msSpectr, plot = FALSE)
 
 
       # bin peaks
+      cat("preprocessing: peak binning .. \n")
       msData      <-  MALDIquant::binPeaks(msData,
-                                          tolerance = fwhm(fwhmObj, 400)/400, #focusing on lipids
+                                          tolerance = getFwhm(fwhmObj, 400)/400, #focusing on lipids
                                           method = "relaxed")
 
 
       # filter out peaks which occur in less than 1% of the time - the
       # built-in function of MALDIquant crashes for bigger datasets
+      cat("preprocessing: peak filtration .. \n")
       msData      <- filterPeaks(x = msData, minFreq = 0.01)
 
 
@@ -75,14 +82,19 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
 
 
       #// create spatial window
-      spwin       <- spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
-      spwin$bdry  <- spwin$bdry[-2] # fix the small glitch
+      #spwin       <- spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+      #spwin$bdry  <- spwin$bdry[-2] # fix the small glitch
 
       #// shrink msData
       if(shrink){
+            cat("preprocessing: shrinking data .. \n")
             msData<- .shrinkData(x = msData, mzKeep = as.numeric(mtspc$mz), fwhmObj = fwhmObj)
 
       }
+
+      #// create sparseIntensityMatrix representation
+      cat("preprocessing: creating sparseIntensityMatrix .. \n")
+      spData      <- createSparseMat(msData)
 
 
       #// remove everything else
@@ -90,7 +102,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
          shrink, msSpectr)
 
       #// save image to working dir
-      save(list = c("msData", "sldb", "mtspc", "fwhm", "spwin"),
+      save(list = c("msData", "sldb", "mtspc", "fwhmObj"),
            file = file.path(saveTo, "processed-example-Data.RData"), compress = TRUE)
 
 
@@ -126,7 +138,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
       xm       <- MALDIquant::mass(i)
       xkpIdx   <- MALDIquant::match.closest(x = mzKeep,
                                            table = xm,
-                                           tolerance = getFwhm(mzKeep))
+                                           tolerance = getFwhm(fwhmObj, mzKeep))
       xkpIdx   <- xkpIdx[!is.na(xkpIdx)]
 
       mt       <- list()

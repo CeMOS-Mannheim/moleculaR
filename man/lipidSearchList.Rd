@@ -14,7 +14,7 @@ lipidSearchList(lipidList, hitsList, allClasses)
 \item{allClasses}{a character vector summarizing all classes taking part in the lipid search.}
 }
 \value{
-An S3 object of type 'lipidSearchList' .
+An S3 object of type 'lipidSearchList'.
 }
 \description{
 A class to re-arrange lipid listings in the SwissLipid database to facilitate computational

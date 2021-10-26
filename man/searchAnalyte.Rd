@@ -2,27 +2,42 @@
 % Please edit documentation in R/searchAnalyte.R
 \name{searchAnalyte}
 \alias{searchAnalyte}
-\title{Find an analyte in the dataset}
+\title{Analyte detection in an MSI dataset}
 \usage{
-searchAnalyte(m, fwhm, massAxis, spData, coords, wMethod = "Gaussian")
+searchAnalyte(
+  m,
+  fwhm,
+  spData,
+  wMethod = "Gaussian",
+  verifiedMasses = NA,
+  confirmedOnly = FALSE,
+  metaData = list()
+)
 }
 \arguments{
-\item{m:}{the mass to be queried (Da).}
+\item{m}{the mass to be queried (in Da).}
 
-\item{fwhm:}{the fwhm at `m`.}
+\item{fwhm}{the fwhm at 'm'.}
 
-\item{massAxis:}{the mass axis of the whole MS dataset to be searched against.}
+\item{spData}{an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.}
 
-\item{spData:}{the sparse matrix containing the data.}
+\item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
 
-\item{coords:}{the coordinates of spectra contained within the spData.}
+\item{verifiedMasses}{an optional numeric vector of m/z values that are (externally) verified to
+be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
+annotation result.}
 
-\item{wMethod:}{wighting method; c("Gaussian", "sum", "max", "mean").}
+\item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
+
+\item{metaData}{optional named list with additional identifiers for the analyte
+under study, ex. list(lipidID = "..", sumformular = "..", ..). This will be passed to the `metaData`
+slot of the resulting `analytePointPattern` object.}
 }
 \value{
-A dataframe containing the hits for `m` in `msData`.
+An analyte point patter of type `ppp` and `analytePointPattern` containing the hits for
+`m` in `msData`. If `confirmedOnly = TRUE` then only these hits are returned.
 }
 \description{
-This function check if an analyte (given by m/z) is detectable in the MS data represented 
-by a sparse matrix
+This function check if an analyte (given by m/z) is detectable in the MS data represented
+by a 'sparseIntensityMatrix' object.
 }

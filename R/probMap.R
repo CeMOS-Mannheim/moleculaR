@@ -75,7 +75,7 @@ probMap                     <- function(sppMoi,  control = NULL,
                                           })
 
 
-                   csrMoi <- analytePointPattern(csrMoi, sppMoi$mzVals)
+                   csrMoi <- analytePointPattern(spp = csrMoi, mzVals = sppMoi$metaData$mzVals, metaData = as.list(sppMoi$metaData))
 
              } else {
 
@@ -120,7 +120,7 @@ probMap                     <- function(sppMoi,  control = NULL,
                                                                            sd(control$marks$intensity)))
                                         })
 
-                   csrMoi <- analytePointPattern(csrMoi, sppMoi$mzVals)
+                   csrMoi <- analytePointPattern(spp = csrMoi, mzVals = sppMoi$metaData$mzVals, metaData = as.list(sppMoi$metaData))
 
 
 
@@ -236,7 +236,8 @@ probMap                     <- function(sppMoi,  control = NULL,
                                         marks = sppMoi$marks,
                                         checkdup = FALSE)
 
-       hotspotpp        <- analytePointPattern(spp = hotspotpp, mzVals = sppMoi$mzVals) # only for conformity with S3 class
+       hotspotpp        <- analytePointPattern(spp = hotspotpp, mzVals = sppMoi$metaData$mzVals,
+                                               metaData = as.list(sppMoi$metaData)) # only for conformity with S3 class
 
 
        ## __ coldspot __ ##
@@ -255,7 +256,8 @@ probMap                     <- function(sppMoi,  control = NULL,
                                          marks = sppMoi$marks,
                                          checkdup = FALSE)
 
-       coldspotpp        <- analytePointPattern(spp = coldspotpp, mzVals = sppMoi$mzVals) # only for conformity with S3 class
+       coldspotpp        <- analytePointPattern(spp = coldspotpp, mzVals = sppMoi$metaData$mzVals,
+                                                metaData = as.list(sppMoi$metaData)) # only for conformity with S3 class
 
 
        return(molProbMap(bw = bw,		# calculated Gaussian bandwidth

@@ -19,13 +19,13 @@ filterPeaks     <- function(x, minFreq = 0.01) {
         }
 
         # first create a spars matrix per tissue region
-        spmat   <- createSparseMat(x)
+        spData   <- createSparseMat(x)
 
 
        # find which peaks (columns) occur in less than 1% of the tissue
-       relFreq              <- diff(spmat@p) / nrow(spmat)
+       relFreq              <- diff(spData$spmat@p) / nrow(spData$spmat)
        kpIdx                <- which(relFreq >= 0.01)
-       .uniqueMass          <- colnames(spmat)
+       .uniqueMass          <- spData$mzAxis
        kpMass               <- .uniqueMass[kpIdx]
 
        x                    <- lapply(x, FUN = function(i) {

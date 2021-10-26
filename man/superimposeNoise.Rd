@@ -6,7 +6,7 @@
 \usage{
 superimposeNoise(
   x = NULL,
-  spmat = NULL,
+  spData = NULL,
   method,
   mz,
   fwhm,
@@ -21,7 +21,7 @@ superimposeNoise(
 
 superimposeNoise(
   x = NULL,
-  spmat = NULL,
+  spData = NULL,
   method,
   mz,
   fwhm,
@@ -37,7 +37,7 @@ superimposeNoise(
 \arguments{
 \item{x:}{dataset, a list of \code{MALDIquant::MassPeaks} objects.}
 
-\item{spmat:}{a corresponding}
+\item{spData:}{a corresponding sparse MSI matrix of type 'sparseIntensityMatrix'.}
 
 \item{method:}{character string, the method used to add noise c("Gaussian","spiked","interfering")}
 

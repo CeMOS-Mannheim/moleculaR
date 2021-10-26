@@ -14,7 +14,12 @@ fwhm(fwhmInterpolator, peaks = NA_real_, fwhmVals = NA_real_)
 \item{fwhmVals}{The corresponding fwhm values in Da.}
 }
 \value{
-An S3 object 'fwhm'.
+An S3 object 'fwhm' with the following entries \cr
+\itemize{
+  \item fwhmInterpolator: A function that is used to find fwhm value for any given m/z.
+  \item peaks: The m/z values of the peaks of a single spectrum that were used for fwhm calculation.
+  \item fwhmVals: The corresponding fwhm values in Da.
+}
 }
 \description{
 This constructs a 'fwhm' object which stores information about the calculated full width half maximum.

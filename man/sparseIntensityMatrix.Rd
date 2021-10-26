@@ -11,11 +11,16 @@ sparseIntensityMatrix(spmat, mzAxis, coordinates)
 
 \item{mzAxis}{A numeric, the overall m/z axis for the experiment.}
 
-\item{coordinates}{A two-column matrix, the coordinates of the spectra which are stored
+\item{coordinates}{A two-column data.frame, the coordinates of the spectra which are stored
 in rows of 'spmat'.}
 }
 \value{
-An S3 object 'sparseIntensityMatrix'.
+An S3 object 'sparseIntensityMatrix' with the following entries \cr
+\itemize{
+  \item spmat: A sparse matrix of type 'Matrix::dgCMatrix' holding MSI intensity data.
+  \item mzAxis: A numeric, the overall m/z axis for the experiment.
+  \item coordinates: A two-column data.frame, the coordinates of the spectra which are stored in rows of 'spmat'.
+}
 }
 \description{
 An S3 class to hold mass spectrometry imaging (MSI) intensity data in a sparse representation ('Matrix::dgCMatrix' class)

@@ -34,7 +34,7 @@ createSparseMat             <- function(x) {
 
         return(sparseIntensityMatrix(spmat = spmat,
                                      mzAxis = .uniqueMass,
-                                     coordinates = MALDIquant::coordinates(x)))
+                                     coordinates = as.data.frame(MALDIquant::coordinates(x))))
 
 
 }
