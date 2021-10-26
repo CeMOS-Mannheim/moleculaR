@@ -20,6 +20,10 @@ For more information about this package and its applications please refer to the
 
 ### running shiny package-app
 
-### deplyoing on premis 
+### deplyoing on premises
 
-### session info
+### Citing moleculaR
+
+### License
+
+### Contact

@@ -10,7 +10,7 @@ Description: a computational framework  that introduces probabilistic mapping an
     testing of metabolites in tissue. It enables collective molecular projections and consequently spatially-
     resolved investigation of ion milieus, lipid pathways or user-defined biomolecular ensembles within the 
     same image.
-License: What license is it under?
+License: GPL (>= 3)
 Depends: R (>= 3.4.0)
 Imports: Matrix, spatstat, MALDIquant, MALDIquantForeign, raster, shiny
 Encoding: UTF-8
