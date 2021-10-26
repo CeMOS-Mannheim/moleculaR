@@ -10,7 +10,7 @@ MoleculaR comes pre-loaded with the [SwissLipids database](https://www.swisslipi
 
 For more information about this package and its applications please refer to the associated paper (doi). 
 
-<p align="center"><img src="extras/package.jpg" width="680"></p>
+<p align="right"><img src="extras/package.jpg" width="680"></p>
 
 ### Installation
 
