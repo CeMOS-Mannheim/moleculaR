@@ -19,7 +19,7 @@
 #' @return
 #' A dataframe containing the hits for `m` in `msData`.
 #'
-#' @export
+#'
 #'
 searchLipid          = function(m, fwhm, massAxis, spData, coords, mtspc = NA,
                                 confirmedOnly = FALSE, adduct = NA, mode = NA, modeAdduct = NA,
