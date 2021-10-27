@@ -1,0 +1,19 @@
+---
+title: "exampleData-workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{exampleData-workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(moleculaR)
+```
