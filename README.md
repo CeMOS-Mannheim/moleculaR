@@ -47,6 +47,8 @@ Vignettes are provided with the package to illustrate basic functionality. You c
 
 ### Citing moleculaR
 
+Abu Sammour, Denis, et al. "Spatial Probabilistic Mapping of Metabolite Ensembles in Mass Spectrometry Imaging." bioRxiv (2021). https://doi.org/10.1101/2021.10.27.466114 
+
 <br />
 
 ### Contact
