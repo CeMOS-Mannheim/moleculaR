@@ -14,7 +14,7 @@ of ion milieus, lipid pathways or user-defined biomolecular ensembles within the
 
 For more information about this package and its applications please refer to the associated paper (doi). 
 
-<p align="right"><img src="extras/package.jpg" width="680"></p>
+<p align="center"><img src="extras/package.jpg" width="680"></p>
 
 ### Installation
 
