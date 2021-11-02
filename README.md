@@ -12,7 +12,7 @@ of ion milieus, lipid pathways or user-defined biomolecular ensembles within the
 
 `moleculaR` comes pre-loaded with the [SwissLipids database](https://www.swisslipids.org) and with is capable of importing metabolite annotation results from the [METASPACE platform](https://metaspace2020.eu/) to compute FDR-verified `moleculaR` probability maps (MPMs) and collective projection probability maps (CPPMs). `moleculaR` could also be deployed and hosted on a centralized server and is equipped with a web-based GUI based on [Shiny](https://www.rdocumentation.org/packages/Shiny/versions/1.7.1). 
 
-For more information about this package and its applications please refer to the associated paper (doi). 
+For more information about this package and its applications please refer to the [associated preprint](https://doi.org/10.1101/2021.10.27.466114). 
 
 <p align="center"><img src="extras/package.jpg" width="680"></p>
 
