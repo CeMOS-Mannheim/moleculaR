@@ -5,7 +5,7 @@ Version: 0.7.0
 Author: Denis Abu Sammour
 Maintainer: 
     Denis Abu Sammour <d.abu-sammour@hs-mannheim.de>
-    James Cairns <j.cairns@hs-mannheim.de> 
+    James L. Cairns <j.cairns@hs-mannheim.de> 
 Description: a computational framework  that introduces probabilistic mapping and point-for-point statistical 
     testing of metabolites in tissue. It enables collective molecular projections and consequently spatially-
     resolved investigation of ion milieus, lipid pathways or user-defined biomolecular ensembles within the 

@@ -147,7 +147,7 @@ return(obj)
 
 print.sparseIntensityMatrix <- function(obj) {
 
-      cat("S3 object 'sparseIntensityMatrix' holding sparse intensity data of an MSI dataset. \n ")
+      cat("S3 object 'sparseIntensityMatrix' holding sparse intensity data of an MSI dataset. \n")
       cat("spmat: sparse matrix of type 'Matrix::dgCMatrix' with ", nrow(obj$spmat),
           "rows (spectra/pixels) and ", ncol(obj$spmat), "columns (m/z bins) .\n")
       cat("mzAxis: a numeric vector holding the m/z axis = number of columns of spmat.\n")
@@ -459,7 +459,7 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
          plot(obj = obj, what = "analyteDensityImage", transpFactor = transpFactor, analyte = analyte)
          plot(obj = obj, what = "MPM", transpFactor = transpFactor, analyte = analyte)
 
-         if(!(is.na(ionImage))){
+         if(!(identical(ionImage, NA))){
             spatstat::plot.im(ionImage,
                               main = paste0("Ion Image of ", analyte),
                               col = spatstat::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),

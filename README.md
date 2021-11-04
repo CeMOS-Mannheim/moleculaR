@@ -7,7 +7,7 @@
 
 The `moleculaR` R package provides a computational framework that introduces probabilistic mapping
 and point-for-point statistical testing of metabolites in tissue via Mass spectrometry imaging.
-It enables collective `moleculaR` projections and consequently spatially-resolved investigation
+It enables collective projections of metabolites and consequently spatially-resolved investigation
 of ion milieus, lipid pathways or user-defined biomolecular ensembles within the same image.
 
 `moleculaR` comes pre-loaded with the [SwissLipids database](https://www.swisslipids.org) and with is capable of importing metabolite annotation results from the [METASPACE platform](https://metaspace2020.eu/) to compute FDR-verified `moleculaR` probability maps (MPMs) and collective projection probability maps (CPPMs). `moleculaR` could also be deployed and hosted on a centralized server and is equipped with a web-based GUI based on [Shiny](https://www.rdocumentation.org/packages/Shiny/versions/1.7.1). 
@@ -22,9 +22,7 @@ The [devtools](https://cran.r-project.org/web/packages/devtools/index.html) pack
 
 ```r
 install.packages("devtools")
-
-library("devtools")
-install_github("CeMOS-Mannheim/moleculaR")
+devtools::install_github("CeMOS-Mannheim/moleculaR", build_vignettes = TRUE)
 ```
 Note that `moleculaR` was created with `renv`to help manage R package dependencies and computational reproducibility. for more info, check [the renv guide page](https://rstudio.github.io/renv/articles/renv.html). 
 
