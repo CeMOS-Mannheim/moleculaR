@@ -273,7 +273,7 @@ To be able to generate custom CPPMs i.e. CPPMs projecting a specific set of anal
 
 ```{r CPPMs.combin, results='hide'}
 # create a window of type 'spatstat::owin' 
-spWin <- spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates))
+spWin <- spatstat.geom::as.polygonal(spatstat::owin(mask = spData$coordinates))
 
 cat("combining all lyso-GPLs into one SPP object - a couple of minutes - \n")
 lysoGplsSumSpp <- superImposeAnalytes(searchList$hitsList, 
