@@ -2,17 +2,12 @@ library(shiny)
 library(shinyWidgets)
 library(moleculaR)
 library(shinythemes)
-library(stringr)
 
-###precomputing####
-
-searchList           = initLipidSearch(swissdb = sldb)
-
+data("processed-example-Data")
+spData             = createSparseMat(x = msData)
 
 #// initialize the swisslipids database
-
-searchList_reactive <<- initLipidSearch(swissdb = sldb)
-
+searchList           = initLipidSearch(swissdb = sldb)
 
 ####  Frontend ####
 ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in Mass Spectrometry Imaging", HTML('&emsp;'), HTML('&emsp;')), theme = shinytheme("flatly"), selected="Main",
@@ -23,25 +18,6 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
                           pageWithSidebar(
                              headerPanel(''),
                              sidebarPanel(
-
-
-                                fluidRow(
-                                   column(12,
-                                          HTML(paste0("<b>","Upload your Files","</b>")),
-                                          fileInput("imzmlFile", NULL, multiple = TRUE, buttonLabel = "imzML & ibd File",
-                                                    accept = c(".imzML",".ibd")
-                                          )),
-                                   column(12,
-                                          fileInput("spectrFile", NULL, multiple = FALSE, buttonLabel = "Spectrum .tsv File",
-                                                    accept = c(".tsv")
-                                          )),
-                                   column(12,
-                                          fileInput("mtspcFile", NULL, multiple = FALSE, buttonLabel = "Metaspace .csv File",
-                                                    accept = c(".csv")
-                                          )),
-                                ),
-                                hr(),
-
                                 fluidRow(
                                    column(12,HTML(paste0("<b>","Peaks FWHM Estimation","</b>"))),
                                    column(12,
@@ -90,32 +66,21 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
 
                           )),
                  tabPanel("About",
-                          p("This is a web app that processes MSI data.
+                          p("This is an example web app with a preloaded sample MSI data of a wild-type Glioblastoma Multiform tissue sample.
+                            MSI Data is restricted to Metaspace-confirmed lipids (SwissLipids DB) at 0.2 FDR in the positive ion mode.
                             moleculaR is an open-source R package available at github.com/CeMOS/molecularR.",
                             style = "font-size:16px"))
 )
 
-####Backend ####
 
+####Backend ####
 server <- function(input, output, session) {
-   #increase maximum file uploade size to 48 GB
-   options(shiny.maxRequestSize=48000*1024^2)
+
    # create empty reactive values
    rv <- reactiveValues(go_mz = list(),
                         go_lipid = list(searchList = searchList)
    )
 
-   msData <- reactiveVal()
-   spmat <- reactiveVal()
-   msSpectr <- reactiveVal()
-   fwhmObj <- reactiveVal()
-   mtspc <- reactiveVal()
-   msCoordinates <- reactiveVal()
-   env <- environment()
-   spwin <- reactiveVal()
-   spwiny <- reactiveVal()
-   .uniqueMass <- reactiveVal()
-   isVerified <- reactiveVal()
 
    # reactive values for which image to output
    plot_output <- reactiveVal("initial")
@@ -124,7 +89,7 @@ server <- function(input, output, session) {
 
    observeEvent(input$adjustmz,{
 
-      if(input$adjustmz==TRUE & plot_output()!="initial"){
+      if(input$adjustmz==TRUE){
          #use the nearest mz in metaspace
          rv$go_mz$mz <- as.numeric(mtspc$mz)[which.min(abs(as.numeric(mtspc$mz) - input$mz))]
       }
@@ -135,15 +100,11 @@ server <- function(input, output, session) {
 
    observeEvent(input$mz,{
 
-      mtspc_tmp = c()
-      if(length(input$mtspcFile$datapath)!=0){
-         mtspc_tmp <- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
+      if(input$adjustmz==TRUE){
+         #use the nearest mz in metaspace
+         rv$go_mz$mz <- as.numeric(mtspc$mz)[which.min(abs(as.numeric(mtspc$mz) - input$mz))]
       }
 
-      if(input$adjustmz==TRUE & length(mtspc_tmp)!=0){
-         #use the nearest mz in the dataset
-         rv$go_mz$mz <- as.numeric(mtspc_tmp$mz)[which.min(abs(as.numeric(mtspc_tmp$mz) - input$mz))]
-      }
       else{
          rv$go_mz$mz <- input$mz
       }
@@ -153,92 +114,7 @@ server <- function(input, output, session) {
    })
 
    observeEvent(input$go_load, {
-      withProgress(
-         message="please wait",
-         detail="Loading Data...",
-         value=0.2,{
-            n<-6
-
-            if (length(input$imzmlFile$name)!=2){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (sum(str_detect(input$imzmlFile$datapath, ".imzML"))!=1){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (sum(str_detect(input$imzmlFile$datapath, ".ibd"))!=1){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (str_detect(input$spectrFile$datapath, ".tsv")==FALSE){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (str_detect(input$mtspcFile$datapath, ".csv")==FALSE){
-
-               isVerified        <<- FALSE
-
-            }
-
-            if (str_detect(input$mtspcFile$datapath, ".csv")!=FALSE){
-
-               isVerified        <<- TRUE
-
-            }
-
-            for(i in 1:length(input$imzmlFile$name)){
-               file.copy(input$imzmlFile$datapath[i], paste0(tempdir(),"/", input$imzmlFile$name[i]))
-            }
-            file <- input$imzmlFile
-            #find first imzml file in case more than one were uploaded
-            imzmlidx <- which(str_detect(file$datapath, ".imzML"))[1]
-            imzmlpath <- (paste0(tempdir(),"/", file$name[imzmlidx]))
-
-            incProgress(1/n, detail = paste("Reading Data..."))
-
-            if (length(imzmlidx)!=0){
-               msData            <<- readCentrData(path = imzmlpath)
-            }
-
-            ### spectr file
-            msSpectr          <<- readSingleSpect(isolate({input$spectrFile$datapath}))
-
-            ### metaspacefile
-            mtspc             <<- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
-
-            if(exists("mtspc")){
-               isVerified        <<- TRUE
-            } else {
-               isVerified        <<- FALSE
-            }
-
-
-            incProgress(1/n, detail = paste("Calculating fwhm..."))
-
-            plot_output("show_fwhm")
-
-            incProgress(1/n, detail = paste("Binning Data..."))
-
-            msData            <<-  MALDIquant::binPeaks(msData,
-                                                        tolerance = fwhmObj(400)/400, #focusing on lipids
-                                                        method = "relaxed")
-
-            msData            <<- filterPeaks(x = msData, minFreq = 0.01)
-
-            incProgress(1/n, detail = paste("Creating sparse matrix..."))
-
-            spwin <<- spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
-            spData             <<- createSparseMat(x = msData)
-
-            bwMethod          <<- "spAutoCor"
-
-            gc()
-         })
+      plot_output("show_fwhm")
    })
 
    # routine for rv update in the m/z case
@@ -259,11 +135,10 @@ server <- function(input, output, session) {
                                                                spData = spData,
                                                                wMethod = "sum")
 
-         })
+            })
 
 
       plot_output("mz")
-
    })
 
    # routine for calculations of lipid species
@@ -278,24 +153,9 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               #// Possible inputs: {
-
-               adduct <- c("M-H", "M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
-               confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
-
-               #}
-
-               if(isVerified){
-                  verifiedMasses = as.numeric(mtspc$mz)
-               }else{
-                  verifiedMasses = NA
-               }
-
-
                searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                              adduct = adduct, numCores = 4L,
-                                              verifiedMasses = verifiedMasses,
-                                              confirmedOnly = confirmedOnly, verbose = TRUE)
+                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
+                                               confirmedOnly = TRUE, verbose = TRUE)
 
                searchListcreated <<- reactiveVal(TRUE)
             }
@@ -329,11 +189,9 @@ server <- function(input, output, session) {
 
             if (lysocreated() != TRUE){
                lysoGplsSumSpp <<- superImposeAnalytes(searchList$hitsList,
-                                                      spWin = spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates)))
+                                                  spWin = spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates)))
                lysocreated <<- reactiveVal(TRUE)
             }
-
-
 
             detectedAdducts <<- unique(lysoGplsSumSpp$metaData$adduct)
 
@@ -345,8 +203,6 @@ server <- function(input, output, session) {
             sppList[["M+H"]]     <<- subsetAnalytes(lysoGplsSumSpp, adduct == "M+H")
 
             lipidGroup <<-"(lyso)GPLs"
-
-
 
             plot_output("lipid_ion")
          })
@@ -378,7 +234,6 @@ server <- function(input, output, session) {
                                                       spWin = spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates)))
                lysocreated <<- reactiveVal(TRUE)
             }
-
 
 
             detectedSaturation <<- c("sat", "mono-unsat", "di-unsat", "poly-unsat")
@@ -416,9 +271,11 @@ server <- function(input, output, session) {
                par(mfrow = c(1, 1))
                #// image without masking
                spatstat::plot.owin(rv$go_mz$hitsIonImage$window,
-                                   main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
+                                   main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"),
                                    ylim = rev(rv$go_mz$hitsIonImage$window$yrange),
                                    box = FALSE)
+
+               rm(rv$go_mz$hitsIonImage)
 
             } else{ # if there are hits then proceed with MPM computations
 
@@ -441,8 +298,8 @@ server <- function(input, output, session) {
 
                #// compute MPM - default parameters
                probImg         <- probMap(sppMoi)
-
                txt  <- paste0("m/z ", round(rv$go_mz$mz_updated, 4), " ± ", round(getFwhm(fwhmObj, rv$go_mz$mz_updated), 4))
+
                plot(probImg, what = "detailed", analyte = txt, ionImage = ionImage)
 
                rm(probImg, txt, sppMoi, ionImage)
@@ -588,11 +445,6 @@ server <- function(input, output, session) {
    # plot for imgs
    output$imgs <- renderPlot({
       #// plotting
-      if(plot_output()=="loading_error"){
-         plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-         text(x = 0.5, y = 0.5, paste("Loading Error\n check if your uploaded .imzml matches your .ibd file\n as well if the\n .tsv and .csv are uploaded correct"),
-              cex = 1.6, col = "black")
-      }
 
       if(plot_output()=="initial"){
          plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
@@ -602,7 +454,7 @@ server <- function(input, output, session) {
 
       if(plot_output()=="show_fwhm"){
 
-         fwhmObj           <<- estimateFwhm(s = msSpectr, plot = TRUE)
+         plot(fwhmObj)
 
       }
 
@@ -632,6 +484,7 @@ server <- function(input, output, session) {
 
 
    }, bg="transparent")
+
 
 }
 
