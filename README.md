@@ -1,6 +1,6 @@
 
 
-<p align="center"><img src="extras/moleculaR-icon.svg" width="400"></p>
+<p align="center"><img src="extras/moleculaR-icon1.svg" width="400"></p>
 
 ### Spatial Probabilistic Mapping of Metabolite Ensembles in Mass Spectrometry Imaging
 

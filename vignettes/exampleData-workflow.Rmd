@@ -4,7 +4,8 @@ author:
 - "Denis Abu Sammour" 
 - "James-Lucas Cairns"
 date: "`r Sys.Date()`"
-output:  rmarkdown::html_vignette:
+output:  
+  rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
     number_sections: true
@@ -355,4 +356,83 @@ plot(probImg, what = "detailed", analyte = paste0("mono-unsat of ", "(lyso)GPLs"
 ```{r}
 sessionInfo()
 ```
+# _moleculaR_ Shiny Apps 
+
+_moleculaR_ provides two R Shiny web apps with intuitive web-based GUIs; a `example-app` which comes pre-loaded with an examplary reduced MALDI MSI dataset (for more info refer to this (preprint)[https://doi.org/10.1101/2021.10.27.466114]) and is used for demonstration purposes only and a `package-app` which lets the user upload her own centroided [imzML](https://ms-imaging.org/imzml/) data and apply spatial probability mapping through Molecular Probability Maps (MPMs) and Collective Projection Probability Maps (CPPMs). 
+
+## Loading Data
+
+This step only applies to `package-app`. The first step using the shiny `package-app`, would be to upload you own data. To do this click on `imzML & ibd` File and navigate to the directory containing the files you want to upload. Then select both imzML- and ibd-Files and upload them. Via `Spectrum .tsv File` uPload a continuous spectrum in `tsv` format which would represent either a single random pixel or a mean spectrum of your imaging dataset. Finally, upload the METASPACE annotation results (optional) via `Metaspace.csv File` which should be in a `csv` format. 
+
+![Loading the Data](shiny-imgs/package_app_load.PNG)
+
+After successfully loading the data the message "Upload complete" should appear.
+
+![Data Loaded](shiny-imgs/package_app_loaded.PNG)
+
+When all files are fully loaded you can proceed and use the Peaks FWHM Estimation. To do this press `Initialize` as shown in the figure below.
+
+![Peaks FWHM Estimation](shiny-imgs/fwhm_esti.PNG)
+
+A progress bar will appear at the bottom right of the app.
+
+![Progress Bar](shiny-imgs/progressbar.PNG)
+
+When the data has been processed and FWHM has been estimated, a plot will appear showing the approximation.
+
+![FWHM Estimation Completed](shiny-imgs/fwhm_loaded.PNG){width=70%}
+
+
+
+## MPMs
+
+To compute molecular probability maps (MPM), one could enter an exact mass. By default the closest m/z-value found in the dataset will be chosen. If you are looking for an exact mass, deactivate the checkbox shown in the figure below.
+
+![Closest m/z in Dataset](shiny-imgs/closest mz.PNG)
+
+After entering the desired mass press `Generate Plot` and wait until the plots are generated. 
+
+![Molecular Probability Maps (MPM)](shiny-imgs/mmp_generated.PNG){width=70%}
+
+
+## CPPMs
+
+Currently three different Collective Projection probability Maps (CPPMs) are supported; `Lipid Classes`, `Ion Milieus` and `Lipid Saturation`.
+
+### Lipid Classes
+
+To generate CPPMs of specific lipid classes one can choose a lipid from the drop-down menu before pressing "Generate Plot". 
+
+![Lipid Classes Generation](shiny-imgs/cpm lipid classes generate.PNG)
+
+After the generation is completed,  plot similar to the one below is displayed.
+
+![Lipid Classes Output](shiny-imgs/cpm lipid classes generated.PNG){width=70%}
+
+
+
+### Ion Milieus
+
+For Ion Milleu generation one can choose between ```all, M+K, M+Na and M+H``` from the drop-down menu before pressing "Generate Plot". 
+
+![Ion Milleu Generation](shiny-imgs/cpm ion generate.PNG)
+
+After the generation is completed,  plot similar to the one below is displayed.
+
+![Ion Milleu Output](shiny-imgs/cpm ion generated.PNG){width=70%}
+
+
+### Lipid Saturation
+
+For Lipid Saturation generation one can choose between ```all, sat., mono., di. and poly.``` from the dropdown menu before pressing "Generate Plot". 
+
+![Lipid Saturation Generation](shiny-imgs/cpm lipid sat generate.PNG)
+
+After the generation is completed,  plot similar to the one below is displayed.
+
+![Lipid Saturation Output](shiny-imgs/cpm lipid sat generated.PNG){width=70%}
+
+
+
+
 
