@@ -38,7 +38,7 @@ Vignettes are provided with the package to illustrate basic functionality. You c
 
 ### _moleculaR_ Shiny-Apps
 
-_moleculaR_ provides two R Shiny web apps with intuitive web-based GUIs; a `web-app` which comes pre-loaded with an examplary reduced MALDI MSI dataset (see citation below) and a `package-app` which lets the user upload her own centroided [imzML](https://ms-imaging.org/imzml/) data and apply spatial probability mapping through Molecular Probability Maps (MPMs) and Collective Projection Probability Maps (CPPMs). 
+_moleculaR_ provides two R Shiny web apps with intuitive web-based GUIs; a `example-app` which comes pre-loaded with an examplary reduced MALDI MSI dataset (see citation below) and a `package-app` which lets the user upload her own centroided [imzML](https://ms-imaging.org/imzml/) data and apply spatial probability mapping through Molecular Probability Maps (MPMs) and Collective Projection Probability Maps (CPPMs). 
 
 ### Deplyoing on a Local Server
 
