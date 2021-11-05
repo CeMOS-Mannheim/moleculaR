@@ -16,9 +16,9 @@ of ion milieus, lipid pathways or user-defined biomolecular ensembles within the
 \section{Details}{
 
 
-Package: \tab moleculaR \cr
-License: \tab MIT \cr
-URL: \tab https://github.com/CeMOS-Mannheim/moleculaR/  \cr
+Package:  moleculaR \cr
+License:  MIT \cr
+URL:  https://github.com/CeMOS-Mannheim/moleculaR/  \cr
 }
 
 \section{Main Classes}{
