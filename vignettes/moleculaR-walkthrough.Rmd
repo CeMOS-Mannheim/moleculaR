@@ -188,9 +188,9 @@ sppIonImage      <- searchAnalyte(m = queryMass,
 
 
 # compute a raster image of the sppIonImage 
-ionImage        <- spatstat::pixellate(sppIonImage,
+ionImage        <- spatstat.geom::pixellate(sppIonImage,
                           weights = sppIonImage$marks$intensity,
-                          W = spatstat::as.mask(sppIonImage$window,
+                          W = spatstat.geom::as.mask(sppIonImage$window,
                                                 dimyx=c(diff(sppIonImage$window$yrange),
                                                         diff(sppIonImage$window$xrange))),
                           padzero = FALSE)
@@ -234,7 +234,8 @@ cat("Batch lipid search is ongoing - this will take several minutes - \n")
 
 searchList <- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
                                adduct = c("M+H", "M+Na", "M+K"),
-                               numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
+                               numCores = 4, 
+                               verifiedMasses = as.numeric(mtspc$mz),
                                confirmedOnly = TRUE, verbose = TRUE)
 
 ```
@@ -273,8 +274,7 @@ To be able to generate custom CPPMs i.e. CPPMs projecting a specific set of anal
 
 ```{r CPPMs.combin, results='hide'}
 # create a window of type 'spatstat::owin' 
-require(spatstat)
-spWin <- as.polygonal(owin(mask = spData$coordinates))
+spWin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
 
 cat("combining all lyso-GPLs into one SPP object - a couple of minutes - \n")
 lysoGplsSumSpp <- superImposeAnalytes(searchList$hitsList, 

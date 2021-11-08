@@ -59,7 +59,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
              if(is.null(control)){ # if control is not supplied generate the csrMoi model from sppMoi
 
-                   csrMoi              <- spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
+                   csrMoi              <- spatstat.core::rpoint(n = sppMoi$n, win = sppMoi$window)
 
 
                    csrMoi$marks   <- switch(csrIntensities,
@@ -79,7 +79,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
              } else {
 
-                   if(!(spatstat::is.ppp(control))) {stop("Supplied control is not an ppp object. \n")}
+                   if(!(spatstat.geom::is.ppp(control))) {stop("Supplied control is not an ppp object. \n")}
 
 
                    if(!("analytePointPattern" %in% class(control))){
@@ -91,7 +91,7 @@ probMap                     <- function(sppMoi,  control = NULL,
                          control$marks$intensity <- sqrt(control$marks$intensity)
                    }
 
-                   csrMoi              <- spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
+                   csrMoi              <- spatstat.core::rpoint(n = sppMoi$n, win = sppMoi$window)
 
 
 
@@ -174,12 +174,12 @@ probMap                     <- function(sppMoi,  control = NULL,
       sppMoiw       <- sppMoi$marks$intensity
 
 
-       win <- spatstat::as.mask(sppMoi$window,
+       win <- spatstat.geom::as.mask(sppMoi$window,
                               dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
 
        # create a density map for csrMoi
-       rhoCsr           <- spatstat::density.ppp(x = csrMoi, sigma = bw,
+       rhoCsr           <- spatstat.core::density.ppp(x = csrMoi, sigma = bw,
                                                 weights = csrMoiw, W = win, positive = TRUE)
 
 
@@ -187,7 +187,7 @@ probMap                     <- function(sppMoi,  control = NULL,
        rhoCsr           <- rhoCsr/sum(rhoCsr)
 
        # create a density map for the image
-       rhoMoi           <- spatstat::density.ppp(x = sppMoi, sigma = bw,
+       rhoMoi           <- spatstat.core::density.ppp(x = sppMoi, sigma = bw,
                                                  weights = sppMoiw, W = win, positive = TRUE)
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
@@ -203,7 +203,7 @@ probMap                     <- function(sppMoi,  control = NULL,
        sigmacsrMoi         <- sd(rhoCsr, na.rm = TRUE)
 
        # convert to data.frame
-       rhoMoidf <- spatstat::as.data.frame.im(x = rhoMoi)
+       rhoMoidf <- spatstat.geom::as.data.frame.im(x = rhoMoi)
        pvalsLwr <- rhoMoidf
        pvalsUpr <- rhoMoidf
 
@@ -216,23 +216,23 @@ probMap                     <- function(sppMoi,  control = NULL,
        pvalsUpr$value <- p.adjust(p = pvalsUpr$value, method = pvalCorrection)
 
        # convert back to image
-       pvalsLwr <- spatstat::as.im.data.frame(pvalsLwr)
-       pvalsUpr <- spatstat::as.im.data.frame(pvalsUpr)
+       pvalsLwr <- spatstat.geom::as.im.data.frame(pvalsLwr)
+       pvalsUpr <- spatstat.geom::as.im.data.frame(pvalsUpr)
 
 
        ## __ hotspot __ ##
 
-       hotspotIm        <- spatstat::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
+       hotspotIm        <- spatstat.geom::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
 
        # filter out points lying outside the computed hotspot
        tmpIm            <- hotspotIm
        tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] <- NA # manually set zero pixels to NA to remove them from mask
-       hotspotMask      <- spatstat::as.owin(tmpIm)
+       hotspotMask      <- spatstat.geom::as.owin(tmpIm)
 
 
-       hotspotpp        <- spatstat::ppp(x = sppMoi$x,
+       hotspotpp        <- spatstat.geom::ppp(x = sppMoi$x,
                                         y = sppMoi$y,
-                                        window = spatstat::as.polygonal(hotspotMask),
+                                        window = spatstat.geom::as.polygonal(hotspotMask),
                                         marks = sppMoi$marks,
                                         checkdup = FALSE)
 
@@ -242,17 +242,17 @@ probMap                     <- function(sppMoi,  control = NULL,
 
        ## __ coldspot __ ##
 
-       coldspotIm        <- spatstat::eval.im(rhoMoi * (pvalsLwr <= pvalThreshold))
+       coldspotIm        <- spatstat.geom::eval.im(rhoMoi * (pvalsLwr <= pvalThreshold))
 
        # filter out points lying outside the computed coldspot
        tmpIm             <- coldspotIm
        tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] <- NA # manually set zero pixels to NA to remove them from mask
-       coldspotMask      <- spatstat::as.owin(tmpIm)
+       coldspotMask      <- spatstat.geom::as.owin(tmpIm)
 
 
-       coldspotpp        <- spatstat::ppp(x = sppMoi$x,
+       coldspotpp        <- spatstat.geom::ppp(x = sppMoi$x,
                                          y = sppMoi$y,
-                                         window = spatstat::as.polygonal(coldspotMask),
+                                         window = spatstat.geom::as.polygonal(coldspotMask),
                                          marks = sppMoi$marks,
                                          checkdup = FALSE)
 
@@ -301,7 +301,7 @@ probMap                     <- function(sppMoi,  control = NULL,
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
       sppMoiw        <- sppMoi$marks$intensity
-      win         <- spatstat::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
+      win         <- spatstat.geom::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
 
       if(is.null(sppMoiw)){
@@ -323,7 +323,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
 
             # create a density map for the image
-            rhoMoi      <- spatstat::density.ppp(x = sppMoi, sigma = bwi,
+            rhoMoi      <- spatstat.core::density.ppp(x = sppMoi, sigma = bwi,
                                                  weights = sppMoiw,
                                                  W = win)
 
@@ -384,7 +384,7 @@ probMap                     <- function(sppMoi,  control = NULL,
        if(is.null(csrMoi)) {
 
              ## craete a complete spatial randomness point pattern with the same number of points and window ----
-             csrMoi        <- spatstat::rpoint(n = sppMoi$n, win = sppMoi$window)
+             csrMoi        <- spatstat.core::rpoint(n = sppMoi$n, win = sppMoi$window)
 
              csrMoi$marks  <- data.frame(intensity = sample(sppMoi$marks$intensity))
 
@@ -403,7 +403,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
        #// create a dataframe to hold the results
        bwdf             <- data.frame(bw = bw, area = NA_real_)
-       win              <- spatstat::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
+       win              <- spatstat.geom::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),diff(sppMoi$window$xrange)))
 
 
        #// to show progress
@@ -420,7 +420,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
 
              # create a density map for csrMoi
-             rhoCsr               <- spatstat::density.ppp(x = csrMoi, sigma = bwi,
+             rhoCsr               <- spatstat.core::density.ppp(x = csrMoi, sigma = bwi,
                                                           weights = csrMoiw,
                                                           W = win)
 
@@ -429,7 +429,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 
 
              # create a density map for the image
-             rhoMoi               <- spatstat::density.ppp(x = sppMoi, sigma = bwi,
+             rhoMoi               <- spatstat.core::density.ppp(x = sppMoi, sigma = bwi,
                                                           weights = sppMoiw,
                                                           W = win)
 
@@ -444,7 +444,7 @@ probMap                     <- function(sppMoi,  control = NULL,
              sigmacsrMoi         <- sd(rhoCsr, na.rm = TRUE)
 
              # convert to data.frame
-             rhoMoidf <- spatstat::as.data.frame.im(x = rhoMoi)
+             rhoMoidf <- spatstat.geom::as.data.frame.im(x = rhoMoi)
              pvalsUpr <- rhoMoidf
 
              # generate p-values -  upper tail
@@ -454,24 +454,24 @@ probMap                     <- function(sppMoi,  control = NULL,
              pvalsUpr$value <- p.adjust(p = pvalsUpr$value, method = pvalCorrection)
 
              # convert back to image
-             pvalsUpr <- spatstat::as.im.data.frame(pvalsUpr)
+             pvalsUpr <- spatstat.geom::as.im.data.frame(pvalsUpr)
 
 
              ## __ hotspot __ ##
 
-             hotspotIm        <- spatstat::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
+             hotspotIm        <- spatstat.geom::eval.im(rhoMoi * (pvalsUpr <= pvalThreshold))
 
              hotspotIm[hotspotIm == 0] <- NA # set zeros to NA to create a window
-             hotspotWin       <- spatstat::as.polygonal(spatstat::as.owin(hotspotIm))
+             hotspotWin       <- spatstat.geom::as.polygonal(spatstat.geom::as.owin(hotspotIm))
 
              if(plotEach){
                    par(mfrow = c(1,1))
-                   spatstat::plot.owin(sppMoi$window, ylim = rev(sppMoi$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
-                   spatstat::plot.owin(hotspotWin, col = rgb(0,1,0,1), add = TRUE)
+                   spatstat.geom::plot.owin(sppMoi$window, ylim = rev(sppMoi$window$yrange), add = FALSE, main = paste0("BW = ",bwi))
+                   spatstat.geom::plot.owin(hotspotWin, col = rgb(0,1,0,1), add = TRUE)
              }
 
 
-             return(spatstat::area.owin(hotspotWin) / spatstat::area.owin(sppMoi$window))
+             return(spatstat.geom::area.owin(hotspotWin) / spatstat.geom::area.owin(sppMoi$window))
 
        })
 
@@ -699,9 +699,9 @@ probMap                     <- function(sppMoi,  control = NULL,
 #// the following function is already available in recent spatstat versions.
 .bw.scott2 <- function(X, isotropic=FALSE, d = NULL) {
 
-       if(is.null(d)) { d <- spatstat::spatdim(X) } else spatstat.utils::check.1.integer(d)
-       nX <- spatstat::npoints(X)
-       cX <- spatstat::coords(X, spatial=TRUE, temporal=FALSE, local=FALSE)
+       if(is.null(d)) { d <- spatstat.geom::spatdim(X) } else spatstat.utils::check.1.integer(d)
+       nX <- spatstat.geom::npoints(X)
+       cX <- spatstat.geom::coords(X, spatial=TRUE, temporal=FALSE, local=FALSE)
        sdX <- apply(cX, 2, sd)
        if(isotropic) {
               #' geometric mean

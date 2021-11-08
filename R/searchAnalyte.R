@@ -56,7 +56,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian",
        if(confirmedOnly){ # if only confirmed detections are needed
 
                if(!mzConfirmed){ # and there are no confirmed detections then return empty ppp
-                       return(spatstat::ppp(x = integer(0), y = integer(0)))
+                       return(spatstat.geom::ppp(x = integer(0), y = integer(0)))
                }
        }
 
@@ -104,7 +104,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian",
                      detectedCoord = spData$coordinates[detectedIn, , drop = F]
 
                      # window object
-                     spwin <- spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates))
+                     spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
 
                      # analytePointPattern
                      rObj <- analytePointPattern(x = detectedCoord[ , "x"],
@@ -122,7 +122,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian",
 
 
 
-        return(spatstat::ppp(x = integer(0), y = integer(0))) # return empty ppp object
+        return(spatstat.geom::ppp(x = integer(0), y = integer(0))) # return empty ppp object
 
 
 

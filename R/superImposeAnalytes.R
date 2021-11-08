@@ -14,7 +14,7 @@
 superImposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
 
       # find which is empty - remove
-      tokeep <- !(sapply(pppObjs, spatstat::is.empty))
+      tokeep <- !(sapply(pppObjs, spatstat.geom::is.empty))
       pppObjs <- pppObjs[tokeep]
 
       # concatinate metadata
@@ -22,7 +22,7 @@ superImposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
       mtd <- do.call("rbind", mtd)
 
       # superimpose
-      unifiedppp <- do.call(spatstat::superimpose.ppp,
+      unifiedppp <- do.call(spatstat.geom::superimpose.ppp,
                             args = c(unname(pppObjs), list(W = spWin, check = check)))
 
       # attach metadata

@@ -23,7 +23,7 @@ subsetAnalytes <- function(obj, expr){
       mtd <- mtd[which(mtd$idx %in% idxToKeep), ]
 
       # call spatstat's subsetting function
-      obj <- spatstat::subset.ppp(obj, idx %in% idxToKeep)
+      obj <- spatstat.geom::subset.ppp(obj, idx %in% idxToKeep)
 
       # attach metadata
       obj$metaData <- mtd

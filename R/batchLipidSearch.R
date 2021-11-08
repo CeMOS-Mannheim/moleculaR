@@ -30,12 +30,18 @@ batchLipidSearch <- function(spData, fwhmObj, sldb, adduct = c("M-H", "M+H", "M+
 
       #>>> to do: confirmedOnly flag set manually here. The check has to be moved to search Analyte.
 
+	  # check OS type
+	  if(.Platform$OS.type == "windows" & numCores > 1){
+		warning("Only single-core operation is supported on windows. \n")
+		numCores <- 1L
+	  }
+	  ifelse(.Platform$OS.type == "windows", 1, 4)
 
       #// sort verifiedMasses
       verifiedMasses <- sort(verifiedMasses)
 
       #// create sp window
-      spwin <- spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates))
+      spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
 
 
       #// filter sldb to include only verified masses - speed up computations
@@ -89,7 +95,7 @@ batchLipidSearch <- function(spData, fwhmObj, sldb, adduct = c("M-H", "M+H", "M+
                                                                     mc.cores = numCores, FUN = function(i) {
 
 
-                          sppCotainer <- list(emptyspp = spatstat::ppp(x = integer(0), y = integer(0)))
+                          sppCotainer <- list(emptyspp = spatstat.geom::ppp(x = integer(0), y = integer(0)))
 
                           #// de-protonated ----
                           if("M-H" %in% adduct) {
@@ -260,7 +266,7 @@ batchLipidSearch <- function(spData, fwhmObj, sldb, adduct = c("M-H", "M+H", "M+
 
 .reduceSearchList <- function(searchList){ # remove classes which did not generate hits
 
-      tokeep <- !(sapply(searchList$hitsList, function(x) spatstat::is.empty.ppp(x)))
+      tokeep <- !(sapply(searchList$hitsList, function(x) spatstat.geom::is.empty.ppp(x)))
 
       searchList <- lipidSearchList(lipidList = searchList$lipidList,
                                     hitsList = searchList$hitsList[tokeep],

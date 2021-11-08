@@ -232,7 +232,7 @@ server <- function(input, output, session) {
 
             incProgress(1/n, detail = paste("Creating sparse matrix..."))
 
-            spwin <<- spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+            spwin <<- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
             spData             <<- createSparseMat(x = msData)
 
             bwMethod          <<- "spAutoCor"
@@ -329,7 +329,7 @@ server <- function(input, output, session) {
 
             if (lysocreated() != TRUE){
                lysoGplsSumSpp <<- superImposeAnalytes(searchList$hitsList,
-                                                      spWin = spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates)))
+                                                      spWin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates)))
                lysocreated <<- reactiveVal(TRUE)
             }
 
@@ -375,7 +375,7 @@ server <- function(input, output, session) {
 
             if (lysocreated() != TRUE){
                lysoGplsSumSpp <<- superImposeAnalytes(searchList$hitsList,
-                                                      spWin = spatstat::as.polygonal(spatstat::owin(mask = spData$coordinates)))
+                                                      spWin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates)))
                lysocreated <<- reactiveVal(TRUE)
             }
 
@@ -415,7 +415,7 @@ server <- function(input, output, session) {
 
                par(mfrow = c(1, 1))
                #// image without masking
-               spatstat::plot.owin(rv$go_mz$hitsIonImage$window,
+               spatstat.geom::plot.owin(rv$go_mz$hitsIonImage$window,
                                    main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
                                    ylim = rev(rv$go_mz$hitsIonImage$window$yrange),
                                    box = FALSE)
@@ -423,9 +423,9 @@ server <- function(input, output, session) {
             } else{ # if there are hits then proceed with MPM computations
 
                # compute rastered image of the sppIonImage
-               ionImage        <- spatstat::pixellate(rv$go_mz$hitsIonImage,
+               ionImage        <- spatstat.geom::pixellate(rv$go_mz$hitsIonImage,
                                                       weights = rv$go_mz$hitsIonImage$marks$intensity,
-                                                      W = spatstat::as.mask(rv$go_mz$hitsIonImage$window,
+                                                      W = spatstat.geom::as.mask(rv$go_mz$hitsIonImage$window,
                                                                             dimyx=c(diff(rv$go_mz$hitsIonImage$window$yrange),
                                                                                     diff(rv$go_mz$hitsIonImage$window$xrange))),
                                                       padzero = FALSE, savemap = FALSE)
@@ -468,9 +468,9 @@ server <- function(input, output, session) {
 
                par(mfrow = c(1, 1))
                #// empty window
-               spwin = spatstat::as.polygonal(spatstat::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+               spwin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
 
-               spatstat::plot.owin(spwin,
+               spatstat.geom::plot.owin(spwin,
                                    main = paste0("No insances of ", lipidClass_iso, " were detected"),
                                    ylim = rev(spwin$yrange),
                                    box = FALSE)
@@ -509,7 +509,7 @@ server <- function(input, output, session) {
                par(mfrow = c(1, 1))
 
                #// empty window
-               spatstat::plot.owin(lysoGplsSumSpp$window,
+               spatstat.geom::plot.owin(lysoGplsSumSpp$window,
                                    main = paste0("No insances of ", igroup, " were detected"),
                                    ylim = rev(lysoGplsSumSpp$window$yrange),
                                    box = FALSE)
@@ -557,7 +557,7 @@ server <- function(input, output, session) {
                par(mfrow = c(1, 1))
 
                #// empty window
-               spatstat::plot.owin(lysoGplsSumSpp$window,
+               spatstat.geom::plot.owin(lysoGplsSumSpp$window,
                                    main = paste0("No insances of ", igroup, " lipids were detected"),
                                    ylim = rev(lysoGplsSumSpp$window$yrange),
                                    box = FALSE)

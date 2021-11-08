@@ -15,7 +15,7 @@ analytePointPattern(
 )
 }
 \arguments{
-\item{spp}{a spatial point pattern of type 'spatstat::ppp' with its `marks` being a dataframe with
+\item{spp}{a spatial point pattern of type 'spatstat.geom::ppp' with its `marks` being a dataframe with
 two columns `idx`and `intensity`.}
 
 \item{x, y, intensity, win}{optional, either these arguments or 'spp' have to be supplied.}
@@ -30,7 +30,7 @@ An S3 object of type 'ppp' and 'analytePointPattern' with the following entries 
 }
 }
 \description{
-This is a class to extend 'spatstat::ppp' class only enforcing specific point-marks. It also
+This is a class to extend 'spatstat.geom::ppp' class only enforcing specific point-marks. It also
 adds a 'metaData' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 It represents the spatial point pattern of an analyte (or set of
 analytes) with marks being a data.frame of two columns c('idx', 'intensity').

@@ -33,13 +33,13 @@ molProbMap(
 
 \item{hotspotIm}{An 'spatstat::im' object storing the corresponding pixellated image of the 'hotspotpp' slot.}
 
-\item{hotspotMask}{An 'spatstat::owin' object storing the corresponding window of the 'hotspotpp' slot.}
+\item{hotspotMask}{An 'spatstat.geom::owin' object storing the corresponding window of the 'hotspotpp' slot.}
 
 \item{coldspotpp}{A 'analytePointPattern' object holding only the points that are located within the coldspot.}
 
 \item{coldspotIm}{An 'spatstat::im' object storing the corresponding pixellated image of the 'coldspotpp' slot.}
 
-\item{coldspotMask}{An 'spatstat::owin' object storing the corresponding window of the 'coldspotpp' slot.}
+\item{coldspotMask}{An 'spatstat.geom::owin' object storing the corresponding window of the 'coldspotpp' slot.}
 }
 \value{
 An S3 object of type 'molProbMap'.

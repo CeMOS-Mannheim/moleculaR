@@ -99,7 +99,7 @@
 #
 # # analytePointPattern Class
 # #
-# # This is a class to extend 'spatstat::ppp' class only enforcing specific point-marks. It also
+# # This is a class to extend 'spatstat.geom::ppp' class only enforcing specific point-marks. It also
 # # adds an 'mzVals' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 # # It represents the spatial point pattern of an analyte (or set of
 # # analytes) with marks being a data.frame of one column c("intensity").
@@ -144,7 +144,7 @@
 # # @slot rhoCsr An 'spatstat::im' object storing the density image of 'csrMoi' after applying KDE.
 # # @slot hotspotpp A 'analytePointPattern' object holding only the points that are located within the hotspot.
 # # @slot hotspotIm An 'spatstat::im' object storing the corresponding pixellated image of the 'hotspotpp' slot.
-# # @slot hotspotMask An 'spatstat::owin' object storing the corresponding window of the 'hotspotpp' slot.
+# # @slot hotspotMask An 'spatstat.geom::owin' object storing the corresponding window of the 'hotspotpp' slot.
 # #
 # #
 # #
