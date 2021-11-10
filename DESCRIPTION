@@ -1,7 +1,7 @@
 Package: moleculaR
 Type: Package
 Title: Spatial Probabilistic Mapping of Metabolite Ensembles in Mass Spectrometry Imaging
-Version: 0.8.0
+Version: 0.8.1
 Author: Denis Abu Sammour
 Maintainer: 
     Denis Abu Sammour <d.abu-sammour@hs-mannheim.de>
@@ -12,7 +12,15 @@ Description: a computational framework  that introduces probabilistic mapping an
     same image.
 License: MIT + file LICENSE
 Depends: R (>= 4.0.2)
-Imports: Matrix, spatstat (>= 2.2.0), MALDIquant, MALDIquantForeign, raster, shiny
+Imports: 
+      Matrix, 
+      spatstat (>= 2.2.0), 
+      MALDIquant, 
+      MALDIquantForeign, 
+      raster, 
+      shiny,
+      viridis,
+      shinyWidgets
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
