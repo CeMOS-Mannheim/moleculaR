@@ -246,7 +246,46 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 
 }
 
+#' Plot analytePointPattern
+#'
+#' A method to plot `anlaytePointPattern` objects. This calls `spatstat.geom::plot.ppp` with
+#' pre-defined defaults. For more control over the plotting please use `spatstat.geom::plot.ppp`.
+#'
+#' @param obj S3 object of type `anlaytePointPattern` (and `spatstat.geom::spp`).
+#' @param colourmap the colourmap to be used, see `?viridis::viridis_pal`.
+#' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
+#' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
+#' @param pch     a positive integer, or a single character. See `?par`.
+#' @param size    the size of the symbol: a positive number or zero. see`?symbolmap`.
+#' @param analyte character, name of the analyte.
+#'
+#' @return nothing, plots only.
+#'
+#' @export
+#'
+plotAnalyte <- function(obj, colourmap = "inferno", transpFactor = 0.7, pch = 19,
+                        size = 0.4, analyte = "m/z Analyte"){
 
+      if(!("analytePointPattern" %in% class(obj))){
+            stop("provided obj is not of type 'analytePointPattern'. \n")
+      }
+
+      colfun <- spatstat.geom::colourmap(col = spatstat.geom::to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
+                                         range = range(obj$marks$intensity))
+
+      spatstat.geom::plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+                              ylim = rev(obj$window$yrange),
+                              #cols = viridis::viridis_pal(option = "inferno")(100),
+                              #markscale = 0.000004,
+                              #zap = 0.0,
+                              #chars = 21,
+                              main = paste0("SPP of ", analyte),
+                              symap = spatstat.geom::symbolmap(pch = pch,
+                                                               cols = colfun,
+                                                               size = size,
+                                                               range = range(obj$marks$intensity))) # colors according to intensity
+
+}
 
 
 
@@ -330,8 +369,6 @@ molProbMap <- function(bw, sppMoi, csrMoi, rhoMoi, rhoCsr, hotspotpp, hotspotIm,
 print.molProbMap <- function(obj) {
 
       cat("S3 object 'molProbMap' holding molecular probability maps of a given analyte in an MSI dataset. \n ")
-      cat("spp: spatial point pattern of type 'spatstat.geom::ppp' with ", obj$spp$n, " points/events.\n")
-      cat("mzVals: m/z values that represent the analyte under study = ", round(object$mzVals, 4), " .\n")
 
 }
 

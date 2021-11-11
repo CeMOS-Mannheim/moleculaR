@@ -14,5 +14,5 @@ A \code{MALDIquant::MassSpectrum} object.
 }
 \description{
 This reads a single spectrum from a tsv file containing two columnd for m/z and intensity,
-respectively.
+respectively. Note that the first row is counted as the header.
 }

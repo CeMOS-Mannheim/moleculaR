@@ -1,7 +1,7 @@
 #' Read a single spectrum
 #'
 #' This reads a single spectrum from a tsv file containing two columnd for m/z and intensity,
-#' respectively.
+#' respectively. Note that the first row is counted as the header.
 #'
 #' @param path: 	character string, path to the tsv file which should be read in.
 #'

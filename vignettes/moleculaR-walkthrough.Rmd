@@ -195,11 +195,12 @@ ionImage        <- spatstat.geom::pixellate(sppIonImage,
                                                         diff(sppIonImage$window$xrange))),
                           padzero = FALSE)
 
+
 ```
 
-Now to compute a FWHM-dependent Gaussian weighted analyte point pattern representation, set `wMethod="Gaussian"`. The `probMap` could then be called with the default parameters to calculate the corresponding MPM of the above POI (see `?probMap` for details) and the generic `plot` could be used on the result to plot a coposite detailed illustration (see `?plot.molProbMap` for details): 
+Now to compute a FWHM-dependent Gaussian weighted analyte point pattern representation, set `wMethod="Gaussian"`:
 
-```{r MPM, results='hide', fig.width=12, fig.height=16, warning=FALSE}
+```{r sppmoi, results='hide', warning=FALSE}
 # compute spatial point pattern of the analyte
 sppMoi          <- searchAnalyte(m = queryMass, 
                             fwhm = getFwhm(fwhmObj, queryMass), 
@@ -207,8 +208,13 @@ sppMoi          <- searchAnalyte(m = queryMass,
                             wMethod = "Gaussian")
 
 
+plotAnalyte(sppMoi, analyte = paste0("m/z ", round(queryMass, 4)))
+```
 
 
+The `probMap` could then be called with the default parameters to calculate the corresponding MPM of the above POI (see `?probMap` for details) and the generic `plot` could be used on the result to plot a coposite detailed illustration (see `?plot.molProbMap` for details): 
+
+```{r MPM, results='hide', fig.width=12, fig.height=16, warning=FALSE}
 #// compute MPM - default parameters
 probImg         <- probMap(sppMoi)
 
