@@ -16,7 +16,8 @@
 \arguments{
 \item{obj}{S3 object of type `molProbMap`.}
 
-\item{what}{What to plot, c("detailed", "sppMoi", "csrPointPattern", )}
+\item{what}{What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
+"csrDensityImage", "MPM")}
 
 \item{transpFactor}{Transparency fraction. Numerical value or
 vector of values between 0 and 1, giving the opaqueness of a colour.

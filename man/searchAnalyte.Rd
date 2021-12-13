@@ -9,6 +9,7 @@ searchAnalyte(
   fwhm,
   spData,
   wMethod = "Gaussian",
+  spwin = NA,
   verifiedMasses = NA,
   confirmedOnly = FALSE,
   metaData = list()
@@ -22,6 +23,9 @@ searchAnalyte(
 \item{spData}{an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.}
 
 \item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
+
+\item{spwin}{optional, an object of type `owin`. If not given the function tries to generate the 
+spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).}
 
 \item{verifiedMasses}{an optional numeric vector of m/z values that are (externally) verified to
 be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE

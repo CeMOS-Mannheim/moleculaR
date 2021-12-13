@@ -7,6 +7,8 @@
 #' @param fwhm the fwhm at 'm'.
 #' @param spData an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.
 #' @param wMethod wighting method; c("Gaussian", "sum", "max", "mean").
+#' @param spwin optional, an object of type `owin`. If not given the function tries to generate the 
+#' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior). 
 #' @param verifiedMasses an optional numeric vector of m/z values that are (externally) verified to
 #' be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
 #' annotation result.
@@ -20,7 +22,7 @@
 #'
 #' @export
 #'
-searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian",
+searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              verifiedMasses = NA, confirmedOnly = FALSE,
                              metaData = list()) {
 
@@ -104,7 +106,9 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian",
                      detectedCoord = spData$coordinates[detectedIn, , drop = F]
 
                      # window object
-                     spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+                     if(is.na(spwin)){
+                            spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+                     }
 
                      # analytePointPattern
                      rObj <- analytePointPattern(x = detectedCoord[ , "x"],

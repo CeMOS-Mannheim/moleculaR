@@ -238,8 +238,13 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 
       # metaData object
       mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
-      spp$metaData <- cbind(mtdt, as.data.frame(metaData, stringsAsFactors  = FALSE))
 
+      if(length(metaData) > 0 & is.list(metaData)){
+         spp$metaData <- cbind(mtdt, as.data.frame(metaData, stringsAsFactors  = FALSE))
+      } else {
+         spp$metaData <- mtdt
+      }
+      
       class(spp) <- c(class(spp), "analytePointPattern")
 
       return(spp)
@@ -378,7 +383,8 @@ print.molProbMap <- function(obj) {
 #' A method to plot MPMs with different combinations.
 #'
 #' @param obj S3 object of type `molProbMap`.
-#' @param what What to plot, c("detailed", "sppMoi", "csrPointPattern", )
+#' @param what What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
+#' "csrDensityImage", "MPM")
 #' @param transpFactor Transparency fraction. Numerical value or
 #' vector of values between 0 and 1, giving the opaqueness of a colour.
 #' A fully opaque colour has `transpFactor=1`.
