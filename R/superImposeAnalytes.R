@@ -14,9 +14,15 @@
 superimposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
 
       # find which is empty - remove
-      tokeep <- !(sapply(pppObjs, spatstat.geom::is.empty))
+      tokeep <- !(sapply(pppObjs, function(i) {
+            spatstat.geom::is.empty.ppp(i) | is.null(i)
+            }))
 
-      if(!any(tokeep)){
+      torm <- sapply(pppObjs, function(i) {
+            (spatstat.geom::is.empty.ppp(i) | is.null(i))
+      })
+
+      if(all(torm)){
             if(is.null(spWin)){
                   return(spatstat.geom::ppp(x = integer(0), y = integer(0)))
             } else{
@@ -24,7 +30,7 @@ superimposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
             }
       }
 
-      pppObjs <- pppObjs[tokeep]
+      pppObjs <- pppObjs[-torm]
 
       # concatinate metadata
       mtd <- lapply(pppObjs, function(i){i$metaData})

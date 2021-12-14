@@ -11,7 +11,7 @@ output:
     number_sections: true
 theme: cosmo
 vignette: >
-  %\VignetteIndexEntry{exampleData-workflow}
+  %\VignetteIndexEntry{moleculaR: Walkthrough}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

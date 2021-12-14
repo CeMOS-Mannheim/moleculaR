@@ -55,11 +55,15 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
         }
 
       #// create sp window
-      if(is.na(spwin)){
+      if(identical(spwin, NA)){
             spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
       }
 
 
+      #// capitalize "M+k" - to handle input error
+      if("M+k" %in% adduct){
+            adduct[adduct == "M+k"] = toupper(adduct[adduct == "M+k"])
+      }
 
 
       # if(verbose){
@@ -79,7 +83,9 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 
 
-                    sppCotainer <- list(emptyspp = spatstat.geom::ppp(x = integer(0), y = integer(0)))
+                    #sppCotainer <- list(emptyspp = spatstat.geom::ppp(x = integer(0), y = integer(0)))
+                    sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
+
 
                     #// de-protonated ----
                     if("M-H" %in% adduct) {
@@ -97,7 +103,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             numDoubleBonds = sldb$numDoubleBond[i],
                                             lipidClass = sldb$lipidGroup[i])
 
-                                hitsDeprot <- searchAnalyte(m = lipTmp,
+                                sppCotainer[["M-H"]] <- searchAnalyte(m = lipTmp,
                                                           fwhm = getFwhm(fwhmObj, lipTmp),
                                                           spData = spData,
                                                           wMethod = wMethod,
@@ -105,7 +111,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                           confirmedOnly = confirmedOnly,
                                                           metaData = mt)
 
-                                sppCotainer <- c(sppCotainer, list(hitsDeprot))
+                                #sppCotainer <- c(sppCotainer, list(hitsDeprot))
 
                                 rm(mt, lipTmp)
 
@@ -131,7 +137,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             numDoubleBonds = sldb$numDoubleBond[i],
                                             lipidClass = sldb$lipidGroup[i])
 
-                                hitsProt <- searchAnalyte(m = lipTmp,
+                                sppCotainer[["M+H"]] <- searchAnalyte(m = lipTmp,
                                                         fwhm = getFwhm(fwhmObj, lipTmp),
                                                         spData = spData,
                                                         wMethod = wMethod,
@@ -139,7 +145,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                         confirmedOnly = confirmedOnly,
                                                         metaData = mt)
 
-                                sppCotainer <- c(sppCotainer, list(hitsProt))
+                                #sppCotainer <- c(sppCotainer, list(hitsProt))
 
 
                                 rm(mt, lipTmp)
@@ -168,7 +174,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             numDoubleBonds = sldb$numDoubleBond[i],
                                             lipidClass = sldb$lipidGroup[i])
 
-                                hitsSod <- searchAnalyte(m = lipTmp,
+                                sppCotainer[["M+Na"]] <- searchAnalyte(m = lipTmp,
                                                        fwhm = getFwhm(fwhmObj, lipTmp),
                                                        spData = spData,
                                                        wMethod = wMethod,
@@ -176,7 +182,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                        confirmedOnly = confirmedOnly,
                                                        metaData = mt)
 
-                                sppCotainer <- c(sppCotainer, list(hitsSod))
+                                #sppCotainer <- c(sppCotainer, list(hitsSod))
 
 
                                 rm(mt, lipTmp)
@@ -190,6 +196,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                     #// K+ adduct ----
                     if("M+K" %in% adduct | "M+k" %in% adduct){
+
                           lipTmp        = sldb$`Exact m/z of [M+K]+`[i]
 
                           if(!is.na(lipTmp)) { # for example there is no Na-adduct version
@@ -203,7 +210,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             numDoubleBonds = sldb$numDoubleBond[i],
                                             lipidClass = sldb$lipidGroup[i])
 
-                                hitsPotas <- searchAnalyte(m = lipTmp,
+                                sppCotainer[["M+K"]] <- searchAnalyte(m = lipTmp,
                                                          fwhm = getFwhm(fwhmObj, lipTmp),
                                                          spData = spData,
                                                          wMethod = wMethod,
@@ -211,7 +218,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                          confirmedOnly = confirmedOnly,
                                                          metaData = mt)
 
-                                sppCotainer <- c(sppCotainer, list(hitsPotas))
+                               #sppCotainer <- c(sppCotainer, list(hitsPotas))
 
 
                                 rm(mt, lipTmp)
@@ -221,11 +228,14 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                           }
                     }
 
-                    if(length(sppCotainer) > 1) {
-                       sppCotainer <- superimposeAnalytes(sppCotainer, spWin = spwin)
+                    noDetections <- sapply(sppCotainer, is.null)
+
+                    if(all(!noDetections)){ # if there are no detections return empty ppp object
+                          return(spatstat.geom::ppp(x = integer(0), y = integer(0)), window = spwin)
+                    } else{
+                          return(superimposeAnalytes(sppCotainer, spWin = spwin))
                     }
 
-                    return(sppCotainer)
                   })
 
 
