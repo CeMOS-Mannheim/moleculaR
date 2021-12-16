@@ -237,14 +237,15 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       spp <- spatstat.geom::as.ppp(spp)
 
       # metaData object
-      mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
+      #mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
+      mtdt <- list(idx = idx, mzVals = mzVals)
 
-      if(length(metaData) > 0 & is.list(metaData)){
-         metaData <- metaData[!sapply(metaData, is.null)] # to remove residual null entries
-         spp$metaData <- cbind(mtdt, as.data.frame(metaData, stringsAsFactors  = FALSE))
-      } else {
-         spp$metaData <- mtdt
-      }
+      #if(length(metaData) > 0 & is.list(metaData)){
+         #metaData <- metaData[!sapply(metaData, is.null)] # to remove residual null entries
+         spp$metaData <- as.data.frame(c(mtdt, metaData), stringsAsFactors  = FALSE)
+      # } else {
+      #    spp$metaData <- mtdt
+      # }
 
       class(spp) <- c(class(spp), "analytePointPattern")
 

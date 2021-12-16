@@ -300,6 +300,7 @@ lysoGPLs <- subsetAnalytes(lipidHits, lipidClass %in% ofInterest)
 lysoGPLs
 
 # detected classes
+cat("detected lipid classes: \n")
 unique(lysoGPLs$metaData$lipidClass)
 ```
 

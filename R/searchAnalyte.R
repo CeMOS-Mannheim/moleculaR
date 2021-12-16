@@ -7,8 +7,8 @@
 #' @param fwhm the fwhm at 'm'.
 #' @param spData an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.
 #' @param wMethod wighting method; c("Gaussian", "sum", "max", "mean").
-#' @param spwin optional, an object of type `owin`. If not given the function tries to generate the 
-#' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior). 
+#' @param spwin optional, an object of type `owin`. If not given the function tries to generate the
+#' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).
 #' @param verifiedMasses an optional numeric vector of m/z values that are (externally) verified to
 #' be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
 #' annotation result.
@@ -55,32 +55,37 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
        }
 
+       # window object
+       if(identical(spwin, NA)){
+             spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+       }
+
        if(confirmedOnly){ # if only confirmed detections are needed
 
                if(!mzConfirmed){ # and there are no confirmed detections then return empty ppp
-                       return(spatstat.geom::ppp(x = integer(0), y = integer(0)))
+                       return(.craeteEmptySpp(spwin))
                }
        }
 
-       idx           = MALDIquant::match.closest(m , spData$mzAxis, fiveS, NA)
+       idx           <- MALDIquant::match.closest(m , spData$mzAxis, fiveS, NA)
 
 
        if(!is.na(idx))
        {
 
-              idxlwr        = MALDIquant::match.closest((m - fiveS), spData$mzAxis, fiveS, idx)
-              idxupr        = MALDIquant::match.closest((m + fiveS), spData$mzAxis, fiveS, idx)
+              idxlwr        <- MALDIquant::match.closest((m - fiveS), spData$mzAxis, fiveS, idx)
+              idxupr        <- MALDIquant::match.closest((m + fiveS), spData$mzAxis, fiveS, idx)
 
 
-              coi           = as(spData$spmat[ , (idxlwr:idxupr), drop = FALSE], "matrix")  #columns of interest
+              coi           <- as(spData$spmat[ , (idxlwr:idxupr), drop = FALSE], "matrix")  #columns of interest
 
-              combinedCols  = switch(wMethod,
+              combinedCols  <- switch(wMethod,
                      "Gaussian" = {
-                            gw = gaussWeight(x = spData$mzAxis[(idxlwr:idxupr)],
+                            gw <- gaussWeight(x = spData$mzAxis[(idxlwr:idxupr)],
                                           m = m,
                                           fwhm = fwhm)
 
-                            coi           = sweep(coi, MARGIN = 2, gw, "*")
+                            coi           <- sweep(coi, MARGIN = 2, gw, "*")
 
                             rowSums(coi)
 
@@ -98,17 +103,14 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
 
 
-              detectedIn    = which(combinedCols > 0) # in which spectra it had a non-zero value
+              detectedIn    <- which(combinedCols > 0) # in which spectra it had a non-zero value
 
               if(length(detectedIn) > 0) {
 
                      # coordinates of these spectra
-                     detectedCoord = spData$coordinates[detectedIn, , drop = F]
+                     detectedCoord <- spData$coordinates[detectedIn, , drop = F]
 
-                     # window object
-                     if(is.na(spwin)){
-                            spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
-                     }
+
 
                      # analytePointPattern
                      rObj <- analytePointPattern(x = detectedCoord[ , "x"],
@@ -126,7 +128,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
 
 
-        return(spatstat.geom::ppp(x = integer(0), y = integer(0))) # return empty ppp object
+        return(.craeteEmptySpp(spwin)) # return empty ppp object
 
 
 
@@ -136,5 +138,16 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
 }
 
+.craeteEmptySpp <- function(spwin){
 
+      # creates an empty spp compatible with the internal representation
+      # of moleculaR
+
+      return(spatstat.geom::ppp(x = integer(0),
+                                y = integer(0),
+                                marks = data.frame(idx = integer(0), intensity = numeric(0)),
+                                window = spwin,
+                                checkdup = FALSE,
+                                drop = FALSE))
+}
 

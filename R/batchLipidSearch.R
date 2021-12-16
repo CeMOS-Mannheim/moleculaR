@@ -66,6 +66,23 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
       }
 
 
+      #// filter sldb to include only verified masses - speed up computations
+      if(confirmedOnly){
+
+            if(identical(verifiedMasses, NA)){
+                  stop("'verifiedMasses' has to be provided when 'confirmedOnly'  is TRUE.\n")
+            }
+
+
+            # reduce sldb to only contain verified masses
+            sldb <- .filtersldb(sldb, verifiedMasses, adduct, fwhmObj)
+
+      }
+
+
+
+
+
       # if(verbose){
       #       pb <- utils::txtProgressBar(min = 1, max = nrow(sldb), style = 3, width = 20)
       #       count <- 1
@@ -84,7 +101,10 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 
                     #sppCotainer <- list(emptyspp = spatstat.geom::ppp(x = integer(0), y = integer(0)))
-                    sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
+                    #sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
+
+                    # initialize empty spp objects for each adduct
+                    sppCotainer <- .initializeEmptySppList(adduct, spwin)
 
 
                     #// de-protonated ----
@@ -228,16 +248,17 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                           }
                     }
 
-                    noDetections <- sapply(sppCotainer, is.null)
+                    # noDetections <- sapply(sppCotainer, is.null)
+                    #
+                    # if(all(!noDetections)){ # if there are no detections return empty ppp object
+                    #       return(spatstat.geom::ppp(x = integer(0), y = integer(0), window = spwin))
+                    # } else{
+                    #       return(superimposeAnalytes(sppCotainer, spWin = spwin))
+                    # }
 
-                    if(all(!noDetections)){ # if there are no detections return empty ppp object
-                          return(spatstat.geom::ppp(x = integer(0), y = integer(0)), window = spwin)
-                    } else{
-                          return(superimposeAnalytes(sppCotainer, spWin = spwin))
-                    }
+                    return(superimposeAnalytes(sppCotainer, spWin = spwin))
 
                   })
-
 
 
 
@@ -272,5 +293,64 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 #
 # }
 
+.initializeEmptySppList <- function(vec, spwin){
 
+      # this is used to initialize an empty list of spp objects
+      # vec is a character vector holding the query adducts
+      # spwin is the spatial window of type spatstat.geom::owin
+
+      emptyspp <- spatstat.geom::ppp(x = integer(0), y = integer(0),
+                                     marks = data.frame(idx = integer(0), intensity = numeric(0)),
+                                     window = spwin, checkdup = FALSE, drop = FALSE)
+
+      cont <- replicate(length(vec), emptyspp, simplify = FALSE)
+
+      names(cont) <- vec
+
+      return(cont)
+
+}
+
+.filtersldb <- function(sldb, verifiedMasses, adduct, fwhmObj){
+
+      # filter sldb to include only verified masses - speed up computations
+
+      idxToKeep <- integer(0)
+
+      if("M-H" %in% adduct){
+            tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M-H]-`,
+                                              table = sort(verifiedMasses),
+                                              tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M-H]-`))
+            idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
+      }
+
+      if("M+H" %in% adduct){
+            tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+H]+`,
+                                              table = sort(verifiedMasses),
+                                              tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+H]+`))
+            idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
+      }
+
+      if("M+Na" %in% adduct){
+            tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+Na]+`,
+                                             table = sort(verifiedMasses),
+                                             tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+Na]+`))
+            idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
+      }
+
+      if("M+K" %in% adduct){
+            tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+K]+`,
+                                             table = sort(verifiedMasses),
+                                             tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+K]+`))
+            idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
+      }
+
+      if(length(idxToKeep) == 0) {
+            stop("No matches of 'verifiedMasses' in the SwissLipid DB. \n" )
+      }
+
+      sldb <- sldb[idxToKeep, ]
+
+
+}
 
