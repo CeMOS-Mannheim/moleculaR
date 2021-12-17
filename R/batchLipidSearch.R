@@ -315,33 +315,66 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
       # filter sldb to include only verified masses - speed up computations
 
+      # to fix: consider adding more stringent filtration on verifiedMasses to also
+      # includ the adduct from which these masses were calculated. 
+
       idxToKeep <- integer(0)
 
       if("M-H" %in% adduct){
+
+            tol <- getFwhm(fwhmObj, sldb$`Exact m/z of [M-H]-`)
+
+            if(any(is.na(tol))){
+                  tol[is.na(tol)] <- 0
+            }
+
+
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M-H]-`,
                                               table = sort(verifiedMasses),
-                                              tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M-H]-`))
+                                              tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
       }
 
       if("M+H" %in% adduct){
+
+            tol <- getFwhm(fwhmObj, sldb$`Exact m/z of [M+H]+`)
+
+            if(any(is.na(tol))){
+                  tol[is.na(tol)] <- 0
+            }
+
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+H]+`,
                                               table = sort(verifiedMasses),
-                                              tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+H]+`))
+                                              tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
+
       }
 
       if("M+Na" %in% adduct){
+
+            tol <- getFwhm(fwhmObj, sldb$`Exact m/z of [M+Na]+`)
+
+            if(any(is.na(tol))){
+                  tol[is.na(tol)] <- 0
+            }
+
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+Na]+`,
                                              table = sort(verifiedMasses),
-                                             tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+Na]+`))
+                                             tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
       }
 
       if("M+K" %in% adduct){
+
+            tol <- getFwhm(fwhmObj, sldb$`Exact m/z of [M+K]+`)
+
+            if(any(is.na(tol))){
+                  tol[is.na(tol)] <- 0
+            }
+
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+K]+`,
                                              table = sort(verifiedMasses),
-                                             tolerance = getFwhm(fwhmObj, sldb$`Exact m/z of [M+K]+`))
+                                             tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
       }
 
