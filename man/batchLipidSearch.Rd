@@ -7,6 +7,7 @@
 batchLipidSearch(
   spData,
   fwhmObj,
+  spwin = NA,
   sldb,
   adduct = c("M-H", "M+H", "M+Na", "M+K"),
   numCores = 1L,
@@ -17,9 +18,14 @@ batchLipidSearch(
 )
 }
 \arguments{
-\item{spData}{an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data.}
+\item{spData}{an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data. This can also be a
+named list `list(positive=..., negative=...)` to allow for lipid search in positive and negative ionisation
+mode datasets simultaneously.}
 
 \item{fwhmObj}{an S3 object of type `fwhm` with the estimated fwhm data.}
+
+\item{spwin}{optional, an object of type `owin`. If not given the function tries to generate the
+spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).}
 
 \item{sldb}{the SwissLipid database loaded as a data.frame.}
 
@@ -35,6 +41,8 @@ be real molecular entities with a certain confidence, ex. 'mz' column of a METAS
 annotation result.}
 
 \item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
+
+\item{verbose}{ignored for now.}
 
 \item{metaData}{optional named list with additional identifiers for the analyte
 under study, ex. list(lipidID = "..", sumformular = "..", ..). This will be passed to the `metaData`

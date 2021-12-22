@@ -53,7 +53,7 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
                                 hr(),
                                 fluidRow(
                                    column(12,
-                                          selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat.", "di-unsat", "poly-unsat")),
+                                          selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat", "di-unsat", "poly-unsat")),
                                           actionButton(inputId = "go_lipid_sat", label = "Generate Plot",style='padding:6px; font-size:80%')
 
                                    ))
@@ -188,19 +188,14 @@ server <- function(input, output, session) {
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
 
             if (lysocreated() != TRUE){
-               lysoGplsSumSpp <<- superImposeAnalytes(searchList$hitsList,
-                                                  spWin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates)))
+
+               ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
+                               "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
+
+               lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
+
                lysocreated <<- reactiveVal(TRUE)
             }
-
-            detectedAdducts <<- unique(lysoGplsSumSpp$metaData$adduct)
-
-            sppList <<- setNames(vector("list", length(detectedAdducts)), detectedAdducts)
-
-            # subsetting
-            sppList[["M+K"]]     <<- subsetAnalytes(lysoGplsSumSpp, adduct == "M+K")
-            sppList[["M+Na"]]    <<- subsetAnalytes(lysoGplsSumSpp, adduct == "M+Na")
-            sppList[["M+H"]]     <<- subsetAnalytes(lysoGplsSumSpp, adduct == "M+H")
 
             lipidGroup <<-"(lyso)GPLs"
 
@@ -230,21 +225,14 @@ server <- function(input, output, session) {
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
 
             if (lysocreated() != TRUE){
-               lysoGplsSumSpp <<- superImposeAnalytes(searchList$hitsList,
-                                                      spWin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates)))
+               ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
+                               "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
+
+               lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
+
                lysocreated <<- reactiveVal(TRUE)
             }
 
-
-            detectedSaturation <<- c("sat", "mono-unsat", "di-unsat", "poly-unsat")
-
-            sppList <<- setNames(vector("list", length(detectedSaturation)), detectedSaturation)
-
-            # subsetting
-            sppList[["sat"]]   <<- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 0)
-            sppList[["mono-unsat"]]   <<- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 1)
-            sppList[["di-unsat"]]   <<- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 2)
-            sppList[["poly-unsat"]]   <<- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds > 2)
 
             lipidGroup <<-"(lyso)GPLs"
 
@@ -285,13 +273,14 @@ server <- function(input, output, session) {
                                                       W = spatstat.geom::as.mask(rv$go_mz$hitsIonImage$window,
                                                                             dimyx=c(diff(rv$go_mz$hitsIonImage$window$yrange),
                                                                                     diff(rv$go_mz$hitsIonImage$window$xrange))),
-                                                      padzero = FALSE, savemap = FALSE)
+                                                      padzero = FALSE)
 
 
                # compute sppMoi (spatial point pattern of the analyte)
                sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
                                                 fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
-                                                spData = spData)
+                                                spData = spData,
+                                                wMethod = "Gaussian")
 
 
 
@@ -320,8 +309,11 @@ server <- function(input, output, session) {
 
             lipidClass_iso <- isolate(input$lipidSpecies)
 
+            # subset lipidHits
+            paHits <- subsetAnalytes(searchList, lipidClass == lipidClass_iso)
 
-            if(identical(searchList$hitsList[[lipidClass_iso]], NULL)) {
+
+            if(paHits$n==0) {
 
                par(mfrow = c(1, 1))
                #// empty window
@@ -335,7 +327,7 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg <- probMap(searchList$hitsList[[lipidClass_iso]], bwMethod = "scott", sqrtTansform = TRUE) # fixed arguments
+               probImg <- probMap(paHits, bwMethod = "scott", sqrtTansform = TRUE) # fixed arguments
 
                plot(probImg, what = "detailed", analyte = paste0(lipidClass_iso, " - n=", length(probImg$sppMoi$metaData$mzVals)))
 
@@ -359,14 +351,16 @@ server <- function(input, output, session) {
 
             igroup              = isolate(input$lipidIon)
 
-            if(identical(sppList[[igroup]], NULL)) {
+            spp_tmp <- subsetAnalytes(lysoGPLs, adduct == igroup)
+
+            if(identical(spp_tmp, NULL)) {
 
 
 
                par(mfrow = c(1, 1))
 
                #// empty window
-               spatstat.geom::plot.owin(lysoGplsSumSpp$window,
+               spatstat.geom::plot.owin(lysoGPLs$window,
                                    main = paste0("No insances of ", igroup, " were detected"),
                                    ylim = rev(lysoGplsSumSpp$window$yrange),
                                    box = FALSE)
@@ -375,7 +369,7 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(sppList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
@@ -407,7 +401,20 @@ server <- function(input, output, session) {
 
             igroup = isolate(input$lipidSat)
 
-            if(identical(sppList[[igroup]], NULL)) {
+
+            if(igroup=="sat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
+            }            else if (igroup=="mono-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
+            }            else if (igroup=="di-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
+            }            else if(igroup=="poly-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
+            }
+
+
+
+            if(identical(spp_tmp, NULL)) {
 
 
 
@@ -422,7 +429,7 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(sppList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")

@@ -24,7 +24,7 @@ searchAnalyte(
 
 \item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
 
-\item{spwin}{optional, an object of type `owin`. If not given the function tries to generate the 
+\item{spwin}{optional, an object of type `owin`. If not given the function tries to generate the
 spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).}
 
 \item{verifiedMasses}{an optional numeric vector of m/z values that are (externally) verified to

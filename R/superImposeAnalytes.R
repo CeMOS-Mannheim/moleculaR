@@ -11,11 +11,26 @@
 #' @export
 #'
 
-superImposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
+superimposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
 
       # find which is empty - remove
-      tokeep <- !(sapply(pppObjs, spatstat.geom::is.empty))
-      pppObjs <- pppObjs[tokeep]
+      # tokeep <- !(sapply(pppObjs, function(i) {
+      #       spatstat.geom::is.empty.ppp(i) | is.null(i)
+      #       }))
+
+      # torm <- sapply(pppObjs, function(i) {
+      #       (spatstat.geom::is.empty.ppp(i) | is.null(i))
+      # })
+      #
+      # if(all(torm)){
+      #       if(is.null(spWin)){
+      #             return(spatstat.geom::ppp(x = integer(0), y = integer(0)))
+      #       } else{
+      #             return(spatstat.geom::ppp(x = integer(0), y = integer(0), window = spWin))
+      #       }
+      # }
+      #
+      # pppObjs <- pppObjs[-torm]
 
       # concatinate metadata
       mtd <- lapply(pppObjs, function(i){i$metaData})

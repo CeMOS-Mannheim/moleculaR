@@ -11,7 +11,7 @@ output:
     number_sections: true
 theme: cosmo
 vignette: >
-  %\VignetteIndexEntry{exampleData-workflow}
+  %\VignetteIndexEntry{moleculaR: Walkthrough}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -238,31 +238,42 @@ As _moleculaR_ is lipidome-focused in its current implementation, the test MSI d
 ```{r CPPMs, results='hide'}
 cat("Batch lipid search is ongoing - this will take several minutes - \n")
 
-searchList <- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
+lipidHits <- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
                                adduct = c("M+H", "M+Na", "M+K"),
                                numCores = 4, 
                                verifiedMasses = as.numeric(mtspc$mz),
                                confirmedOnly = TRUE, verbose = TRUE)
 
+lipidHits
 ```
 
-The results is an S3 object `lipidSearchList` which contains the hits as `analytePointPattern` objects organized into a list of lipid classes (see `?lipidSearchList` for more details). To list all lipid classes which were detected (and confirmed by METASPACE; if `confirmedOnly=TRUE`):
+The results is an S3 object of type `spatstat::ppp` and `moleculaR::analytePointPattern` which contains all lipid identifications (against SwissLipids database) according to the provided `mtspc` annotation file. The metaData of the detected analytes are found in the `metaData` slot:
+
+```{r metadata}
+# show metaData 
+head(lipidHits$metaData)
+```
+
+
+To list all lipid classes which were detected (and confirmed by METASPACE; if `confirmedOnly=TRUE`):
 
 ```{r lipidClasses}
 # whow all detected lipid classes
-searchList$allClasses
+unique(lipidHits$metaData$lipidClass)
 ```
-Afterwards one could directly apply `probMap` method and produce a CPPM for all hit instances for a given lipid class : 
+To generate class-specific lipid maps, `subsetAnalytes` could be used to filter `lipidHits` according to lipid classes. Note that `subsetAnalytes` subsetting is always based on the column names of `lipidHits$metaData`. Afterwards one could directly apply `probMap` method and produce a CPPM for all hit instances for a given lipid class : 
 
 ```{r CPPM.plot, results='hide', fig.width=12, fig.height=16, warning=FALSE}
 # choose one lipid species
 lipidClass <- "PA(x:x)"
 
+# subset lipidHits
+paHits <- subsetAnalytes(lipidHits, lipidClass == "PA(x:x)")
+
 
 # compute MPM - default parameters
-probImg    <- probMap(searchList$hitsList[[lipidClass]], bwMethod = "scott", sqrtTansform = TRUE)
+probImg    <- probMap(paHits, bwMethod = "scott", sqrtTansform = TRUE)
 
-txt  <- paste0("m/z ", round(queryMass, 4), " ± ", round(getFwhm(fwhmObj, queryMass), 4))
 
 #// plot everything together
 par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
@@ -276,36 +287,42 @@ Note that for CPPMs it is recommended to use square root transformation `sqrtTan
 
 ## CPPMs - Ion Milieus
 
-To be able to generate custom CPPMs i.e. CPPMs projecting a specific set of analytes with user-chosen characterestics the `searchList` created by the `batchLipidSearch` method must be merged into a single `analytePointPattern`:
+Same as with lipid class maps, one could create representations of a custom set of analytes. Suppose that ion milieus distribution of all (lyso)glycerophospholipids '(lyso)GPLs' which are the mian constituent of biological membraes. One could first subset `lipidHits` to include PA, PS, PE, PC, PI, PG, LPA, LPS, LPE, LPC, LPI, and LPG:
 
-```{r CPPMs.combin, results='hide'}
-# create a window of type 'spatstat::owin' 
-spWin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+```{r lyso-GPLs}
+# create a subset representing lysoGPLs
+ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)", 
+                "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
 
-cat("combining all lyso-GPLs into one SPP object - a couple of minutes - \n")
-lysoGplsSumSpp <- superImposeAnalytes(searchList$hitsList, 
-                                      spWin = spWin)
+# subset lipidHits
+lysoGPLs <- subsetAnalytes(lipidHits, lipidClass %in% ofInterest)
 
+lysoGPLs
+
+# detected classes
+cat("detected lipid classes: \n")
+unique(lysoGPLs$metaData$lipidClass)
 ```
-Note that `lysoGplsSumSpp` represents all lipid hits of (lyso)GPLs. Then one could use `subsetAnalytes` to subset `lysoGplsSumSpp` according to any analyte characterestic of the `metaData` table i.e. 
+
+
+Then one could further use `subsetAnalytes` to subset `lysoGPLs` according to any analyte characterestic of the `metaData` table i.e. 
 
 ```{r metadataCols}
 # meta data table columns
-colnames(lysoGplsSumSpp$metaData)
+colnames(lysoGPLs$metaData)
 ```
 To this end, one could visualize for example all [M+K]+ adducts of detected (lyso)GPLs: 
 
 ```{r adducts,fig.width=12, fig.height=10}
 # detected adducts
-detectedAdducts <- unique(lysoGplsSumSpp$metaData$adduct) 
-
-detectedAdducts
+cat("detected adducts: ")
+table(lysoGPLs$metaData$adduct)
 
 
 # subsetting
-kspp            <- subsetAnalytes(lysoGplsSumSpp, adduct == "M+K")
-# or Naspp      <- subsetAnalytes(lysoGplsSumSpp, adduct == "M+Na")
-# or Hspp       <- subsetAnalytes(lysoGplsSumSpp, adduct == "M+H")
+kHits           <- subsetAnalytes(lysoGPLs, adduct == "M+K")
+# or NHits      <- subsetAnalytes(lysoGPLs, adduct == "M+Na")
+# or HHits      <- subsetAnalytes(lysoGPLs, adduct == "M+H")
 
 ```
 
@@ -314,7 +331,7 @@ To apply CPPMs and plot the result for [M+K]+:
 ```{r ions.plot.K, results='hide', fig.width=12, fig.height=16, warning=FALSE}
 
 # compute CPPM
-probImg    = probMap(kspp, bwMethod = "scott", sqrtTansform = TRUE)
+probImg    = probMap(kHits, bwMethod = "scott", sqrtTansform = TRUE)
 
 if(probImg$sppMoi$n > 50000) {
   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
@@ -337,10 +354,10 @@ detectedSaturation <- c("sat", "mono-unsat", "di-unsat", "poly-unsat")
 
 
 # subsetting
-satspp              <- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 0)
-# or monospp        <- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 1)
-# or dispp          <- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds == 2)
-# or polyspp        <- subsetAnalytes(lysoGplsSumSpp, numDoubleBonds > 2)
+satHits             <- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
+# or monoHits       <- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
+# or diHits         <- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
+# or polyHits       <- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
 
 ```
 
@@ -348,7 +365,7 @@ input for the specific saturation
 
 ```{r cppms.unsat.plot,results='hide', fig.width=12, fig.height=16, warning=FALSE}
 # compute CPPM
-probImg    = probMap(satspp, bwMethod = "scott", sqrtTansform = TRUE)
+probImg    = probMap(satHits, bwMethod = "scott", sqrtTansform = TRUE)
 
 if(probImg$sppMoi$n > 50000) {
   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")

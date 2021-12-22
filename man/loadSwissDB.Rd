@@ -7,10 +7,13 @@
 loadSwissDB(path)
 }
 \arguments{
-\item{path:}{path to the swiss database file.}
+\item{path:}{path to the SwissLipids database file.}
 }
 \value{
-a filtered data frame holding the entries of the swisslipids database at the "species" level.
+a filtered data frame holding the entries of the swisslipids database at the "species" level. Entries with no
+`Abbreviation*` record are removed. Two additional columns are added `numDoubleBond` and `lipidClass` to hold
+the calculated number of double-bonds and the lipid class, respectively. This is done to make easier to
+filter for these attriutes.
 }
 \description{
 This function reads the swisslipids database previously douwnloaded as a file. It keeps the entries at "Species" level and
