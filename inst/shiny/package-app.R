@@ -77,7 +77,7 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
                                 hr(),
                                 fluidRow(
                                    column(12,
-                                          selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat.", "di-unsat", "poly-unsat")),
+                                          selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat", "di-unsat", "poly-unsat")),
                                           actionButton(inputId = "go_lipid_sat", label = "Generate Plot",style='padding:6px; font-size:80%')
 
                                    ))
@@ -339,16 +339,6 @@ server <- function(input, output, session) {
             }
 
 
-
-            detectedAdducts <<- detectedSaturation <<- c("M+K", "M+Na", "M+H")
-
-            sppList <<- setNames(vector("list", length(detectedAdducts)), detectedAdducts)
-
-            # subsetting
-            sppList[["M+K"]]     <<- subsetAnalytes(lysoGPLs, adduct == "M+K")
-            sppList[["M+Na"]]    <<- subsetAnalytes(lysoGPLs, adduct == "M+Na")
-            sppList[["M+H"]]     <<- subsetAnalytes(lysoGPLs, adduct == "M+H")
-
             lipidGroup <<-"(lyso)GPLs"
 
 
@@ -389,20 +379,7 @@ server <- function(input, output, session) {
 
             }
 
-
-
-            detectedSaturation <<- c("sat", "mono-unsat", "di-unsat", "poly-unsat")
-
-            sppList <<- setNames(vector("list", length(detectedSaturation)), detectedSaturation)
-
-            # subsetting
-            sppList[["sat"]]   <<- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
-            sppList[["mono-unsat"]]   <<- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
-            sppList[["di-unsat"]]   <<- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
-            sppList[["poly-unsat"]]   <<- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
-
             lipidGroup <<-"(lyso)GPLs"
-
 
             plot_output("lipid_sat")
          })
@@ -516,14 +493,16 @@ server <- function(input, output, session) {
 
             igroup              = isolate(input$lipidIon)
 
-            if(identical(sppList[[igroup]], NULL)) {
+            spp_tmp <- subsetAnalytes(lysoGPLs, adduct == igroup)
+
+            if(identical(spp_tmp, NULL)) {
 
 
 
                par(mfrow = c(1, 1))
 
                #// empty window
-               spatstat.geom::plot.owin(lysoGplsSumSpp$window,
+               spatstat.geom::plot.owin(lysoGPLs$window,
                                    main = paste0("No insances of ", igroup, " were detected"),
                                    ylim = rev(lysoGplsSumSpp$window$yrange),
                                    box = FALSE)
@@ -532,7 +511,7 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(sppList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
@@ -564,14 +543,25 @@ server <- function(input, output, session) {
 
             igroup = isolate(input$lipidSat)
 
-            if(identical(sppList[[igroup]], NULL)) {
+            if(igroup=="sat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
+               }            else if (igroup=="mono-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
+               }            else if (igroup=="di-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
+               }            else if(igroup=="poly-unsat"){
+               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
+               }
+
+
+            if(identical(spp_tmp, NULL)) {
 
 
 
                par(mfrow = c(1, 1))
 
                #// empty window
-               spatstat.geom::plot.owin(lysoGplsSumSpp$window,
+               spatstat.geom::plot.owin(lysoGPLs$window,
                                    main = paste0("No insances of ", igroup, " lipids were detected"),
                                    ylim = rev(lysoGplsSumSpp$window$yrange),
                                    box = FALSE)
@@ -579,7 +569,7 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(sppList[[igroup]], bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
