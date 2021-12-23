@@ -34,7 +34,7 @@ Example MSI data could be downloaded in [imzML](https://ms-imaging.org/imzml/) f
 
 ### Vignettes
 
-Vignettes are provided with the package to illustrate basic functionality. You can see all installed vignettes by calling `browseVignettes("moleculaR")`. To read a speficic vignette use, for example, `vignette("exampleData-workflow")` and to view its code use `edit(vignette("exampleData-workflow"))`. 
+Vignettes are provided with the package to illustrate basic functionality. You can see all installed vignettes by calling `browseVignettes("moleculaR")`. To read a speficic vignette use, for example, `vignette("moleculaR-walkthrough")` and to view its code use `edit(vignette("moleculaR-walkthrough"))`. 
 
 ### _moleculaR_ Shiny-Apps
 
