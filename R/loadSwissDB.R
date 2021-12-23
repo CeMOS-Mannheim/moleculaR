@@ -36,6 +36,9 @@ loadSwissDB    <- function(path) {
 		# add lipid class info as an additional column to sldb
 		sldb                <- .appendLipidClass(sldb)
 
+		# add fatty acid chain length as an additional column to sldb
+		sldb                <- .appendChainLength(sldb)
+
 
 
        return(sldb)
@@ -70,4 +73,15 @@ loadSwissDB    <- function(path) {
       return(cbind(sldb, lipidGroup = allAbbrevs))
 }
 
+.appendChainLength <- function(sldb) {
+
+      # This appends the length of the fatty acid chain as an additional column
+      # to the SwissLipids database `sldb`
+
+      allAbbrevs        <- strsplit(x = sldb$`Abbreviation*`, split = "\\(")
+      allAbbrevs        <- sapply(allAbbrevs, FUN = function(i) strsplit(x=i[2], ":"))
+      allAbbrevs        <- as.integer(sapply(allAbbrevs, FUN = function(i) gsub(pattern = "[^0-9]", replacement = "", x = i[1])))
+
+      return(cbind(sldb, chainLength = allAbbrevs))
+}
 

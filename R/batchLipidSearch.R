@@ -121,7 +121,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             sumformula = sldb$`Formula (pH7.3)`[i],
                                             abbrev = sldb$`Abbreviation*`[i],
                                             numDoubleBonds = sldb$numDoubleBond[i],
-                                            lipidClass = sldb$lipidGroup[i])
+                                            lipidClass = sldb$lipidGroup[i],
+                                            chainLength = sldb$chainLength[i])
 
                                 sppCotainer[["M-H"]] <- searchAnalyte(m = lipTmp,
                                                           fwhm = getFwhm(fwhmObj, lipTmp),
@@ -155,7 +156,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             sumformula = sldb$`Formula (pH7.3)`[i],
                                             abbrev = sldb$`Abbreviation*`[i],
                                             numDoubleBonds = sldb$numDoubleBond[i],
-                                            lipidClass = sldb$lipidGroup[i])
+                                            lipidClass = sldb$lipidGroup[i],
+                                            chainLength = sldb$chainLength[i])
 
                                 sppCotainer[["M+H"]] <- searchAnalyte(m = lipTmp,
                                                         fwhm = getFwhm(fwhmObj, lipTmp),
@@ -192,7 +194,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             sumformula = sldb$`Formula (pH7.3)`[i],
                                             abbrev = sldb$`Abbreviation*`[i],
                                             numDoubleBonds = sldb$numDoubleBond[i],
-                                            lipidClass = sldb$lipidGroup[i])
+                                            lipidClass = sldb$lipidGroup[i],
+                                            chainLength = sldb$chainLength[i])
 
                                 sppCotainer[["M+Na"]] <- searchAnalyte(m = lipTmp,
                                                        fwhm = getFwhm(fwhmObj, lipTmp),
@@ -228,7 +231,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                             sumformula = sldb$`Formula (pH7.3)`[i],
                                             abbrev = sldb$`Abbreviation*`[i],
                                             numDoubleBonds = sldb$numDoubleBond[i],
-                                            lipidClass = sldb$lipidGroup[i])
+                                            lipidClass = sldb$lipidGroup[i],
+                                            chainLength = sldb$chainLength[i])
 
                                 sppCotainer[["M+K"]] <- searchAnalyte(m = lipTmp,
                                                          fwhm = getFwhm(fwhmObj, lipTmp),
@@ -316,7 +320,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
       # filter sldb to include only verified masses - speed up computations
 
       # to fix: consider adding more stringent filtration on verifiedMasses to also
-      # includ the adduct from which these masses were calculated. 
+      # includ the adduct from which these masses were calculated.
 
       idxToKeep <- integer(0)
 
