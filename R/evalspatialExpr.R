@@ -53,7 +53,7 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
       imdf <- spatstat.geom::as.data.frame.im(x = res)
 
       if(any(is.infinite(imdf$value))){
-            imdf <- imdf[which(!is.infinite(imdf$value)), ]
+            imdf <- imdf[which(is.finite(imdf$value)), ]
       }
 
 
