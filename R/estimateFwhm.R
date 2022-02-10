@@ -35,7 +35,7 @@
 #' @export
 #'
 #'
-estimateFwhm            <- function(s, spectraSampling = 99, peakSampling = 99,
+estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000,
                                     numCores = 1, plot = FALSE, savePlot = NULL) {
 
 
