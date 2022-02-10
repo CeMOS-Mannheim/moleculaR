@@ -1,7 +1,7 @@
 Package: moleculaR
 Type: Package
 Title: Spatial Probabilistic Mapping of Metabolite Ensembles in Mass Spectrometry Imaging
-Version: 0.8.6
+Version: 0.8.7
 Author: Denis Abu Sammour
 Maintainer: 
     Denis Abu Sammour <d.abu-sammour@hs-mannheim.de>

@@ -2,23 +2,31 @@
 % Please edit documentation in R/estimateFwhm.R
 \name{estimateFwhm}
 \alias{estimateFwhm}
-\title{Estimation of fwhm(m/z)}
+\title{Estimation of fwhm as a function of m/z axis}
 \usage{
 estimateFwhm(
   s,
-  sampling = 1000L,
+  spectraSampling = 99,
+  peakSampling = 99,
+  numCores = 1,
   plot = FALSE,
-  savePlot = NULL,
-  returnValues = FALSE
+  savePlot = NULL
 )
 }
 \arguments{
-\item{s:}{a single spectrum or a list of single spectra of 'MALDIquant::MassSpectrum' type. In the latter
-case, a single spectrum is randomly chosen to base the computations on.}
+\item{s:}{a single profile (continuous) spectrum of type `MALDIquant::MassSpectrum` of a list thereof. This
+could also be a list of `MALDIquant::MassPeaks` object but with conditions, see Details.}
 
-\item{sampling:}{an integer specifying how many detected peaks to consider for fwhm estimation, the lower the faster.}
+\item{spectraSampling:}{an integer specifying how many spectra should be used for fwhm estimation
+(the lower the faster) when `s` is a list of `MALDIquant::MassSpectrum` objects. Defaults to 99.}
 
-\item{plot:}{whether to plot the result}
+\item{peakSampling:}{an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
+the lower the faster. Defaults to 99.}
+
+\item{numCores:}{an integer specifying the number of cores used for the FWHM computations when s is a
+`MassSpectrum` or a list thereof. This is ignored on windows.}
+
+\item{plot:}{whether to plot the result.}
 
 \item{savePlot:}{either \code{NULL} or file path to save a plot as svg.}
 }
@@ -29,4 +37,18 @@ m/z values of the peaks and their corresponding fwhm values.
 \description{
 This creates a linear interpolator function that approximats fwhm as a function
 of m/z for the given single spectrum or a list of mass spectra.
+}
+\details{
+The input `s` could be a single profile (continuous) `MassSpectrum` object. This could be supplied externally
+or via `readSingleSpect` function (see `?readSingleSpect`). This is normally the case when dealing with MRMS (FTICR)
+centroided data which does not contain any information about peaks FWHM values (for example when read from a centroided
+imzML file).
+
+`s` could also be a list of `MassSpectrum` objects. This could be the case when dealing with continuous TOF data.
+In this case, the list of spectra is sampled and FWHM values are computed based on these.
+
+If `s` is a list of centroided `MassPeaks` objects, the function assumes that FWHM values have been
+(externally) pre-computed and attached to each centroided spectrum (`MassPeaks` object) via the
+`metaData` slot (see `?MALDIquant::MassPeaks`) such that for every centroided spectrum `s[[i]]` the
+FWHM values corresponding to all detected peaks `s[[i]]@mass` are stored in `s[[i]]@metaData$fwhm`.
 }
