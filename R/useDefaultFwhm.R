@@ -25,7 +25,7 @@
 #' Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
 #' m/z values of the peaks and their corresponding fwhm values.
 #'
-#' export
+#' @export
 #'
 #'
 useDefaultFwhm    <- function(userMassRes, modality = "FTICR", constant = FALSE) {
