@@ -11,6 +11,9 @@
 #' the lower the faster. Defaults to 99.
 #' @param numCores: an integer specifying the number of cores used for the FWHM computations when s is a
 #' `MassSpectrum` or a list thereof. This is ignored on windows.
+#' @param smoothingMethod: a character, the method that is used for fitting a smoothing curve to
+#' represent fwhm as a function of m/z. Defaults to `loess` which produced "better" fits but takes
+#' longer to compute.
 #' @param plot:      whether to plot the result.
 #' @param savePlot:  either \code{NULL} or file path to save a plot as svg.
 #'
@@ -36,7 +39,8 @@
 #' @include manualSpatstatImport.R
 #'
 estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000,
-                                    numCores = 1, plot = FALSE, savePlot = NULL) {
+                                    numCores = 1, smoothingMethod = "loess",
+                                    plot = FALSE, savePlot = NULL) {
 
 
       if(is.list(s)){
@@ -83,7 +87,8 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
                   if(length(s[[1]]@mass) != length(s[[1]]@metaData$fwhm)){
                         stop("Number of peaks does not equal number of FWHM values ",
-                             "attached to s. \n")
+                             "attached to s. Have you already applied peak binning? ",
+                             "if so, please run fwhm estimation on raw data .. \n")
                   }
 
                   spectraSampling <- ifelse(length(s) < spectraSampling, length(s), spectraSampling)
@@ -130,13 +135,11 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
       }
 
-
-      #// use super smoother to get a smooth curve
-      sm           <- supsmu(x = fwhmdf$peaks, y = fwhmdf$fwhmValues, bass = 9)
-
-
       #// create the linear interpolation function
-      fwhmFun      <- approxfun(x = sm$x, y = sm$y, rule = 2)
+      fwhmFun <- switch(smoothingMethod,
+                        "superSmoother" = .superSmoother(x = fwhmdf$peaks, y = fwhmdf$fwhmValues),
+                        "loess" = .loess(data = fwhmdf),
+                        stop("smoothingMethod not recognized, accepted values = c('leoss','superSmoother').\n"))
 
       if(plot)
       {
@@ -184,7 +187,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
       md          <- p@metaData # record metaData
 
       if(!is.null(p@metaData$fwhm)){
-            p@metaData$fwhm <- p@metaData$fwhm[idx][orderedIdx]
+            md$fwhm <- md$fwhm[idx][orderedIdx]
       }
 
       MALDIquant::createMassPeaks(mass = p@mass[idx][orderedIdx],
@@ -192,6 +195,26 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
                                   snr = p@snr[idx][orderedIdx],
                                   metaData = md)
 
+}
+
+#// compute the fwhm interpolating function by super smoother method
+.superSmoother <- function(x, y){
+
+      #// use super smoother to get a smooth curve
+      sm           <- supsmu(x = x, y = y, bass = 9)
+
+      #// create the linear interpolation function
+      return(approxfun(x = sm$x, y = sm$y, rule = 2))
+}
+
+#// compute the fwhm interpolating function by super smoother method
+.loess <- function(data){
+
+      #// use loess to get a smooth curve
+      lo           <- loess(fwhmValues ~ peaks, data)
+
+      #// create the linear interpolation function
+      return(function(x) {predict(object = lo, newdata = x)})
 }
 
 

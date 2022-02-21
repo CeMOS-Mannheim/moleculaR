@@ -9,6 +9,7 @@ estimateFwhm(
   spectraSampling = 10,
   peakSampling = 1000,
   numCores = 1,
+  smoothingMethod = "loess",
   plot = FALSE,
   savePlot = NULL
 )
@@ -25,6 +26,10 @@ the lower the faster. Defaults to 99.}
 
 \item{numCores:}{an integer specifying the number of cores used for the FWHM computations when s is a
 `MassSpectrum` or a list thereof. This is ignored on windows.}
+
+\item{smoothingMethod:}{a character, the method that is used for fitting a smoothing curve to
+represent fwhm as a function of m/z. Defaults to `loess` which produced "better" fits but takes
+longer to compute.}
 
 \item{plot:}{whether to plot the result.}
 

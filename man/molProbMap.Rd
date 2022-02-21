@@ -49,3 +49,4 @@ This is an S3 class to represent the calculated molecular probability maps. This
 class is only used with objects returned by `porbMap` function and should not be
 called explicitly by the user.
 }
+\keyword{internal}
