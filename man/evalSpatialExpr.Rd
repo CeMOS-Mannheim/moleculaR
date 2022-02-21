@@ -11,15 +11,15 @@ evalSpatialExpr(exprn, dataList, ppwin, sqrtTransform = FALSE)
 
 \item{dataList:}{A named list containing the 'ppp' objects involved in 'expr'.}
 
-\item{ppwin:}{The window 'spatstat.geom::owin' object which all elements of 'dataList' share.}
+\item{ppwin:}{The window 'owin' object which all elements of 'dataList' share.}
 
 \item{sqrtTransform:}{Optional square root transofmation of the 'ppp' objects in 'dataList'.}
 }
 \value{
-An object of type 'spatstat.geom::ppp' and 'moleculaR::analytePointPattern' holding the result of
+An object of type 'ppp' and 'moleculaR::analytePointPattern' holding the result of
 the applied expression 'expr'.
 }
 \description{
-This evaluates an arbitrary expression involving spatial point pattern objects 'spatstat.geom::ppp' which encode
+This evaluates an arbitrary expression involving spatial point pattern objects 'ppp' which encode
 analyte distributions of MSI data.
 }

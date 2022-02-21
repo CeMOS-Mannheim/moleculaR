@@ -99,7 +99,7 @@
 #
 # # analytePointPattern Class
 # #
-# # This is a class to extend 'spatstat.geom::ppp' class only enforcing specific point-marks. It also
+# # This is a class to extend 'ppp' class only enforcing specific point-marks. It also
 # # adds an 'mzVals' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 # # It represents the spatial point pattern of an analyte (or set of
 # # analytes) with marks being a data.frame of one column c("intensity").
@@ -140,11 +140,11 @@
 # # @slot bw   A numeric, the calculated Gaussian bandwidth
 # # @slot sppMoi A 'analytePointPattern' object representing a given analyte (metabolite-of-interest).
 # # @slot csrMoi A 'analytePointPattern' object representing the corresponding CSR model.
-# # @slot rhoMoi An 'spatstat::im' object storing the density image of 'sppMoi' after applying KDE.
-# # @slot rhoCsr An 'spatstat::im' object storing the density image of 'csrMoi' after applying KDE.
+# # @slot rhoMoi An 'im' object storing the density image of 'sppMoi' after applying KDE.
+# # @slot rhoCsr An 'im' object storing the density image of 'csrMoi' after applying KDE.
 # # @slot hotspotpp A 'analytePointPattern' object holding only the points that are located within the hotspot.
-# # @slot hotspotIm An 'spatstat::im' object storing the corresponding pixellated image of the 'hotspotpp' slot.
-# # @slot hotspotMask An 'spatstat.geom::owin' object storing the corresponding window of the 'hotspotpp' slot.
+# # @slot hotspotIm An 'im' object storing the corresponding pixellated image of the 'hotspotpp' slot.
+# # @slot hotspotMask An 'owin' object storing the corresponding window of the 'hotspotpp' slot.
 # #
 # #
 # #

@@ -6,13 +6,15 @@
 ## the respective packages.
 ##
 ##
+## to document this -> https://r-pkgs.org/man.html#man-functions
 
-# to document this -> https://r-pkgs.org/man.html#man-functions
-
+#' @include manualSpatstatImport.R
+NULL
 
 #' fwhm Class Constructor
 #'
 #' This constructs a 'fwhm' object which stores information about the calculated full width half maximum.
+#' This function is for internal use and normally should not be called by the user.
 #'
 #' @param fwhmInterpolator A function that is used to find fwhm value for any given m/z.
 #' @param  peaks  The m/z values of the peaks of a single spectrum.
@@ -27,6 +29,7 @@
 #' }
 #'
 #' @export
+#' @keywords internal
 #'
 
 fwhm <- function(fwhmInterpolator, peaks = NA_real_, fwhmVals = NA_real_) {
@@ -94,7 +97,8 @@ getFwhm <- function(obj, mzVals) {
 #' sparseIntensityMatrix Class Constructor
 #'
 #' An S3 class to hold mass spectrometry imaging (MSI) intensity data in a sparse representation ('Matrix::dgCMatrix' class)
-#' with few additional slots. It is used to speed-up computation.
+#' with few additional slots. It is used to speed-up computation. This constructor is for
+#' internal use and normally should not be called by the user.
 #'
 #' @param spmat A sparse matrix of type 'Matrix::dgCMatrix' holding MSI intensity data.
 #' @param mzAxis A numeric, the overall m/z axis for the experiment.
@@ -110,6 +114,7 @@ getFwhm <- function(obj, mzVals) {
 #' }
 #'
 #' @export
+#' @keywords internal
 #'
 
 sparseIntensityMatrix <- function(spmat, mzAxis, coordinates) {
@@ -160,12 +165,13 @@ print.sparseIntensityMatrix <- function(obj) {
 
 #' analytePointPattern Class Constructor
 #'
-#' This is a class to extend 'spatstat.geom::ppp' class only enforcing specific point-marks. It also
+#' This is a class to extend 'ppp' class only enforcing specific point-marks. It also
 #' adds a 'metaData' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 #' It represents the spatial point pattern of an analyte (or set of
-#' analytes) with marks being a data.frame of two columns c('idx', 'intensity').
+#' analytes) with marks being a data.frame of two columns c('idx', 'intensity'). This constructor is for
+#' internal use and normally should not be called by the user.
 #'
-#' @param spp a spatial point pattern of type 'spatstat.geom::ppp' with its `marks` being a dataframe with
+#' @param spp a spatial point pattern of type 'ppp' with its `marks` being a dataframe with
 #' two columns `idx`and `intensity`.
 #' @param x,y,intensity,win optional, either these arguments or 'spp' have to be supplied.
 #' @param metaData a named list having additional attributes describing the individual masses in `mzVals`.
@@ -182,7 +188,7 @@ print.sparseIntensityMatrix <- function(obj) {
 #' }
 #'
 #' @export
-#'
+#' @keywords internal
 #'
 #'
 
@@ -210,7 +216,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       if(identical(spp, NA)){
 
 
-         spp <- spatstat.geom::ppp(x = x, y = y,
+         spp <- ppp(x = x, y = y,
                               marks = data.frame(idx = rep(idx, length(intensity)), intensity = intensity),
                               window = win, checkdup = FALSE, drop = FALSE)
 
@@ -218,7 +224,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       } else {
 
          if(class(spp) != "ppp"){
-            stop("slot 'spp' must be of type 'spatstat.geom::ppp' \n")
+            stop("slot 'spp' must be of type 'ppp' \n")
          }
 
          if(class(spp$marks) != "data.frame"){
@@ -234,7 +240,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       }
 
       # remove rejected points
-      spp <- spatstat.geom::as.ppp(spp)
+      spp <- as.ppp(spp)
 
       # metaData object
       #mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
@@ -255,10 +261,10 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 
 #' Plot analytePointPattern
 #'
-#' A method to plot `anlaytePointPattern` objects. This calls `spatstat.geom::plot.ppp` with
-#' pre-defined defaults. For more control over the plotting please use `spatstat.geom::plot.ppp`.
+#' A method to plot `anlaytePointPattern` objects. This calls `plot.ppp` with
+#' pre-defined defaults. For more control over the plotting please use `plot.ppp`.
 #'
-#' @param obj S3 object of type `anlaytePointPattern` (and `spatstat.geom::spp`).
+#' @param obj S3 object of type `anlaytePointPattern` (and `spp`).
 #' @param colourmap the colourmap to be used, see `?viridis::viridis_pal`.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
@@ -277,20 +283,30 @@ plotAnalyte <- function(obj, colourmap = "inferno", transpFactor = 0.7, pch = 19
             stop("provided obj is not of type 'analytePointPattern'. \n")
       }
 
-      colfun <- spatstat.geom::colourmap(col = spatstat.geom::to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
-                                         range = range(obj$marks$intensity))
+      if(obj$n == 0){
 
-      spatstat.geom::plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-                              ylim = rev(obj$window$yrange),
-                              #cols = viridis::viridis_pal(option = "inferno")(100),
-                              #markscale = 0.000004,
-                              #zap = 0.0,
-                              #chars = 21,
-                              main = paste0("SPP of ", analyte),
-                              symap = spatstat.geom::symbolmap(pch = pch,
-                                                               cols = colfun,
-                                                               size = size,
-                                                               range = range(obj$marks$intensity))) # colors according to intensity
+            plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+                                    ylim = rev(obj$window$yrange),
+                                    main = paste0("Empty SPP of ", analyte))
+
+      } else{
+
+            colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
+                                               range = range(obj$marks$intensity))
+
+            plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+                                    ylim = rev(obj$window$yrange),
+                                    #cols = viridis::viridis_pal(option = "inferno")(100),
+                                    #markscale = 0.000004,
+                                    #zap = 0.0,
+                                    #chars = 21,
+                                    main = paste0("SPP of ", analyte),
+                                    symap = symbolmap(pch = pch,
+                                                                     cols = colfun,
+                                                                     size = size,
+                                                                     range = range(obj$marks$intensity))) # colors according to intensity
+
+      }
 
 }
 
@@ -299,24 +315,27 @@ plotAnalyte <- function(obj, colourmap = "inferno", transpFactor = 0.7, pch = 19
 
 #' molProbMap Class Constructor
 #'
-#' This is a class to represent the calculated molecular probability maps.
+#' This is an S3 class to represent the calculated molecular probability maps. This
+#' class is only used with objects returned by `porbMap` function and should not be
+#' called explicitly by the user.
 #'
 #' @param bw   A numeric, the calculated Gaussian bandwidth
 #' @param sppMoi A 'analytePointPattern' object representing a given analyte (metabolite-of-interest).
 #' @param csrMoi A 'analytePointPattern' object representing the corresponding CSR model.
-#' @param rhoMoi An 'spatstat::im' object storing the density image of 'sppMoi' after applying KDE.
-#' @param rhoCsr An 'spatstat::im' object storing the density image of 'csrMoi' after applying KDE.
+#' @param rhoMoi An 'im' object storing the density image of 'sppMoi' after applying KDE.
+#' @param rhoCsr An 'im' object storing the density image of 'csrMoi' after applying KDE.
 #' @param hotspotpp A 'analytePointPattern' object holding only the points that are located within the hotspot.
-#' @param hotspotIm An 'spatstat::im' object storing the corresponding pixellated image of the 'hotspotpp' slot.
-#' @param hotspotMask An 'spatstat.geom::owin' object storing the corresponding window of the 'hotspotpp' slot.
+#' @param hotspotIm An 'im' object storing the corresponding pixellated image of the 'hotspotpp' slot.
+#' @param hotspotMask An 'owin' object storing the corresponding window of the 'hotspotpp' slot.
 #' @param coldspotpp A 'analytePointPattern' object holding only the points that are located within the coldspot.
-#' @param coldspotIm An 'spatstat::im' object storing the corresponding pixellated image of the 'coldspotpp' slot.
-#' @param coldspotMask An 'spatstat.geom::owin' object storing the corresponding window of the 'coldspotpp' slot.
+#' @param coldspotIm An 'im' object storing the corresponding pixellated image of the 'coldspotpp' slot.
+#' @param coldspotMask An 'owin' object storing the corresponding window of the 'coldspotpp' slot.
 #'
 #' @return
 #' An S3 object of type 'molProbMap'.
 #'
 #' @export
+#' @keywords internal
 #'
 molProbMap <- function(bw, sppMoi, csrMoi, rhoMoi, rhoCsr, hotspotpp, hotspotIm, hotspotMask, coldspotpp, coldspotIm, coldspotMask) {
 
@@ -392,9 +411,9 @@ print.molProbMap <- function(obj) {
 #' A fully opaque colour has `transpFactor=1`.
 #' @param signifArea a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").
 #' @param analyte character, name of the analyte.
-#' @param ionImage an optional rastered image of type `spatstat::im` of the corresponding "regular"
+#' @param ionImage an optional rastered image of type `im` of the corresponding "regular"
 #' ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
-#' and subsequently using `spatstat.geom::pixellate`.
+#' and subsequently using `pixellate`.
 #'
 #' @return nothing, plots only.
 #'
@@ -405,17 +424,17 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
    switch (what,
       "analytePointPattern" = {
-         colfun <- spatstat.geom::colourmap(col = spatstat.geom::to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
+         colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
                                              range = range(obj$sppMoi$marks$intensity))
 
-         spatstat.geom::plot.ppp(obj$sppMoi, use.marks = TRUE, which.marks = "intensity",
+         plot.ppp(obj$sppMoi, use.marks = TRUE, which.marks = "intensity",
                             ylim = rev(obj$sppMoi$window$yrange),
                             #cols = viridis::viridis_pal(option = "inferno")(100),
                             #markscale = 0.000004,
                             #zap = 0.0,
                             #chars = 21,
                             main = paste0("SPP of ", analyte),
-                            symap = spatstat.geom::symbolmap(pch = 19,
+                            symap = symbolmap(pch = 19,
                                                         cols = colfun,
                                                         size = 0.4,
                                                         range = range(obj$sppMoi$marks$intensity))) # colors according to intensity
@@ -423,17 +442,17 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
       },
       "csrPointPattern" = {
-         colfun <- spatstat.geom::colourmap(col = spatstat.geom::to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
+         colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
                                              range = range(obj$csrMoi$marks$intensity))
 
-         spatstat.geom::plot.ppp(obj$csrMoi, use.marks = TRUE, which.marks = "intensity",
+         plot.ppp(obj$csrMoi, use.marks = TRUE, which.marks = "intensity",
                             ylim = rev(obj$sppMoi$window$yrange),
                             #cols = viridis::viridis_pal(option = "inferno")(100),
                             #markscale = 0.000004,
                             #zap = 0.0,
                             #chars = 21,
                             main = paste0("CSR of ", analyte),
-                            symap = spatstat.geom::symbolmap(pch = 19,
+                            symap = symbolmap(pch = 19,
                                                         cols = colfun,
                                                         size = 0.4,
                                                         range = range(obj$csrMoi$marks$intensity))) # colors according to intensity
@@ -441,18 +460,18 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
       },
       "analyteDensityImage" = {
-         spatstat.geom::plot.im(obj$rhoMoi,
+         plot.im(obj$rhoMoi,
                            main = expression(paste(rho["MOI"], "(x,y)")),
-                           col = spatstat.geom::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoMoi, na.rm = T)),
+                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoMoi, na.rm = T)),
                            ylim = rev(obj$sppMoi$window$yrange),
                            box = FALSE)
 
 
       },
       "csrDensityImage" = {
-         spatstat.geom::plot.im(obj$rhoCsr,
+         plot.im(obj$rhoCsr,
                            main = expression(paste(rho["CSR"], "(x,y)")),
-                           col = spatstat.geom::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoCs, na.rm = T)),
+                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoCs, na.rm = T)),
                            ylim = rev(obj$sppMoi$window$yrange),
                            box = FALSE)
 
@@ -468,27 +487,27 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
          } else { # this is a single-analyte MPM -> use rasterized image
 
             # raster image of the spp
-            imgMpm  <- spatstat.geom::pixellate(obj$sppMoi,
+            imgMpm  <- pixellate(obj$sppMoi,
                                            weights = obj$sppMoi$marks$intensity,
-                                           W = spatstat.geom::as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange))),
+                                           W = as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange))),
                                            padzero = FALSE, savemap = FALSE)
 
          }
 
-         spatstat.geom::plot.im(imgMpm,
+         plot.im(imgMpm,
                            main = paste0("MPM of ", analyte),
-                           col = spatstat.geom::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
+                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
                            ylim = rev(range(spwin$y)),
                            box = FALSE)
 
          if(signifArea == "both" | signifArea == "hotspot"){
-            spatstat.geom::plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
-            spatstat.geom::plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
          }
 
          if(signifArea == "both" | signifArea == "coldspot"){
-            spatstat.geom::plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
-            spatstat.geom::plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
+            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
          }
 
          legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"),
@@ -505,9 +524,9 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
          plot(obj = obj, what = "MPM", transpFactor = transpFactor, analyte = analyte)
 
          if(!(identical(ionImage, NA))){
-            spatstat.geom::plot.im(ionImage,
+            plot.im(ionImage,
                               main = paste0("Ion Image of ", analyte),
-                              col = spatstat.geom::colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),
+                              col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),
                               ylim = rev(obj$sppMoi$window$yrange),
                               box = FALSE)
 
@@ -524,7 +543,8 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 #' lipidSearchList Class Constructor
 #'
 #' A class to re-arrange lipid listings in the SwissLipid database to facilitate computational
-#' serach. It splits the full database into lipid class-oriented lists.
+#' serach. It splits the full database into lipid class-oriented lists. This function is for
+#' internal use and normally should not be called by the user.
 #'
 #' @param lipidList a data.frame which lists entries of lipids.
 #' @param hitsList a data.frame holding the lipids that were detected.
@@ -534,7 +554,7 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 #' An S3 object of type 'lipidSearchList'.
 #'
 #' @export
-#'
+#' @keywords internal
 #'
 
 lipidSearchList <- function(lipidList, hitsList, allClasses) {

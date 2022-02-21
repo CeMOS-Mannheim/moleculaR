@@ -26,7 +26,7 @@
 #' m/z values of the peaks and their corresponding fwhm values.
 #'
 #' @export
-#'
+#' @include manualSpatstatImport.R
 #'
 useDefaultFwhm    <- function(userMassRes, modality = "FTICR", constant = FALSE) {
 

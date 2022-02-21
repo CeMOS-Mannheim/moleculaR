@@ -1,19 +1,19 @@
 #' Evaluates an expression of SPP objects
 #'
-#' This evaluates an arbitrary expression involving spatial point pattern objects 'spatstat.geom::ppp' which encode
+#' This evaluates an arbitrary expression involving spatial point pattern objects 'ppp' which encode
 #' analyte distributions of MSI data.
 #'
 #' @param expr: 	   A character vector representing tha arithmetic expression of 'ppp' objects listed in 'dataList'.
 #' @param dataList:  A named list containing the 'ppp' objects involved in 'expr'.
-#' @param ppwin:     The window 'spatstat.geom::owin' object which all elements of 'dataList' share.
+#' @param ppwin:     The window 'owin' object which all elements of 'dataList' share.
 #' @param sqrtTransform: Optional square root transofmation of the 'ppp' objects in 'dataList'.
 #'
 #' @return
-#' An object of type 'spatstat.geom::ppp' and 'moleculaR::analytePointPattern' holding the result of
+#' An object of type 'ppp' and 'moleculaR::analytePointPattern' holding the result of
 #' the applied expression 'expr'.
 #'
 #' @export
-#'
+#' @include manualSpatstatImport.R
 
 evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
@@ -35,9 +35,9 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
 
             # create a pixellated image and assign back
-            dataList[[ivar]] <- spatstat.geom::pixellate(dataList[[ivar]],
+            dataList[[ivar]] <- pixellate(dataList[[ivar]],
                                       weights = dataList[[ivar]]$marks$intensity,
-                                      W = spatstat.geom::as.mask(ppwin,
+                                      W = as.mask(ppwin,
                                                             dimyx=c(diff(ppwin$yrange),
                                                                     diff(ppwin$xrange))),
                                       padzero = FALSE, savemap = FALSE)
@@ -47,10 +47,10 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
       # the result of the expression as an 'im' object
       res <- eval(expr = e, envir = dataList)
-      #res <- spatstat.geom::eval.im(exprn, envir = dataList)
+      #res <- eval.im(exprn, envir = dataList)
 
       # convert back to ppp
-      imdf <- spatstat.geom::as.data.frame.im(x = res)
+      imdf <- as.data.frame.im(x = res)
 
       if(any(is.infinite(imdf$value))){
             imdf <- imdf[which(is.finite(imdf$value)), ]

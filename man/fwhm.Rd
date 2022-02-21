@@ -23,4 +23,6 @@ An S3 object 'fwhm' with the following entries \cr
 }
 \description{
 This constructs a 'fwhm' object which stores information about the calculated full width half maximum.
+This function is for internal use and normally should not be called by the user.
 }
+\keyword{internal}

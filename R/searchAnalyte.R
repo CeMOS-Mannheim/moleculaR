@@ -21,6 +21,7 @@
 #' `m` in `msData`. If `confirmedOnly = TRUE` then only these hits are returned.
 #'
 #' @export
+#' @include manualSpatstatImport.R
 #'
 searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              verifiedMasses = NA, confirmedOnly = FALSE,
@@ -29,6 +30,13 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
         if(length(m) > 1){
                 stop("'m' length must be equal to one. \n")
+        }
+
+        if(!identical(spwin, NA)){
+              owinInfo <- summary(spwin)
+              if(owinInfo$nvertices <= 4){
+                    warning("The provided window 'spwin' does not seem to be a tissue section. \n ")
+              }
         }
 
 
@@ -57,7 +65,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
        # window object
        if(identical(spwin, NA)){
-             spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+             spwin <- as.polygonal(owin(mask = spData$coordinates))
        }
 
        if(confirmedOnly){ # if only confirmed detections are needed
@@ -143,7 +151,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
       # creates an empty spp compatible with the internal representation
       # of moleculaR
 
-      return(spatstat.geom::ppp(x = integer(0),
+      return(ppp(x = integer(0),
                                 y = integer(0),
                                 marks = data.frame(idx = integer(0), intensity = numeric(0)),
                                 window = spwin,

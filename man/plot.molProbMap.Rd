@@ -27,9 +27,9 @@ A fully opaque colour has `transpFactor=1`.}
 
 \item{analyte}{character, name of the analyte.}
 
-\item{ionImage}{an optional rastered image of type `spatstat::im` of the corresponding "regular"
+\item{ionImage}{an optional rastered image of type `im` of the corresponding "regular"
 ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
-and subsequently using `spatstat.geom::pixellate`.}
+and subsequently using `pixellate`.}
 }
 \value{
 nothing, plots only.

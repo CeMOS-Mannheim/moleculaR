@@ -18,5 +18,7 @@ An S3 object of type 'lipidSearchList'.
 }
 \description{
 A class to re-arrange lipid listings in the SwissLipid database to facilitate computational
-serach. It splits the full database into lipid class-oriented lists.
+serach. It splits the full database into lipid class-oriented lists. This function is for
+internal use and normally should not be called by the user.
 }
+\keyword{internal}

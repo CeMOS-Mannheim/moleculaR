@@ -24,5 +24,7 @@ An S3 object 'sparseIntensityMatrix' with the following entries \cr
 }
 \description{
 An S3 class to hold mass spectrometry imaging (MSI) intensity data in a sparse representation ('Matrix::dgCMatrix' class)
-with few additional slots. It is used to speed-up computation.
+with few additional slots. It is used to speed-up computation. This constructor is for
+internal use and normally should not be called by the user.
 }
+\keyword{internal}

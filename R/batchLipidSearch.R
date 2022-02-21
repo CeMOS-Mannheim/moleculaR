@@ -28,6 +28,8 @@
 #'
 #' @export
 #'
+#' @include manualSpatstatImport.R
+
 
 batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H", "M+H", "M+Na", "M+K"),
                              numCores = 1L, wMethod = "Gaussian", verifiedMasses = NA,
@@ -56,7 +58,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
       #// create sp window
       if(identical(spwin, NA)){
-            spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
+            spwin <- as.polygonal(owin(mask = spData$coordinates))
       }
 
 
@@ -100,7 +102,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 
 
-                    #sppCotainer <- list(emptyspp = spatstat.geom::ppp(x = integer(0), y = integer(0)))
+                    #sppCotainer <- list(emptyspp = ppp(x = integer(0), y = integer(0)))
                     #sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
 
                     # initialize empty spp objects for each adduct
@@ -255,7 +257,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                     # noDetections <- sapply(sppCotainer, is.null)
                     #
                     # if(all(!noDetections)){ # if there are no detections return empty ppp object
-                    #       return(spatstat.geom::ppp(x = integer(0), y = integer(0), window = spwin))
+                    #       return(ppp(x = integer(0), y = integer(0), window = spwin))
                     # } else{
                     #       return(superimposeAnalytes(sppCotainer, spWin = spwin))
                     # }
@@ -287,7 +289,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 # .reduceSearchList <- function(searchList){ # remove classes which did not generate hits
 #
-#       tokeep <- !(sapply(searchList$hitsList, function(x) spatstat.geom::is.empty.ppp(x)))
+#       tokeep <- !(sapply(searchList$hitsList, function(x) is.empty.ppp(x)))
 #
 #       searchList <- lipidSearchList(lipidList = searchList$lipidList,
 #                                     hitsList = searchList$hitsList[tokeep],
@@ -301,9 +303,9 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
       # this is used to initialize an empty list of spp objects
       # vec is a character vector holding the query adducts
-      # spwin is the spatial window of type spatstat.geom::owin
+      # spwin is the spatial window of type owin
 
-      emptyspp <- spatstat.geom::ppp(x = integer(0), y = integer(0),
+      emptyspp <- ppp(x = integer(0), y = integer(0),
                                      marks = data.frame(idx = integer(0), intensity = numeric(0)),
                                      window = spwin, checkdup = FALSE, drop = FALSE)
 

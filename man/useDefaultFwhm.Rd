@@ -16,8 +16,6 @@ mass range.}
 \value{
 Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
 m/z values of the peaks and their corresponding fwhm values.
-
-export
 }
 \description{
 -- this is still under development --

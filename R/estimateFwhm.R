@@ -33,7 +33,7 @@
 #' m/z values of the peaks and their corresponding fwhm values.
 #'
 #' @export
-#'
+#' @include manualSpatstatImport.R
 #'
 estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000,
                                     numCores = 1, plot = FALSE, savePlot = NULL) {
@@ -93,8 +93,10 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
                   #// collect fwhm and corresponding masses.
                   fwhmdf       <- lapply(s, FUN = function(i) {
 
-                        data.frame(peaks = MALDIquant::mass(i),
-                                   fwhmValues = MALDIquant::metaData(i)$fwhm)
+                        isampled <- .samplep(i, peakSampling)
+
+                        data.frame(peaks = MALDIquant::mass(isampled),
+                                   fwhmValues = MALDIquant::metaData(isampled)$fwhm)
                   })
 
                   #// put everything together
@@ -130,7 +132,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
 
       #// use super smoother to get a smooth curve
-      sm           <- supsmu(x = fwhmdf$peaks, y = fwhmdf$fwhmValues)
+      sm           <- supsmu(x = fwhmdf$peaks, y = fwhmdf$fwhmValues, bass = 9)
 
 
       #// create the linear interpolation function
@@ -170,6 +172,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 }
 
 #// internal function to sample detected peaks - for speed
+# p is a MassPeaks object
 .samplep      <- function(p, sampling) {
 
       if(sampling > length(p)){
@@ -178,11 +181,16 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
       idx         <- sample(seq(1, length(p)), sampling)
       orderedIdx  <- order(p@mass[idx])
+      md          <- p@metaData # record metaData
+
+      if(!is.null(p@metaData$fwhm)){
+            p@metaData$fwhm <- p@metaData$fwhm[idx][orderedIdx]
+      }
 
       MALDIquant::createMassPeaks(mass = p@mass[idx][orderedIdx],
                                   intensity = p@intensity[idx][orderedIdx],
                                   snr = p@snr[idx][orderedIdx],
-                                  metaData = p@metaData)
+                                  metaData = md)
 
 }
 

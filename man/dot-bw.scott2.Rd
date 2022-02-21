@@ -19,6 +19,6 @@ geometric mean
 }
 \description{
 This function Calculate Gaussian bandwideth based on Scott's rule of thumb.
-Note that this function is already available in recent \code{spatstat} versions (see \code{?spatstat::.bw.scott}).
+Note that this function is already available in recent \code{spatstat} versions (see \code{?.bw.scott}).
 This is used internally in `moleculaR::probMap`.
 }

@@ -14,7 +14,7 @@ plotAnalyte(
 )
 }
 \arguments{
-\item{obj}{S3 object of type `anlaytePointPattern` (and `spatstat.geom::spp`).}
+\item{obj}{S3 object of type `anlaytePointPattern` (and `spp`).}
 
 \item{colourmap}{the colourmap to be used, see `?viridis::viridis_pal`.}
 
@@ -31,6 +31,6 @@ giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
 nothing, plots only.
 }
 \description{
-A method to plot `anlaytePointPattern` objects. This calls `spatstat.geom::plot.ppp` with
-pre-defined defaults. For more control over the plotting please use `spatstat.geom::plot.ppp`.
+A method to plot `anlaytePointPattern` objects. This calls `plot.ppp` with
+pre-defined defaults. For more control over the plotting please use `plot.ppp`.
 }

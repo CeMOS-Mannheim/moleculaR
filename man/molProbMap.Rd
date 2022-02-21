@@ -25,25 +25,27 @@ molProbMap(
 
 \item{csrMoi}{A 'analytePointPattern' object representing the corresponding CSR model.}
 
-\item{rhoMoi}{An 'spatstat::im' object storing the density image of 'sppMoi' after applying KDE.}
+\item{rhoMoi}{An 'im' object storing the density image of 'sppMoi' after applying KDE.}
 
-\item{rhoCsr}{An 'spatstat::im' object storing the density image of 'csrMoi' after applying KDE.}
+\item{rhoCsr}{An 'im' object storing the density image of 'csrMoi' after applying KDE.}
 
 \item{hotspotpp}{A 'analytePointPattern' object holding only the points that are located within the hotspot.}
 
-\item{hotspotIm}{An 'spatstat::im' object storing the corresponding pixellated image of the 'hotspotpp' slot.}
+\item{hotspotIm}{An 'im' object storing the corresponding pixellated image of the 'hotspotpp' slot.}
 
-\item{hotspotMask}{An 'spatstat.geom::owin' object storing the corresponding window of the 'hotspotpp' slot.}
+\item{hotspotMask}{An 'owin' object storing the corresponding window of the 'hotspotpp' slot.}
 
 \item{coldspotpp}{A 'analytePointPattern' object holding only the points that are located within the coldspot.}
 
-\item{coldspotIm}{An 'spatstat::im' object storing the corresponding pixellated image of the 'coldspotpp' slot.}
+\item{coldspotIm}{An 'im' object storing the corresponding pixellated image of the 'coldspotpp' slot.}
 
-\item{coldspotMask}{An 'spatstat.geom::owin' object storing the corresponding window of the 'coldspotpp' slot.}
+\item{coldspotMask}{An 'owin' object storing the corresponding window of the 'coldspotpp' slot.}
 }
 \value{
 An S3 object of type 'molProbMap'.
 }
 \description{
-This is a class to represent the calculated molecular probability maps.
+This is an S3 class to represent the calculated molecular probability maps. This
+class is only used with objects returned by `porbMap` function and should not be
+called explicitly by the user.
 }

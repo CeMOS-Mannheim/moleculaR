@@ -15,7 +15,7 @@ analytePointPattern(
 )
 }
 \arguments{
-\item{spp}{a spatial point pattern of type 'spatstat.geom::ppp' with its `marks` being a dataframe with
+\item{spp}{a spatial point pattern of type 'ppp' with its `marks` being a dataframe with
 two columns `idx`and `intensity`.}
 
 \item{x, y, intensity, win}{optional, either these arguments or 'spp' have to be supplied.}
@@ -30,13 +30,15 @@ An S3 object of type 'ppp' and 'analytePointPattern' with the following entries 
 }
 }
 \description{
-This is a class to extend 'spatstat.geom::ppp' class only enforcing specific point-marks. It also
+This is a class to extend 'ppp' class only enforcing specific point-marks. It also
 adds a 'metaData' slot to declare which analytes are constructing a given 'analytePointPattern' object.
 It represents the spatial point pattern of an analyte (or set of
-analytes) with marks being a data.frame of two columns c('idx', 'intensity').
+analytes) with marks being a data.frame of two columns c('idx', 'intensity'). This constructor is for
+internal use and normally should not be called by the user.
 }
 \details{
 `mzVals` and `metaData` are combined into a data.frame which becomes a class slot `metaData`.
 This contains the `mzVals` and possible other meta data with each row having a unique identifier `idx`
 which then link `metaData` with `spp$marks`.
 }
+\keyword{internal}

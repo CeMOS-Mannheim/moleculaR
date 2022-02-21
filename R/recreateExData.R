@@ -82,7 +82,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
 
 
       #// create spatial window
-      #spwin       <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+      #spwin       <- as.polygonal(owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
       #spwin$bdry  <- spwin$bdry[-2] # fix the small glitch
 
       #// shrink msData
