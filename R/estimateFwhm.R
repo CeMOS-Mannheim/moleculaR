@@ -11,9 +11,10 @@
 #' the lower the faster. Defaults to 99.
 #' @param numCores: an integer specifying the number of cores used for the FWHM computations when s is a
 #' `MassSpectrum` or a list thereof. This is ignored on windows.
-#' @param smoothingMethod: a character, the method that is used for fitting a smoothing curve to
-#' represent fwhm as a function of m/z. Defaults to `loess` which produced "better" fits but takes
+#' @param smoothingMethod: a character, one of `c('loess','superSmoother')`, the method that is used for fitting a smoothing curve to
+#' represent fwhm as a function of m/z. Defaults to `loess` which produced better fits but takes
 #' longer to compute.
+#' @param SNR: an optional numeric, the minimum SNR level of the peaks that are used for fwhm estimation.
 #' @param plot:      whether to plot the result.
 #' @param savePlot:  either \code{NULL} or file path to save a plot as svg.
 #'
@@ -40,7 +41,7 @@
 #'
 estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000,
                                     numCores = 1, smoothingMethod = "loess",
-                                    plot = FALSE, savePlot = NULL) {
+                                    SNR = 5, plot = FALSE, savePlot = NULL) {
 
 
       if(is.list(s)){
@@ -54,7 +55,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
                   s           <- s[idx]
 
                   #// detect peaks - here p is a list of MassPeaks objects
-                  p           <- MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = 3)
+                  p           <- MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = SNR)
 
                   #// override numCores if OS is windows
                   numCores    <- ifelse(.Platform$OS.type == "windows", 1, numCores)
@@ -98,10 +99,12 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
                   #// collect fwhm and corresponding masses.
                   fwhmdf       <- lapply(s, FUN = function(i) {
 
-                        isampled <- .samplep(i, peakSampling)
+                        i <- .snrFilterp(i, SNR)
 
-                        data.frame(peaks = MALDIquant::mass(isampled),
-                                   fwhmValues = MALDIquant::metaData(isampled)$fwhm)
+                        i <- .samplep(i, peakSampling)
+
+                        data.frame(peaks = MALDIquant::mass(i),
+                                   fwhmValues = MALDIquant::metaData(i)$fwhm)
                   })
 
                   #// put everything together
@@ -119,7 +122,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
             }
 
             #// detect peaks
-            p           <- MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = 3)
+            p           <- MALDIquant::detectPeaks(object = s, method = "SuperSmoother", SNR = SNR)
 
             #// complain if peak is suspecious
             if(length(p@mass) == 0){
@@ -139,7 +142,7 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
       fwhmFun <- switch(smoothingMethod,
                         "superSmoother" = .superSmoother(x = fwhmdf$peaks, y = fwhmdf$fwhmValues),
                         "loess" = .loess(data = fwhmdf),
-                        stop("smoothingMethod not recognized, accepted values = c('leoss','superSmoother').\n"))
+                        stop("smoothingMethod not recognized, accepted values = c('loess','superSmoother').\n"))
 
       if(plot)
       {
@@ -197,11 +200,40 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
 }
 
+#// internal function to filter detected peaks according to their SNR
+# p is a MassPeaks object
+.snrFilterp      <- function(p, SNR = 3) {
+
+      if(min(p@snr) >= SNR){
+            return(p)
+      }
+
+      idx         <- which(p@snr >= SNR)
+
+      if(length(idx) == 0){
+            warning(paste0("There are peaks with SNR >= ", SNR,
+                           ". All available peaks will be used. \n"))
+            return(p)
+      }
+
+      md          <- p@metaData # record metaData
+
+      if(!is.null(md$fwhm)){
+            md$fwhm <- md$fwhm[idx]
+      }
+
+      MALDIquant::createMassPeaks(mass = p@mass[idx],
+                                  intensity = p@intensity[idx],
+                                  snr = p@snr[idx],
+                                  metaData = md)
+
+}
+
 #// compute the fwhm interpolating function by super smoother method
 .superSmoother <- function(x, y){
 
       #// use super smoother to get a smooth curve
-      sm           <- supsmu(x = x, y = y, bass = 9)
+      sm           <- supsmu(x = x, y = y, bass = 10)
 
       #// create the linear interpolation function
       return(approxfun(x = sm$x, y = sm$y, rule = 2))
@@ -290,10 +322,10 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
       ## interpolate x values
       xleft         <- approx(x=intensities[left:(left+1)],
-                             y=peaksMasses[left:(left+1)], xout=hm)$y
+                              y=peaksMasses[left:(left+1)], xout=hm)$y
 
       xright        <- approx(x=intensities[(right-1):right],
-                             y=peaksMasses[(right-1):right], xout=hm)$y
+                              y=peaksMasses[(right-1):right], xout=hm)$y
 
       return(abs(xleft-xright))
 
