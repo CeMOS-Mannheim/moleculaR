@@ -265,50 +265,71 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 #' pre-defined defaults. For more control over the plotting please use `plot.ppp`.
 #'
 #' @param obj S3 object of type `anlaytePointPattern` (and `spp`).
-#' @param colourmap the colourmap to be used, see `?viridis::viridis_pal`.
+#' @param colourPal the colourmap to be used, see `?viridis::viridis_pal`.
+#' @param uniformCol a character specifying a single colour. This will override `colourPal`.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
 #' @param pch     a positive integer, or a single character. See `?par`.
 #' @param size    the size of the symbol: a positive number or zero. see`?symbolmap`.
 #' @param analyte character, name of the analyte.
+#' @param ... further arguments passed to `spatstat.geom::plot.ppp`. 
 #'
 #' @return nothing, plots only.
 #'
 #' @export
 #'
-plotAnalyte <- function(obj, colourmap = "inferno", transpFactor = 0.7, pch = 19,
-                        size = 0.4, analyte = "m/z Analyte"){
-
-      if(!("analytePointPattern" %in% class(obj))){
-            stop("provided obj is not of type 'analytePointPattern'. \n")
-      }
-
-      if(obj$n == 0){
-
-            plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-                                    ylim = rev(obj$window$yrange),
-                                    main = paste0("Empty SPP of ", analyte))
-
-      } else{
-
-            colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
-                                               range = range(obj$marks$intensity))
-
-            plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-                                    ylim = rev(obj$window$yrange),
-                                    #cols = viridis::viridis_pal(option = "inferno")(100),
-                                    #markscale = 0.000004,
-                                    #zap = 0.0,
-                                    #chars = 21,
-                                    main = paste0("SPP of ", analyte),
-                                    symap = symbolmap(pch = pch,
-                                                                     cols = colfun,
-                                                                     size = size,
-                                                                     range = range(obj$marks$intensity))) # colors according to intensity
-
-      }
-
+plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, pch = 19,
+                        size = 0.4, analyte = "m/z Analyte", ...){
+  
+  if(!("analytePointPattern" %in% class(obj))){
+    stop("provided obj is not of type 'analytePointPattern'. \n")
+  }
+  
+  if(obj$n == 0){
+    
+    plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+             ylim = rev(obj$window$yrange),
+             main = paste0("Empty SPP of ", analyte))
+    
+  } else{
+    
+    if(is.null(uniformCol)){
+      
+      colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
+                          range = range(obj$marks$intensity))
+      
+      plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+               ylim = rev(obj$window$yrange),
+               #cols = viridis::viridis_pal(option = colourPal)(100),
+               #markscale = 0.000004,
+               #zap = 0.0,
+               #chars = 21,
+               main = paste0("SPP of ", analyte),
+               symap = symbolmap(pch = pch,
+                                 cols = colfun,
+                                 size = size,
+                                 range = range(obj$marks$intensity)),
+               ...) # colors according to intensity
+      
+    } else{
+      
+      col <- to.transparent(uniformCol, transpFactor)
+      
+      plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+               ylim = rev(obj$window$yrange),
+               main = paste0("SPP of ", analyte),
+               symap = symbolmap(pch = pch,
+                                 cols = col,
+                                 size = size),
+               ...) 
+      
+    }
+   
+    
+  }
+  
 }
+
 
 
 
@@ -533,7 +554,9 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
          }
 
 
-      }
+      },
+      stop("argument 'what' must be one of c('detailed', 'analytePointPattern', 'csrPointPattern', ",
+      "'analyteDensityImage','csrDensityImage', 'MPM').\n")
    )
 
 }
