@@ -489,7 +489,7 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
             # raster image of the spp
             imgMpm  <- pixellate(obj$sppMoi,
                                            weights = obj$sppMoi$marks$intensity,
-                                           W = as.mask(spwin,dimyx=c(diff(spwin$yrange),diff(spwin$xrange))),
+                                           W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
                                            padzero = FALSE, savemap = FALSE)
 
          }

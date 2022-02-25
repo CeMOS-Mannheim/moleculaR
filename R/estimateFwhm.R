@@ -202,9 +202,15 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 
 #// internal function to filter detected peaks according to their SNR
 # p is a MassPeaks object
-.snrFilterp      <- function(p, SNR = 3) {
+.snrFilterp      <- function(p, SNR) {
 
-      if(min(p@snr) >= SNR){
+      if(all(is.na(p@snr))){
+            warning("There is no SNR information attached to 's'. ",
+                    "SNR peak filtration was skipped. \n")
+            return(p)
+      }
+
+      if(min(p@snr, na.rm = TRUE) >= SNR){
             return(p)
       }
 
