@@ -271,63 +271,72 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
 #' @param pch     a positive integer, or a single character. See `?par`.
 #' @param size    the size of the symbol: a positive number or zero. see`?symbolmap`.
-#' @param analyte character, name of the analyte.
-#' @param ... further arguments passed to `spatstat.geom::plot.ppp`. 
+#' @param title  character, title of the plot. If not given, the m/z value of `obj` is used.
+#' @param ... further arguments passed to `spatstat.geom::plot.ppp`.
 #'
 #' @return nothing, plots only.
 #'
 #' @export
 #'
 plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, pch = 19,
-                        size = 0.4, analyte = "m/z Analyte", ...){
-  
+                        size = 0.4, title = NULL, ...){
+
   if(!("analytePointPattern" %in% class(obj))){
     stop("provided obj is not of type 'analytePointPattern'. \n")
   }
-  
+
+  if(is.null(title)){
+        if(length(obj$metaData$mzVals) > 1){
+              title <- paste0("Collective SPP of ", length(obj$metaData$mzVals)," m/z Values")
+        } else{
+                  mz <- ifelse(is.numeric(obj$metaData$mzVals),
+                              as.character(round(obj$metaData$mzVals, 4)),
+                              obj$metaData$mzVals) # to account for simulation cases
+
+              title <- paste0("m/z ", mz)
+        }
+
+  }
+
   if(obj$n == 0){
-    
+
     plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
              ylim = rev(obj$window$yrange),
-             main = paste0("Empty SPP of ", analyte))
-    
+             main = title)
+
   } else{
-    
+
     if(is.null(uniformCol)){
-      
+
       colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
                           range = range(obj$marks$intensity))
-      
+
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                ylim = rev(obj$window$yrange),
-               #cols = viridis::viridis_pal(option = colourPal)(100),
-               #markscale = 0.000004,
-               #zap = 0.0,
-               #chars = 21,
-               main = paste0("SPP of ", analyte),
+               main = title,
                symap = symbolmap(pch = pch,
                                  cols = colfun,
                                  size = size,
                                  range = range(obj$marks$intensity)),
                ...) # colors according to intensity
-      
+
     } else{
-      
+
       col <- to.transparent(uniformCol, transpFactor)
-      
+
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                ylim = rev(obj$window$yrange),
-               main = paste0("SPP of ", analyte),
+               main = title,
                symap = symbolmap(pch = pch,
                                  cols = col,
                                  size = size),
-               ...) 
-      
+               ...)
+
     }
-   
-    
+
+
   }
-  
+
 }
 
 
@@ -426,63 +435,102 @@ print.molProbMap <- function(obj) {
 #'
 #' @param obj S3 object of type `molProbMap`.
 #' @param what What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
-#' "csrDensityImage", "MPM")
+#' "csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.
 #' @param transpFactor Transparency fraction. Numerical value or
 #' vector of values between 0 and 1, giving the opaqueness of a colour.
 #' A fully opaque colour has `transpFactor=1`.
 #' @param signifArea a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").
-#' @param analyte character, name of the analyte.
+#' @param title character, title of the plot. If not given, the m/z value of `obj` is used.
 #' @param ionImage an optional rastered image of type `im` of the corresponding "regular"
 #' ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
 #' and subsequently using `pixellate`.
+#' @param figLegend logical, whether to show the hotspot and coldspot legends.
+#' @param lwd.signifArea numeric, the width of the hotspot and coldspot contours.
+#' @param ... additional arguments passed to `par`.
 #'
 #' @return nothing, plots only.
 #'
 #' @method plot molProbMap
 #' @export
+#'
 plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifArea = "both",
-                            analyte = "m/z Analyte", ionImage = NA){
+                            title = NULL, ionImage = NA, figLegend = TRUE, lwd.signifArea = 5,
+                            ...){
+
+
+   parArgs <- list(...)
+
+   if(length(parArgs) > 1){
+            par(...)
+   }
 
    switch (what,
       "analytePointPattern" = {
+
+         if(is.null(title)){
+            if(length(obj$sppMoi$metaData$mzVals) > 1){
+                  title <- paste0("Collective SPP of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
+            } else{
+                  mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
+                               as.character(round(obj$sppMoi$metaData$mzVals, 4)),
+                               obj$sppMoi$metaData$mzVals) # to account for simulation cases
+
+                  title <- paste0("m/z ", mz, " SPP")
+            }
+         }
+
+
          colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
                                              range = range(obj$sppMoi$marks$intensity))
 
          plot.ppp(obj$sppMoi, use.marks = TRUE, which.marks = "intensity",
                             ylim = rev(obj$sppMoi$window$yrange),
-                            #cols = viridis::viridis_pal(option = "inferno")(100),
-                            #markscale = 0.000004,
-                            #zap = 0.0,
-                            #chars = 21,
-                            main = paste0("SPP of ", analyte),
+                            main = title,
                             symap = symbolmap(pch = 19,
-                                                        cols = colfun,
-                                                        size = 0.4,
-                                                        range = range(obj$sppMoi$marks$intensity))) # colors according to intensity
+                                              cols = colfun,
+                                              size = 0.4,
+                                              range = range(obj$sppMoi$marks$intensity))) # colors according to intensity
 
 
       },
       "csrPointPattern" = {
+
+         if(is.null(title)){
+               if(length(obj$sppMoi$metaData$mzVals) > 1){
+                        title <- paste0("Corresponding CSR of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
+               } else{
+                        mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
+                                     as.character(round(obj$sppMoi$metaData$mzVals, 4)),
+                                     obj$sppMoi$metaData$mzVals) # to account for simulation cases
+
+                        title <- paste0("m/z ", mz, " CSR")
+               }
+
+         }
+
          colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
                                              range = range(obj$csrMoi$marks$intensity))
 
          plot.ppp(obj$csrMoi, use.marks = TRUE, which.marks = "intensity",
                             ylim = rev(obj$sppMoi$window$yrange),
-                            #cols = viridis::viridis_pal(option = "inferno")(100),
-                            #markscale = 0.000004,
-                            #zap = 0.0,
-                            #chars = 21,
-                            main = paste0("CSR of ", analyte),
+                            main = title,
                             symap = symbolmap(pch = 19,
-                                                        cols = colfun,
-                                                        size = 0.4,
-                                                        range = range(obj$csrMoi$marks$intensity))) # colors according to intensity
+                                              cols = colfun,
+                                              size = 0.4,
+                                              range = range(obj$csrMoi$marks$intensity))) # colors according to intensity
 
 
       },
       "analyteDensityImage" = {
+
+         if(is.null(title)){
+
+                  title <- expression(paste(rho["MOI"], "(x,y)"))
+
+         }
+
          plot.im(obj$rhoMoi,
-                           main = expression(paste(rho["MOI"], "(x,y)")),
+                           main = title,
                            col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoMoi, na.rm = T)),
                            ylim = rev(obj$sppMoi$window$yrange),
                            box = FALSE)
@@ -490,14 +538,77 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
       },
       "csrDensityImage" = {
+
+         if(is.null(title)){
+
+               title <- expression(paste(rho["CSR"], "(x,y)"))
+
+         }
+
          plot.im(obj$rhoCsr,
-                           main = expression(paste(rho["CSR"], "(x,y)")),
-                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoCs, na.rm = T)),
-                           ylim = rev(obj$sppMoi$window$yrange),
-                           box = FALSE)
+                 main = title,
+                 col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoCs, na.rm = T)),
+                  ylim = rev(obj$sppMoi$window$yrange), box = FALSE)
+
+      },
+      "kdeIntensitiesDistr" = {
+
+               fmoi <- density(c(obj$rhoMoi$v), na.rm = TRUE)
+               fcsr <- density(c(obj$rhoCsr$v), na.rm = TRUE)
+               muCsr <- mean(obj$rhoCsr$v, na.rm = TRUE)
+               sigmaCsr <- sd(obj$rhoCsr$v, na.rm = TRUE)
+
+               ymax <- max(max(fmoi$y), max(fcsr$y))
+               ymin <- min(min(fmoi$y), min(fcsr$y))
+               xmax <- max(max(fmoi$x), max(fcsr$x))
+               xmin <- min(min(fmoi$x), min(fcsr$x))
+
+               # Create two panels side by side
+               #layout(t(1:1), widths=c(5,1))
+
+               # Set margins and turn all axis labels horizontally (with `las=1`)
+               #par(mar=rep(3, 4), oma=rep(4, 4), las=1)
+
+               plot(fcsr,
+                    main = bquote(f[CSR]*(k) ~ and ~ f[MOI]*(k) ~ at ~ bw==.(obj$bw)),
+                    col = "black",
+                    ylim = c(ymin, ymax),
+                    xlim = c(xmin, xmax),
+                    xlab = "Intensities",
+                    ylab = "Density",
+                    bty = "n",
+                    lwd = 2)
+
+               lines(fmoi, col =  "red", lwd = 2)
+
+               polygon(x = c(quantile(fcsr, 0.95), xmax, xmax, quantile(fcsr, 0.95)),
+                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("#6BD7AF", 0.5),
+                       border = NA)
+
+               polygon(x = c(xmin, quantile(fcsr, 0.05), quantile(fcsr, 0.05), xmin),
+                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("#6BD7AF", 0.5),
+                       border = NA)
+
+               legend("topright", legend = c(expression(paste(f["CSR"], "(k)")),
+                                             expression(paste(f["MOI"], "(k)"))),
+                      lty = c("solid"), lwd = 2,
+                      col = c("black", "red"),
+                      bty = "n", horiz = FALSE)
 
       },
       "MPM" = {
+
+         if(is.null(title)){
+               if(length(obj$sppMoi$metaData$mzVals) > 1){
+                        title <- paste0("CPPM of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
+               } else{
+                        mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
+                                     as.character(round(obj$sppMoi$metaData$mzVals, 4)),
+                                     obj$sppMoi$metaData$mzVals) # to account for simulation cases
+
+                        title <- paste0("m/z ", mz, " MPM")
+               }
+         }
 
          spwin <- obj$sppMoi$window
 
@@ -509,48 +620,64 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
             # raster image of the spp
             imgMpm  <- pixellate(obj$sppMoi,
-                                           weights = obj$sppMoi$marks$intensity,
-                                           W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
-                                           padzero = FALSE, savemap = FALSE)
+                                 weights = obj$sppMoi$marks$intensity,
+                                 W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
+                                 padzero = FALSE, savemap = FALSE)
 
          }
 
          plot.im(imgMpm,
-                           main = paste0("MPM of ", analyte),
-                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
-                           ylim = rev(range(spwin$y)),
-                           box = FALSE)
+                 main = title,
+                 col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
+                 ylim = rev(range(spwin$y)), box = FALSE)
 
          if(signifArea == "both" | signifArea == "hotspot"){
-            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
-            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = 2.5, lty = "dashed",add = TRUE)
+            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
+            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
          }
 
          if(signifArea == "both" | signifArea == "coldspot"){
-            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = 5,  add = TRUE)
-            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = 2.5, lty = "dashed",add = TRUE)
+            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
+            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
          }
 
-         legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"),
-                col = c("red", "blue"), bty = "n", horiz = TRUE, inset = c(-0.5,0))
+         if(figLegend){
+                  legend("bottom", legend = c("Analyte Hotspot", "Analyte Coldspot"), lty = c("dashed"),
+                           col = c("red", "blue"), bty = "n", horiz = TRUE, inset = c(-0.5,0))
+
+         }
 
 
       },
       "detailed" = {
-         par(mfrow = c(3, 2))
-         plot(obj = obj, what = "csrPointPattern", transpFactor = transpFactor, analyte = analyte)
-         plot(obj = obj, what = "analytePointPattern", transpFactor = transpFactor, analyte = analyte)
-         plot(obj = obj, what = "csrDensityImage", transpFactor = transpFactor, analyte = analyte)
-         plot(obj = obj, what = "analyteDensityImage", transpFactor = transpFactor, analyte = analyte)
-         plot(obj = obj, what = "MPM", transpFactor = transpFactor, analyte = analyte)
+
+         par(mfrow = c(3, 2), ...)
+
+         plot(obj = obj, what = "csrPointPattern", transpFactor = transpFactor, signifArea = signifArea,
+              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+
+         plot(obj = obj, what = "analytePointPattern", transpFactor = transpFactor, signifArea = signifArea,
+              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+
+         plot(obj = obj, what = "csrDensityImage", transpFactor = transpFactor, signifArea = signifArea,
+              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+
+         plot(obj = obj, what = "analyteDensityImage", transpFactor = transpFactor, signifArea = signifArea,
+              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+
+         if(identical(ionImage, NA)){
+                  plot(obj = obj, what = "kdeIntensitiesDistr",transpFactor = transpFactor, signifArea = signifArea,
+                       title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         }
+
+         plot(obj = obj, what = "MPM", transpFactor = transpFactor, signifArea = signifArea,
+              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
 
          if(!(identical(ionImage, NA))){
             plot.im(ionImage,
-                              main = paste0("Ion Image of ", analyte),
-                              col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),
-                              ylim = rev(obj$sppMoi$window$yrange),
-                              box = FALSE)
-
+                    main = "Corresponding Ion Image",
+                    col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),
+                    ylim = rev(obj$sppMoi$window$yrange), box = FALSE)
          }
 
 

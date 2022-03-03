@@ -9,15 +9,18 @@
   what = "detailed",
   transpFactor = 0.7,
   signifArea = "both",
-  analyte = "m/z Analyte",
-  ionImage = NA
+  title = NULL,
+  ionImage = NA,
+  figLegend = TRUE,
+  lwd.signifArea = 5,
+  ...
 )
 }
 \arguments{
 \item{obj}{S3 object of type `molProbMap`.}
 
 \item{what}{What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
-"csrDensityImage", "MPM")}
+"csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.}
 
 \item{transpFactor}{Transparency fraction. Numerical value or
 vector of values between 0 and 1, giving the opaqueness of a colour.
@@ -25,11 +28,17 @@ A fully opaque colour has `transpFactor=1`.}
 
 \item{signifArea}{a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").}
 
-\item{analyte}{character, name of the analyte.}
+\item{title}{character, title of the plot. If not given, the m/z value of `obj` is used.}
 
 \item{ionImage}{an optional rastered image of type `im` of the corresponding "regular"
 ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
 and subsequently using `pixellate`.}
+
+\item{figLegend}{logical, whether to show the hotspot and coldspot legends.}
+
+\item{lwd.signifArea}{numeric, the width of the hotspot and coldspot contours.}
+
+\item{...}{additional arguments passed to `par`.}
 }
 \value{
 nothing, plots only.

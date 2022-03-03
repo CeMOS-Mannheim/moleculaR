@@ -6,17 +6,21 @@
 \usage{
 plotAnalyte(
   obj,
-  colourmap = "inferno",
+  colourPal = "inferno",
+  uniformCol = NULL,
   transpFactor = 0.7,
   pch = 19,
   size = 0.4,
-  analyte = "m/z Analyte"
+  title = NULL,
+  ...
 )
 }
 \arguments{
 \item{obj}{S3 object of type `anlaytePointPattern` (and `spp`).}
 
-\item{colourmap}{the colourmap to be used, see `?viridis::viridis_pal`.}
+\item{colourPal}{the colourmap to be used, see `?viridis::viridis_pal`.}
+
+\item{uniformCol}{a character specifying a single colour. This will override `colourPal`.}
 
 \item{transpFactor}{Transparency fraction. Numerical value or vector of values between 0 and 1,
 giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
@@ -25,7 +29,9 @@ giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
 
 \item{size}{the size of the symbol: a positive number or zero. see`?symbolmap`.}
 
-\item{analyte}{character, name of the analyte.}
+\item{title}{character, title of the plot. If not given, the m/z value of `obj` is used.}
+
+\item{...}{further arguments passed to `spatstat.geom::plot.ppp`.}
 }
 \value{
 nothing, plots only.
