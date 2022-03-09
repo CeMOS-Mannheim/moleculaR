@@ -42,7 +42,7 @@
 probMap                     <- function(sppMoi,  control = NULL,
                                        bw = seq(1, 10, 1), bwMethod = "spAutoCor",
                                        csrIntensities = "resample", sqrtTansform = FALSE,
-                                       csrMoi = NULL, pvalThreshold = 0.05, pvalCorrection = "bonferroni",
+                                       csrMoi = NULL, pvalThreshold = 0.05, pvalCorrection = "BH",
                                        bwPlot = FALSE, verbose = TRUE) {
 
 

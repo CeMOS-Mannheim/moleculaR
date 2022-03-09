@@ -46,7 +46,7 @@ superimposeNoise(
 \item{fwhm:}{numeric, the fwhm at the specified m/z.}
 
 \item{noiseFactor:}{integer, this will be multiplied by the standard deviation of intensities at \code{mz} which will
-be plugged in in \code{rnorm} to generate the intensities of the Gaussian noise.}
+be plugged into \code{rnorm} to generate the intensities of the Gaussian noise.}
 
 \item{searchFactor:}{integer, search tolerance, how many standard deviations (sigma) around \code{mz} to include in the search of
 \code{mz} peak presence.}

@@ -579,20 +579,20 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
                     bty = "n",
                     lwd = 2)
 
-               lines(fmoi, col =  "red", lwd = 2)
+               lines(fmoi, col =  "#6BD7AF", lwd = 2)
 
-               polygon(x = c(quantile(fcsr, 0.95), xmax, xmax, quantile(fcsr, 0.95)),
-                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("#6BD7AF", 0.5),
+               polygon(x = c(quantile(fcsr$x, 0.95), xmax, xmax, quantile(fcsr$x, 0.95)),
+                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("coral2", 0.5),
                        border = NA)
 
-               polygon(x = c(xmin, quantile(fcsr, 0.05), quantile(fcsr, 0.05), xmin),
-                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("#6BD7AF", 0.5),
+               polygon(x = c(xmin, quantile(fcsr$x, 0.05), quantile(fcsr$x, 0.05), xmin),
+                       y = c(ymin, ymin, ymax, ymax), col = to.transparent("cornflowerblue", 0.5),
                        border = NA)
 
                legend("topright", legend = c(expression(paste(f["CSR"], "(k)")),
                                              expression(paste(f["MOI"], "(k)"))),
                       lty = c("solid"), lwd = 2,
-                      col = c("black", "red"),
+                      col = c("black", "#6BD7AF"),
                       bty = "n", horiz = FALSE)
 
       },

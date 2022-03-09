@@ -13,7 +13,7 @@ probMap(
   sqrtTansform = FALSE,
   csrMoi = NULL,
   pvalThreshold = 0.05,
-  pvalCorrection = "bonferroni",
+  pvalCorrection = "BH",
   bwPlot = FALSE,
   verbose = TRUE
 )

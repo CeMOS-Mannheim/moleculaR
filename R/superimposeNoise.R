@@ -9,7 +9,7 @@
 #' @param mz:     numeric, m/z value where the noise will be added.
 #' @param fwhm:   numeric, the fwhm at the specified m/z.
 #' @param noiseFactor:    integer, this will be multiplied by the standard deviation of intensities at \code{mz} which will
-#' be plugged in in \code{rnorm} to generate the intensities of the Gaussian noise.
+#' be plugged into \code{rnorm} to generate the intensities of the Gaussian noise.
 #' @param searchFactor:    integer, search tolerance, how many standard deviations (sigma) around \code{mz} to include in the search of
 #' \code{mz} peak presence.
 #' @param sigmaInterfering: integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.
@@ -39,12 +39,12 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
       if(is.null(spData)){
 
-            coords      = MALDIquant::coordinates(x) # save a copy of the coordinates
-
-
             if(!MALDIquant::isMassPeaksList(x)){
                   stop("x is not a list of MassPeaks objects. \n")
             }
+
+            coords      = MALDIquant::coordinates(x) # save a copy of the coordinates
+
       }
 
       if(is.null(x)){
