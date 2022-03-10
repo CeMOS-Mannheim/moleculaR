@@ -7,13 +7,15 @@
 \method{plot}{molProbMap}(
   obj,
   what = "detailed",
-  transpFactor = 0.7,
+  sppArgs = list(),
+  imageArgs = list(),
+  fArgs = list(),
   signifArea = "both",
-  title = NULL,
   ionImage = NA,
   figLegend = TRUE,
   lwd.signifArea = 5,
-  ...
+  col.hotspot = "red",
+  col.coldspot = "blue"
 )
 }
 \arguments{
@@ -22,13 +24,16 @@
 \item{what}{What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
 "csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.}
 
-\item{transpFactor}{Transparency fraction. Numerical value or
-vector of values between 0 and 1, giving the opaqueness of a colour.
-A fully opaque colour has `transpFactor=1`.}
+\item{sppArgs}{a named list of arguments to be passed to `plotAnalyte` or plotting
+"analytePointPattern" and "csrPointPattern". There are sensible defaults.}
+
+\item{imageArgs}{a named list of arguments to be passed to `spatstat.geom::plot.im` for plotting
+"analyteDensityImage", "csrDensityImage" and "MPM". There are sensible defaults.}
+
+\item{fArgs}{a named list of arguments to be passed to `base::plot` for plotting
+"kdeIntensitiesDistr". There are sensible defaults.}
 
 \item{signifArea}{a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").}
-
-\item{title}{character, title of the plot. If not given, the m/z value of `obj` is used.}
 
 \item{ionImage}{an optional rastered image of type `im` of the corresponding "regular"
 ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
@@ -38,7 +43,9 @@ and subsequently using `pixellate`.}
 
 \item{lwd.signifArea}{numeric, the width of the hotspot and coldspot contours.}
 
-\item{...}{additional arguments passed to `par`.}
+\item{col.hotspot}{a character specifying the color of the hotspot contour.}
+
+\item{col.coldspot}{a character specifying the color of the coldspot contour.}
 }
 \value{
 nothing, plots only.

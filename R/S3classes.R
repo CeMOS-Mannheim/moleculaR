@@ -436,119 +436,95 @@ print.molProbMap <- function(obj) {
 #' @param obj S3 object of type `molProbMap`.
 #' @param what What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
 #' "csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.
-#' @param transpFactor Transparency fraction. Numerical value or
-#' vector of values between 0 and 1, giving the opaqueness of a colour.
-#' A fully opaque colour has `transpFactor=1`.
+#' @param sppArgs a named list of arguments to be passed to `plotAnalyte` or plotting
+#' "analytePointPattern" and "csrPointPattern". There are sensible defaults.
+#' @param imageArgs a named list of arguments to be passed to `spatstat.geom::plot.im` for plotting
+#' "analyteDensityImage", "csrDensityImage" and "MPM". There are sensible defaults.
+#' @param fArgs a named list of arguments to be passed to `base::plot` for plotting
+#' "kdeIntensitiesDistr". There are sensible defaults.
 #' @param signifArea a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").
-#' @param title character, title of the plot. If not given, the m/z value of `obj` is used.
 #' @param ionImage an optional rastered image of type `im` of the corresponding "regular"
 #' ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
 #' and subsequently using `pixellate`.
 #' @param figLegend logical, whether to show the hotspot and coldspot legends.
 #' @param lwd.signifArea numeric, the width of the hotspot and coldspot contours.
-#' @param ... additional arguments passed to `par`.
+#' @param col.hotspot a character specifying the color of the hotspot contour.
+#' @param col.coldspot a character specifying the color of the coldspot contour.
 #'
 #' @return nothing, plots only.
 #'
 #' @method plot molProbMap
+#'
 #' @export
 #'
-plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifArea = "both",
-                            title = NULL, ionImage = NA, figLegend = TRUE, lwd.signifArea = 5,
-                            ...){
+plot.molProbMap <- function(obj, what = "detailed",
+                            sppArgs = list(),
+                            imageArgs = list(),
+                            fArgs = list(),
+                            signifArea = "both",
+                            ionImage = NA,
+                            figLegend = TRUE,
+                            lwd.signifArea = 5,
+                            col.hotspot = "red",
+                            col.coldspot = "blue"){
 
 
-   parArgs <- list(...)
-
-   if(length(parArgs) > 1){
-            par(...)
-   }
 
    switch (what,
       "analytePointPattern" = {
 
-         if(is.null(title)){
-            if(length(obj$sppMoi$metaData$mzVals) > 1){
-                  title <- paste0("Collective SPP of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
-            } else{
-                  mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
-                               as.character(round(obj$sppMoi$metaData$mzVals, 4)),
-                               obj$sppMoi$metaData$mzVals) # to account for simulation cases
+               # workout the plotting arguments
+               sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+                                      pch = 19, size = 0.4, title = NULL)
+               sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
-                  title <- paste0("m/z ", mz, " SPP")
-            }
-         }
-
-
-         colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
-                                             range = range(obj$sppMoi$marks$intensity))
-
-         plot.ppp(obj$sppMoi, use.marks = TRUE, which.marks = "intensity",
-                            ylim = rev(obj$sppMoi$window$yrange),
-                            main = title,
-                            symap = symbolmap(pch = 19,
-                                              cols = colfun,
-                                              size = 0.4,
-                                              range = range(obj$sppMoi$marks$intensity))) # colors according to intensity
+               # call the plotting function
+               do.call(plotAnalyte, c(list(obj = obj$sppMoi), sppArgs))
 
 
       },
       "csrPointPattern" = {
 
-         if(is.null(title)){
-               if(length(obj$sppMoi$metaData$mzVals) > 1){
-                        title <- paste0("Corresponding CSR of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
-               } else{
-                        mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
-                                     as.character(round(obj$sppMoi$metaData$mzVals, 4)),
-                                     obj$sppMoi$metaData$mzVals) # to account for simulation cases
+               # workout the plotting arguments
+               sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+                                      pch = 19, size = 0.4, title = NULL)
+               sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
-                        title <- paste0("m/z ", mz, " CSR")
-               }
-
-         }
-
-         colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = "inferno")(100)), transpFactor),
-                                             range = range(obj$csrMoi$marks$intensity))
-
-         plot.ppp(obj$csrMoi, use.marks = TRUE, which.marks = "intensity",
-                            ylim = rev(obj$sppMoi$window$yrange),
-                            main = title,
-                            symap = symbolmap(pch = 19,
-                                              cols = colfun,
-                                              size = 0.4,
-                                              range = range(obj$csrMoi$marks$intensity))) # colors according to intensity
+               # call the plotting function
+               do.call(plotAnalyte, c(list(obj = obj$csrMoi), sppArgs))
 
 
       },
       "analyteDensityImage" = {
 
-         if(is.null(title)){
+               # workout the plotting arguments
+               imageDefaults  <- list(main = expression(paste(rho["MOI"], "(x,y)")),
+                                      col = colourmap(viridis::viridis_pal(option = "inferno")(100),
+                                                      range = range(obj$rhoMoi, na.rm = T)),
+                                      ylim = rev(obj$sppMoi$window$yrange),
+                                      box = FALSE)
 
-                  title <- expression(paste(rho["MOI"], "(x,y)"))
+               imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
-         }
-
-         plot.im(obj$rhoMoi,
-                           main = title,
-                           col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoMoi, na.rm = T)),
-                           ylim = rev(obj$sppMoi$window$yrange),
-                           box = FALSE)
+               # call the plotting function
+               do.call(plot.im, c(list(x = obj$rhoMoi), imageArgs))
 
 
       },
       "csrDensityImage" = {
 
-         if(is.null(title)){
+               # workout the plotting arguments
+               imageDefaults  <- list(main = expression(paste(rho["CSR"], "(x,y)")),
+                                      col = colourmap(viridis::viridis_pal(option = "inferno")(100),
+                                                      range = range(obj$rhoCsr, na.rm = T)),
+                                      ylim = rev(obj$sppMoi$window$yrange),
+                                      box = FALSE)
 
-               title <- expression(paste(rho["CSR"], "(x,y)"))
+               imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
-         }
+               # call the plotting function
+               do.call(plot.im, c(list(x = obj$rhoCsr), imageArgs))
 
-         plot.im(obj$rhoCsr,
-                 main = title,
-                 col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(obj$rhoCs, na.rm = T)),
-                  ylim = rev(obj$sppMoi$window$yrange), box = FALSE)
 
       },
       "kdeIntensitiesDistr" = {
@@ -557,6 +533,8 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
                fcsr <- density(c(obj$rhoCsr$v), na.rm = TRUE)
                muCsr <- mean(obj$rhoCsr$v, na.rm = TRUE)
                sigmaCsr <- sd(obj$rhoCsr$v, na.rm = TRUE)
+               lowerCutoff <- qnorm(0.05, muCsr, sigmaCsr)
+               upperCutoff <- qnorm(0.05, muCsr, sigmaCsr, lower.tail = FALSE)
 
                ymax <- max(max(fmoi$y), max(fcsr$y))
                ymin <- min(min(fmoi$y), min(fcsr$y))
@@ -569,46 +547,53 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
                # Set margins and turn all axis labels horizontally (with `las=1`)
                #par(mar=rep(3, 4), oma=rep(4, 4), las=1)
 
-               plot(fcsr,
-                    main = bquote(f[CSR]*(k) ~ and ~ f[MOI]*(k) ~ at ~ bw==.(obj$bw)),
-                    col = "black",
-                    ylim = c(ymin, ymax),
-                    xlim = c(xmin, xmax),
-                    xlab = "Intensities",
-                    ylab = "Density",
-                    bty = "n",
-                    lwd = 2)
+               # workout the plotting arguments
+               fDefaults  <- list(main = bquote(f[CSR]*(k) ~ and ~ f[MOI]*(k) ~ at ~ bw==.(obj$bw)),
+                                  col = "black",
+                                  ylim = c(ymin, ymax),
+                                  xlim = c(xmin, xmax),
+                                  xlab = "Intensities",
+                                  ylab = "Density",
+                                  bty = "n",
+                                  lwd = 3)
 
-               lines(fmoi, col =  "#6BD7AF", lwd = 2)
+               fArgs      <- .mergeArgs(fArgs, fDefaults)
 
-               polygon(x = c(quantile(fcsr$x, 0.95), xmax, xmax, quantile(fcsr$x, 0.95)),
+               # call the plotting function
+               do.call(plot, c(list(fcsr), fArgs))
+
+
+               lines(fmoi, col =  "forestgreen", lwd = fArgs$lwd)
+
+               polygon(x = c(upperCutoff, xmax, xmax, upperCutoff),
                        y = c(ymin, ymin, ymax, ymax), col = to.transparent("coral2", 0.5),
                        border = NA)
 
-               polygon(x = c(xmin, quantile(fcsr$x, 0.05), quantile(fcsr$x, 0.05), xmin),
+               polygon(x = c(xmin, lowerCutoff, lowerCutoff, xmin),
                        y = c(ymin, ymin, ymax, ymax), col = to.transparent("cornflowerblue", 0.5),
                        border = NA)
 
-               legend("topright", legend = c(expression(paste(f["CSR"], "(k)")),
-                                             expression(paste(f["MOI"], "(k)"))),
-                      lty = c("solid"), lwd = 2,
-                      col = c("black", "#6BD7AF"),
-                      bty = "n", horiz = FALSE)
+               polygon(x = c(fcsr$x[fcsr$x >= upperCutoff],  upperCutoff),
+                       y = c(fcsr$y[fcsr$x >= upperCutoff],  0),
+                       col = to.transparent("red", 0.5),
+                       border = NA)
+
+               polygon(x = c(fcsr$x[fcsr$x <= lowerCutoff], lowerCutoff),
+                       y = c(fcsr$y[fcsr$x <= lowerCutoff],  0),
+                       col = to.transparent("blue", 0.5),
+                       border = NA)
+
+               if(figLegend){
+                        legend("topright", legend = c(expression(paste(italic(f["CSR"]), italic("(k)"))),
+                                                      expression(paste(italic(f["MOI"]), italic("(k)")))),
+                               lty = c("solid"), lwd = 2,
+                               col = c("black", "forestgreen"),
+                               bty = "n", horiz = FALSE)
+               }
+
 
       },
       "MPM" = {
-
-         if(is.null(title)){
-               if(length(obj$sppMoi$metaData$mzVals) > 1){
-                        title <- paste0("CPPM of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
-               } else{
-                        mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
-                                     as.character(round(obj$sppMoi$metaData$mzVals, 4)),
-                                     obj$sppMoi$metaData$mzVals) # to account for simulation cases
-
-                        title <- paste0("m/z ", mz, " MPM")
-               }
-         }
 
          spwin <- obj$sppMoi$window
 
@@ -626,19 +611,40 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
 
          }
 
-         plot.im(imgMpm,
-                 main = title,
-                 col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(imgMpm, na.rm = T)),
-                 ylim = rev(range(spwin$y)), box = FALSE)
+         # workout the plotting arguments
+         imageDefaults  <- list(main = NULL,
+                                col = colourmap(viridis::viridis_pal(option = "inferno")(100),
+                                                range = range(imgMpm, na.rm = T)),
+                                ylim = rev(range(spwin$y)),
+                                box = FALSE)
+
+         imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
+
+         # fix title
+         if(is.null(imageArgs$title)){
+                  if(length(obj$sppMoi$metaData$mzVals) > 1){
+                           imageArgs$title <- paste0("CPPM of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
+                  } else{
+                           mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
+                                        as.character(round(obj$sppMoi$metaData$mzVals, 4)),
+                                        obj$sppMoi$metaData$mzVals) # to account for simulation cases
+
+                           imageArgs$title <- paste0("m/z ", mz, " MPM")
+                  }
+         }
+
+         # call the plotting function
+         do.call(plot.im, c(list(x = imgMpm), imageArgs))
+
 
          if(signifArea == "both" | signifArea == "hotspot"){
             plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
-            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "red", lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
+            plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = col.hotspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
          }
 
          if(signifArea == "both" | signifArea == "coldspot"){
             plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
-            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "blue", lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
+            plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = col.coldspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
          }
 
          if(figLegend){
@@ -651,44 +657,132 @@ plot.molProbMap <- function(obj, what = "detailed", transpFactor = 0.7, signifAr
       },
       "detailed" = {
 
-         par(mfrow = c(3, 2), ...)
+         par(mfrow = c(3, 2))
 
-         plot(obj = obj, what = "csrPointPattern", transpFactor = transpFactor, signifArea = signifArea,
-              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         plot(obj = obj, what = "csrPointPattern",
+              sppArgs = sppArgs,
+              imageArgs = imageArgs,
+              fArgs = fArgs,
+              signifArea = signifArea,
+              ionImage = ionImage,
+              figLegend = figLegend,
+              lwd.signifArea = lwd.signifArea,
+              col.hotspot = col.hotspot,
+              col.coldspot = col.coldspot)
 
-         plot(obj = obj, what = "analytePointPattern", transpFactor = transpFactor, signifArea = signifArea,
-              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         plot(obj = obj, what = "analytePointPattern",
+              sppArgs = sppArgs,
+              imageArgs = imageArgs,
+              fArgs = fArgs,
+              signifArea = signifArea,
+              ionImage = ionImage,
+              figLegend = figLegend,
+              lwd.signifArea = lwd.signifArea,
+              col.hotspot = col.hotspot,
+              col.coldspot = col.coldspot)
 
-         plot(obj = obj, what = "csrDensityImage", transpFactor = transpFactor, signifArea = signifArea,
-              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         plot(obj = obj, what = "csrDensityImage",
+              sppArgs = sppArgs,
+              imageArgs = imageArgs,
+              fArgs = fArgs,
+              signifArea = signifArea,
+              ionImage = ionImage,
+              figLegend = figLegend,
+              lwd.signifArea = lwd.signifArea,
+              col.hotspot = col.hotspot,
+              col.coldspot = col.coldspot)
 
-         plot(obj = obj, what = "analyteDensityImage", transpFactor = transpFactor, signifArea = signifArea,
-              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         plot(obj = obj, what = "analyteDensityImage",
+              sppArgs = sppArgs,
+              imageArgs = imageArgs,
+              fArgs = fArgs,
+              signifArea = signifArea,
+              ionImage = ionImage,
+              figLegend = figLegend,
+              lwd.signifArea = lwd.signifArea,
+              col.hotspot = col.hotspot,
+              col.coldspot = col.coldspot)
 
          if(identical(ionImage, NA)){
-                  plot(obj = obj, what = "kdeIntensitiesDistr",transpFactor = transpFactor, signifArea = signifArea,
-                       title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+                  plot(obj = obj, what = "kdeIntensitiesDistr",
+                       sppArgs = sppArgs,
+                       imageArgs = imageArgs,
+                       fArgs = fArgs,
+                       signifArea = signifArea,
+                       ionImage = ionImage,
+                       figLegend = figLegend,
+                       lwd.signifArea = lwd.signifArea,
+                       col.hotspot = col.hotspot,
+                       col.coldspot = col.coldspot)
          }
 
-         plot(obj = obj, what = "MPM", transpFactor = transpFactor, signifArea = signifArea,
-              title = title, figLegend = figLegend, lwd.signifArea = lwd.signifArea)
+         plot(obj = obj, what = "MPM",
+              sppArgs = sppArgs,
+              imageArgs = imageArgs,
+              fArgs = fArgs,
+              signifArea = signifArea,
+              ionImage = ionImage,
+              figLegend = figLegend,
+              lwd.signifArea = lwd.signifArea,
+              col.hotspot = col.hotspot,
+              col.coldspot = col.coldspot)
 
          if(!(identical(ionImage, NA))){
-            plot.im(ionImage,
-                    main = "Corresponding Ion Image",
-                    col = colourmap(viridis::viridis_pal(option = "inferno")(100), range = range(ionImage, na.rm = T)),
-                    ylim = rev(obj$sppMoi$window$yrange), box = FALSE)
+
+                  # workout the plotting arguments
+                  imageDefaults  <- list(main = "Corresponding Ion Image",
+                                         col = colourmap(viridis::viridis_pal(option = "inferno")(100),
+                                                         range = range(ionImage, na.rm = T)),
+                                         ylim = rev(obj$sppMoi$window$yrange),
+                                         box = FALSE)
+
+                  imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
+
+                  # call the plotting function
+                  do.call(plot.im, c(list(x = ionImage), imageArgs))
+
          }
 
 
       },
       stop("argument 'what' must be one of c('detailed', 'analytePointPattern', 'csrPointPattern', ",
-      "'analyteDensityImage','csrDensityImage', 'MPM').\n")
+      "'analyteDensityImage','csrDensityImage', 'kdeIntensitiesDistr' or 'MPM').\n")
    )
 
 }
 
+# merge default arguments with provided ones
+# providedArgs and defualt args are named lists
+.mergeArgs <- function(providedArgs, defaultArgs){
 
+         if(length(providedArgs) == 0){
+                  providedArgs <- defaultArgs
+         } else {
+                  providedArgs <- c(providedArgs, defaultArgs[!(names(defaultArgs) %in% names(providedArgs))])
+         }
+
+         return(providedArgs)
+}
+
+# .assignTitle <- function(mzVals, expr = NULL) {
+#
+#          if(!is.null(expr)){
+#                   return(expr)
+#          }
+#
+#
+#          if(length(mzVals) > 1){
+#                   title <- paste0("Collective SPP of ", length(mzVals)," m/z Values")
+#          } else{
+#                   mz <- ifelse(is.numeric(mzVals),
+#                                as.character(round(mzVals, 4)),
+#                                mzVals) # to account for simulation cases
+#
+#                   title <- paste0("m/z ", mz, " SPP")
+#          }
+#
+#          return(title)
+# }
 
 #' lipidSearchList Class Constructor
 #'
