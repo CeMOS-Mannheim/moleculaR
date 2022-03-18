@@ -594,14 +594,14 @@ plot.molProbMap <- function(obj, what = "detailed",
    switch (what,
       "analytePointPattern" = {
 
+               if(rescale){
+                        obj$sppMoi <- .rescale(obj$sppMoi)
+               }
+
                # workout the plotting arguments
                sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
                                       pch = 19, size = 0.4, title = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
-
-               if(rescale){
-                        obj$sppMoi <- .rescale(obj$sppMoi)
-               }
 
                # call the plotting function
                do.call(plotAnalyte, c(list(obj = obj$sppMoi), sppArgs))
@@ -610,14 +610,16 @@ plot.molProbMap <- function(obj, what = "detailed",
       },
       "csrPointPattern" = {
 
+               if(rescale){
+                        obj$csrMoi <- .rescale(obj$csrMoi)
+               }
+
                # workout the plotting arguments
                sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
                                       pch = 19, size = 0.4, title = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
-               if(rescale){
-                        obj$csrMoi <- .rescale(obj$csrMoi)
-               }
+
 
                # call the plotting function
                do.call(plotAnalyte, c(list(obj = obj$csrMoi), sppArgs))
@@ -625,6 +627,10 @@ plot.molProbMap <- function(obj, what = "detailed",
 
       },
       "analyteDensityImage" = {
+
+               if(rescale){
+                        obj$rhoMoi <- .rescale(obj$rhoMoi)
+               }
 
                # workout the plotting arguments
                imageDefaults  <- list(main = expression(paste(rho["MOI"], "(x,y)")),
@@ -636,17 +642,16 @@ plot.molProbMap <- function(obj, what = "detailed",
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
 
-               if(rescale){
-                        obj$rhoMoi <- .rescale(obj$rhoMoi)
-               }
-
-
                # call the plotting function
                do.call(plot.im, c(list(x = obj$rhoMoi), imageArgs))
 
 
       },
       "csrDensityImage" = {
+
+               if(rescale){
+                        obj$rhoCsr <- .rescale(obj$rhoCsr)
+               }
 
                # workout the plotting arguments
                imageDefaults  <- list(main = expression(paste(rho["CSR"], "(x,y)")),
@@ -658,9 +663,7 @@ plot.molProbMap <- function(obj, what = "detailed",
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
 
-               if(rescale){
-                        obj$rhoCsr <- .rescale(obj$rhoCsr)
-               }
+
 
                # call the plotting function
                do.call(plot.im, c(list(x = obj$rhoCsr), imageArgs))
@@ -756,6 +759,10 @@ plot.molProbMap <- function(obj, what = "detailed",
 
          }
 
+         if(rescale){
+                  imgMpm <- .rescale(imgMpm)
+         }
+
          # workout the plotting arguments
          imageDefaults  <- list(main = NULL,
                                 col = colourmap(viridis::viridis_pal(option = "inferno")(100),
@@ -778,9 +785,7 @@ plot.molProbMap <- function(obj, what = "detailed",
                   }
          }
 
-         if(rescale){
-                  imgMpm <- .rescale(imgMpm)
-         }
+
 
          # call the plotting function
          do.call(plot.im, c(list(x = imgMpm), imageArgs))
@@ -884,6 +889,10 @@ plot.molProbMap <- function(obj, what = "detailed",
 
          if(!(identical(ionImage, NA))){
 
+                  if(rescale){
+                           ionImage <- .rescale(ionImage)
+                  }
+
                   # workout the plotting arguments
                   imageDefaults  <- list(main = "Corresponding Ion Image",
                                          col = colourmap(viridis::viridis_pal(option = "inferno")(100),
@@ -893,9 +902,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
                   imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
-                  if(rescale){
-                           ionImage <- .rescale(ionImage)
-                  }
+
 
                   # call the plotting function
                   do.call(plot.im, c(list(x = ionImage), imageArgs))
