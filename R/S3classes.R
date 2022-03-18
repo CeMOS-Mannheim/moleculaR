@@ -342,6 +342,126 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 
 
 
+#' Plot raster images of type `im`
+#'
+#' A method to plot `im` objects of the `spatstat` package. This calls `plot.im` with
+#' pre-defined defaults. For more control over the plotting please use `plot.im`.
+#'
+#' @param obj S3 object of type `im`.
+#' @param colourPal the colourmap to be used, see `?viridis::viridis_pal`.
+#' @param uniformCol a character specifying a single colour. This will override `colourPal`.
+#' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
+#' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
+#' @param ... further arguments passed to `plot.im`.
+#'
+#' @return nothing, plots only.
+#'
+#' @export
+#'
+#'
+plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, ...){
+
+         if(class(obj) != "im"){
+                  stop("provided obj must be of type 'im'.\n")
+         }
+
+         if(is.null(uniformCol)){
+
+                  imageDefaults  <- list(main = NULL,
+                                         col = colourmap(viridis::viridis_pal(option = colourPal)(100),
+                                                         range = range(obj$v, na.rm = T)),
+                                         ylim = rev(obj$yrange),
+                                         box = FALSE)
+
+                  imageArgs <- list(...)
+
+                  imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
+
+                  do.call(plot.im, c(list(x = obj), imageArgs))
+
+         } else{
+
+                  col <- to.transparent(uniformCol, transpFactor)
+
+                  imageDefaults  <- list(main = NULL,
+                                         col = col,
+                                         ylim = rev(obj$yrange),
+                                         box = FALSE)
+
+                  imageArgs <- list(...)
+
+                  imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
+
+                  do.call(plot.im, c(list(x = obj), imageArgs))
+
+         }
+
+
+
+}
+
+
+#' Convert `anlaytePointPattern` to `im`
+#'
+#' A method to convert `anlaytePointPattern` objects to `im` objects.
+#'
+#' @param obj S3 object of type `anlaytePointPattern` (and `spp`).
+#' @param scale logical, whether to scale the intensities of the output `im` object
+#' to [0,1] interval.
+#' @param zero.rm for internal use only.
+#'
+#' @return an object of type `im` (see `spatstat` documentation).
+#'
+#' @export
+#' @keywords internal
+#'
+
+app2im <- function(obj, rescale = FALSE, zero.rm = FALSE){
+
+         if(!("analytePointPattern" %in% class(obj))){
+                  stop("provided obj is not of type 'analytePointPattern'. \n")
+         }
+
+         win <- obj$window
+
+         im <- pixellate(obj,
+                         weights = obj$marks$intensity,
+                         W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
+                         padzero = FALSE, savemap = FALSE)
+
+         if(zero.rm){
+                  im[im == 0] <- NA
+         }
+
+
+         if(rescale){
+
+                  im <- .rescale(im)
+         }
+
+         return(im)
+}
+
+.rescale <- function(obj){
+
+         if(class(obj) == "im"){
+
+                  im <- (obj - min(obj)) / (max(obj) - min(obj))
+
+                  return(im)
+         }
+
+         if("analytePointPattern" %in% class(obj)){
+
+                  intens <- obj$marks$intensity
+
+                  obj$marks$intensity <- (intens - min(intens)) / (max(intens) - min(intens))
+
+                  return(obj)
+
+         }
+}
+
 
 #' molProbMap Class Constructor
 #'
@@ -461,6 +581,7 @@ plot.molProbMap <- function(obj, what = "detailed",
                             sppArgs = list(),
                             imageArgs = list(),
                             fArgs = list(),
+                            rescale = TRUE,
                             signifArea = "both",
                             ionImage = NA,
                             figLegend = TRUE,
@@ -478,6 +599,10 @@ plot.molProbMap <- function(obj, what = "detailed",
                                       pch = 19, size = 0.4, title = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
+               if(rescale){
+                        obj$sppMoi <- .rescale(obj$sppMoi)
+               }
+
                # call the plotting function
                do.call(plotAnalyte, c(list(obj = obj$sppMoi), sppArgs))
 
@@ -489,6 +614,10 @@ plot.molProbMap <- function(obj, what = "detailed",
                sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
                                       pch = 19, size = 0.4, title = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
+
+               if(rescale){
+                        obj$csrMoi <- .rescale(obj$csrMoi)
+               }
 
                # call the plotting function
                do.call(plotAnalyte, c(list(obj = obj$csrMoi), sppArgs))
@@ -506,6 +635,12 @@ plot.molProbMap <- function(obj, what = "detailed",
 
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
+
+               if(rescale){
+                        obj$rhoMoi <- .rescale(obj$rhoMoi)
+               }
+
+
                # call the plotting function
                do.call(plot.im, c(list(x = obj$rhoMoi), imageArgs))
 
@@ -522,12 +657,22 @@ plot.molProbMap <- function(obj, what = "detailed",
 
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
+
+               if(rescale){
+                        obj$rhoCsr <- .rescale(obj$rhoCsr)
+               }
+
                # call the plotting function
                do.call(plot.im, c(list(x = obj$rhoCsr), imageArgs))
 
 
       },
       "kdeIntensitiesDistr" = {
+
+               if(rescale){
+                        obj$rhoMoi <- .rescale(obj$rhoMoi)
+                        obj$rhoCsr <- .rescale(obj$rhoCsr)
+               }
 
                fmoi <- density(c(obj$rhoMoi$v), na.rm = TRUE)
                fcsr <- density(c(obj$rhoCsr$v), na.rm = TRUE)
@@ -633,6 +778,10 @@ plot.molProbMap <- function(obj, what = "detailed",
                   }
          }
 
+         if(rescale){
+                  imgMpm <- .rescale(imgMpm)
+         }
+
          # call the plotting function
          do.call(plot.im, c(list(x = imgMpm), imageArgs))
 
@@ -663,6 +812,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
+              rescale = rescale,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,
@@ -674,6 +824,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
+              rescale = rescale,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,
@@ -685,6 +836,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
+              rescale = rescale,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,
@@ -696,6 +848,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
+              rescale = rescale,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,
@@ -708,6 +861,7 @@ plot.molProbMap <- function(obj, what = "detailed",
                        sppArgs = sppArgs,
                        imageArgs = imageArgs,
                        fArgs = fArgs,
+                       rescale = rescale,
                        signifArea = signifArea,
                        ionImage = ionImage,
                        figLegend = figLegend,
@@ -720,6 +874,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
+              rescale = rescale,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,
@@ -737,6 +892,10 @@ plot.molProbMap <- function(obj, what = "detailed",
                                          box = FALSE)
 
                   imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
+
+                  if(rescale){
+                           ionImage <- .rescale(ionImage)
+                  }
 
                   # call the plotting function
                   do.call(plot.im, c(list(x = ionImage), imageArgs))

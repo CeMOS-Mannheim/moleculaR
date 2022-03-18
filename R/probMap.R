@@ -721,3 +721,59 @@ probMap                     <- function(sppMoi,  control = NULL,
 
 
 
+#' Normalized cross correlation
+#'
+#' This function Calculates the normalized cross correlation between two
+#' images of type `im` (see `spatstat` documentation).
+#'
+#' @param im0:    a reference image object of type `im`.
+#' @param im1:    a second image object of type `im`.
+#' @return
+#' A numeric, the calculated normalized cross correlation
+#'
+#' @export
+#' @keywords internal
+#'
+ncc <- function(im0, im1){
+
+         stopifnot(class(im0) == "im", class(im1) == "im")
+
+         mu0 <- mean(im0)
+         mu1 <- mean(im1)
+         sd0 <- sd(im0)
+         sd1 <- sd(im1)
+         n <- prod(im0$dim)
+
+         .ncc <- (1/n) * sum(((im0 - mu0) * (im1 - mu1)) /(sd0*sd1))
+
+         return(.ncc)
+
+}
+
+
+#' Normalized sum of squared differences
+#'
+#' This function Calculates the normalized sum of squared differences between two
+#' images of type `im` (see `spatstat` documentation).
+#'
+#' @param im0:    a reference image object of type `im`.
+#' @param im1:    a second image object of type `im`.
+#' @return
+#' A numeric, the calculated normalized sum of squared differences.
+#'
+#' @export
+#' @keywords internal
+#'
+nssd <- function(im0, im1){
+
+         stopifnot(class(im0) == "im", class(im1) == "im")
+
+         numerator <- sum((im0 - im1)^2)
+         denominator <- sqrt(sum(im0^2) * sum(im1^2))
+
+         return(numerator/denominator)
+
+
+
+}
+

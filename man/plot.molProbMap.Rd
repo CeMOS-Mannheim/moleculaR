@@ -10,6 +10,7 @@
   sppArgs = list(),
   imageArgs = list(),
   fArgs = list(),
+  rescale = TRUE,
   signifArea = "both",
   ionImage = NA,
   figLegend = TRUE,

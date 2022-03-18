@@ -5,7 +5,7 @@
 #'
 #' @param x: 	dataset, a list of \code{MALDIquant::MassPeaks} objects.
 #' @param spData: a corresponding sparse MSI matrix of type 'sparseIntensityMatrix'.
-#' @param method: character string, the method used to add noise c("Poisson", "Gaussian","spiked","interfering").
+#' @param method: character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interfering").
 #' @param mz:     numeric, m/z value where the noise will be added.
 #' @param fwhm:   numeric, the fwhm at the specified m/z.
 #' @param noiseFactor:    integer, this will be multiplied by the standard deviation of intensities at \code{mz} which will
@@ -15,7 +15,7 @@
 #' @param sigmaInterfering: integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.
 #' @param mzTrim:   numeric, this will trim the m/z axis to only include \code{[mz-mzTrim,mz+mzTrim]}. Skipped if set to \code{0}
 #' (default) or \code{length(mz) > 1}.
-#' @param numSpikedPeaks:     integer, number of spiked peaks for \code{spiked} method.
+#' @param numSpikedPeaks:     integer, number of spiked peaks for \code{intensityArtifacts} method.
 #' @param returnMat:    if \code{TRUE} returns a sparse MSI matrix of type `sparseIntensityMatrix`. Otherwise, returns a list of
 #' \code{MALDIquant::MassPeaks} objects (default).
 #' @param verbose:      whether to print progress.
@@ -101,27 +101,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
          if(verbose) {cat("applying noise .. \n")}
 
          switch (method,
-                 "Poisson" = {
 
-                          n = lapply(idx, function(icol){
-
-                                   colData = .extractCol(spData$spmat, icol)
-                                   abs(rpois(nrow(spData$spmat),
-                                             mean(colData)) * noiseFactor)
-
-                          })
-
-                          nmat = Matrix::sparseMatrix(i = rep(seq_len(nrow(spData$spmat)), times = length(idx)),
-                                                      j = rep(idx, each = nrow(spData$spmat)),
-                                                      x = unlist(n, use.names = FALSE),
-                                                      dimnames = list(NULL, NULL),
-                                                      dims = dim(spData$spmat))
-
-
-                          spData$spmat = spData$spmat + nmat
-
-
-                 },
                  "Gaussian" = {
 
                           n = lapply(idx, function(icol){
@@ -129,7 +109,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
                                    colData = .extractCol(spData$spmat, icol)
                                    abs(rnorm(nrow(spData$spmat),
                                              mean(colData),
-                                             sd(colData)) * noiseFactor)
+                                             sd(colData) * noiseFactor))
 
                           })
 
@@ -144,14 +124,42 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
 
                  },
-                 "spiked" = {
+
+                 "Poisson" = {
+
+                          n = lapply(idx, function(icol){
+
+                                   colData = .extractCol(spData$spmat, icol)
+                                   abs(rpois(nrow(spData$spmat),
+                                             mean(colData) * noiseFactor))
+
+                          })
+
+                          nmat = Matrix::sparseMatrix(i = rep(seq_len(nrow(spData$spmat)), times = length(idx)),
+                                                      j = rep(idx, each = nrow(spData$spmat)),
+                                                      x = unlist(n, use.names = FALSE),
+                                                      dimnames = list(NULL, NULL),
+                                                      dims = dim(spData$spmat))
+
+
+                          spData$spmat = spData$spmat + nmat
+
+
+                 },
+
+                 "intensityArtifacts" = {
 
 
                           idxSpike    = sample(seq(1, nrow(spData$spmat)), numSpikedPeaks)
 
                           n = lapply(idx, function(icol){
 
-                                   rpois(length(idxSpike), max(.extractCol(spData$spmat, icol), na.rm = TRUE) * 3)
+                                   #rpois(length(idxSpike), max(.extractCol(spData$spmat, icol), na.rm = TRUE) * 3)
+                                   mx <- max(.extractCol(spData$spmat, icol), na.rm = TRUE)
+                                   mx5 <- mx * 5
+
+                                   sample(seq(mx, mx5, (mx5-mx)/100), numSpikedPeaks)
+
 
                           })
 
@@ -174,8 +182,9 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
                           n = lapply(idx, function(icol){
 
                                    colData = .extractCol(spData$spmat, icol)
-                                   abs(rpois(nrow(spData$spmat),
-                                             mean(colData)) * noiseFactor)
+                                   abs(rnorm(nrow(spData$spmat),
+                                             mean(colData),
+                                             sd(colData) * noiseFactor))
 
                           })
 

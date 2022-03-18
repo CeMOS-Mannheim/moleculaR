@@ -39,7 +39,7 @@ superimposeNoise(
 
 \item{spData:}{a corresponding sparse MSI matrix of type 'sparseIntensityMatrix'.}
 
-\item{method:}{character string, the method used to add noise c("Gaussian","spiked","interfering")}
+\item{method:}{character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interfering").}
 
 \item{mz:}{numeric, m/z value where the noise will be added.}
 
@@ -56,9 +56,9 @@ be plugged into \code{rnorm} to generate the intensities of the Gaussian noise.}
 \item{mzTrim:}{numeric, this will trim the m/z axis to only include \code{[mz-mzTrim,mz+mzTrim]}. Skipped if set to \code{0}
 (default) or \code{length(mz) > 1}.}
 
-\item{numSpikedPeaks:}{integer, number of spiked peaks for \code{spiked} method.}
+\item{numSpikedPeaks:}{integer, number of spiked peaks for \code{intensityArtifacts} method.}
 
-\item{returnMat:}{if \code{TRUE} returns a sparse matrix \code{Matrix::dgCMatrix}. Otherwise, returns a list of
+\item{returnMat:}{if \code{TRUE} returns a sparse MSI matrix of type `sparseIntensityMatrix`. Otherwise, returns a list of
 \code{MALDIquant::MassPeaks} objects (default).}
 
 \item{verbose:}{whether to print progress.}
