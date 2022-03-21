@@ -129,7 +129,7 @@ recreateExData     <- function(pathToImzml, pathToSingleSpctr = NULL,
 .shrinkData     <- function(x, mzKeep, fwhmObj) {
 
    if(!MALDIquant::isMassPeaksList(x)) {
-      stop("Error in CreateSparseMat; x must be a list of MassPeaks objects.\n")
+      stop("x must be a list of MassPeaks objects.\n")
    }
 
    mzKeep      <- sort(mzKeep)

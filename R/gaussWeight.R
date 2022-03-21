@@ -21,7 +21,7 @@ gaussWeight   <- function(x, m, fwhm, ionMode = NA, plot = FALSE, savePlot = FAL
 
 
 
-       s      <- fwhm / 2.355 # sigma i.e. fwhm = 2.355 * sigma
+       s      <- fwhm / (2*sqrt(2*log(2))) # sigma i.e. fwhm ~ 2.355 * sigma
 
        w      <- dnorm(x, mean = m, sd = s) / dnorm(m, mean = m, sd = s) # normalization is done to set the peak to 1
 

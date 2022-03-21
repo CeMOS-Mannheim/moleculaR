@@ -269,31 +269,33 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 #' @param uniformCol a character specifying a single colour. This will override `colourPal`.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
+#' @param rescale logical, whether to scale the intensities of the output plot
+#' to [0,1] interval.
 #' @param pch     a positive integer, or a single character. See `?par`.
 #' @param size    the size of the symbol: a positive number or zero. see`?symbolmap`.
-#' @param title  character, title of the plot. If not given, the m/z value of `obj` is used.
+#' @param main  character, title of the plot. If not given, the m/z value of `obj` is used.
 #' @param ... further arguments passed to `spatstat.geom::plot.ppp`.
 #'
 #' @return nothing, plots only.
 #'
 #' @export
 #'
-plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, pch = 19,
-                        size = 0.4, title = NULL, ...){
+plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+                        rescale = TRUE, pch = 19, size = 0.4, main = NULL, ...){
 
   if(!("analytePointPattern" %in% class(obj))){
     stop("provided obj is not of type 'analytePointPattern'. \n")
   }
 
-  if(is.null(title)){
+  if(is.null(main)){
         if(length(obj$metaData$mzVals) > 1){
-              title <- paste0("Collective SPP of ", length(obj$metaData$mzVals)," m/z Values")
+              main <- paste0("Collective SPP of ", length(obj$metaData$mzVals)," m/z Values")
         } else{
                   mz <- ifelse(is.numeric(obj$metaData$mzVals),
                               as.character(round(obj$metaData$mzVals, 4)),
                               obj$metaData$mzVals) # to account for simulation cases
 
-              title <- paste0("m/z ", mz)
+              main <- paste0("m/z ", mz)
         }
 
   }
@@ -302,18 +304,24 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 
     plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
              ylim = rev(obj$window$yrange),
-             main = title)
+             main = main)
 
   } else{
 
     if(is.null(uniformCol)){
+
+             if(rescale){
+
+                      obj <- .rescale(obj)
+             }
+
 
       colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
                           range = range(obj$marks$intensity))
 
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                ylim = rev(obj$window$yrange),
-               main = title,
+               main = main,
                symap = symbolmap(pch = pch,
                                  cols = colfun,
                                  size = size,
@@ -322,11 +330,16 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 
     } else{
 
+             if(rescale){
+
+                      obj <- .rescale(obj)
+             }
+
       col <- to.transparent(uniformCol, transpFactor)
 
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                ylim = rev(obj$window$yrange),
-               main = title,
+               main = main,
                symap = symbolmap(pch = pch,
                                  cols = col,
                                  size = size),
@@ -350,6 +363,8 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' @param obj S3 object of type `im`.
 #' @param colourPal the colourmap to be used, see `?viridis::viridis_pal`.
 #' @param uniformCol a character specifying a single colour. This will override `colourPal`.
+#' @param rescale logical, whether to scale the intensities of the output plot
+#' to [0,1] interval.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
 #' @param ... further arguments passed to `plot.im`.
@@ -359,13 +374,20 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' @export
 #'
 #'
-plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, ...){
+plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRUE,
+                    transpFactor = 0.7, ...){
 
          if(class(obj) != "im"){
                   stop("provided obj must be of type 'im'.\n")
          }
 
          if(is.null(uniformCol)){
+
+                  if(rescale){
+
+                           obj <- .rescale(obj)
+                  }
+
 
                   imageDefaults  <- list(main = NULL,
                                          col = colourmap(viridis::viridis_pal(option = colourPal)(100),
@@ -380,6 +402,11 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor 
                   do.call(plot.im, c(list(x = obj), imageArgs))
 
          } else{
+
+                  if(rescale){
+
+                           obj <- .rescale(obj)
+                  }
 
                   col <- to.transparent(uniformCol, transpFactor)
 
@@ -406,7 +433,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor 
 #' A method to convert `anlaytePointPattern` objects to `im` objects.
 #'
 #' @param obj S3 object of type `anlaytePointPattern` (and `spp`).
-#' @param scale logical, whether to scale the intensities of the output `im` object
+#' @param rescale logical, whether to scale the intensities of the output `im` object
 #' to [0,1] interval.
 #' @param zero.rm for internal use only.
 #'
@@ -562,6 +589,8 @@ print.molProbMap <- function(obj) {
 #' "analyteDensityImage", "csrDensityImage" and "MPM". There are sensible defaults.
 #' @param fArgs a named list of arguments to be passed to `base::plot` for plotting
 #' "kdeIntensitiesDistr". There are sensible defaults.
+#' @param rescale logical, whether to scale the intensities of the output plot
+#' to [0,1] interval.
 #' @param signifArea a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").
 #' @param ionImage an optional rastered image of type `im` of the corresponding "regular"
 #' ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
@@ -600,7 +629,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
                # workout the plotting arguments
                sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
-                                      pch = 19, size = 0.4, title = NULL)
+                                      pch = 19, size = 0.4, main = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
                # call the plotting function
@@ -616,7 +645,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
                # workout the plotting arguments
                sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
-                                      pch = 19, size = 0.4, title = NULL)
+                                      pch = 19, size = 0.4, main = NULL)
                sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
 
@@ -773,15 +802,15 @@ plot.molProbMap <- function(obj, what = "detailed",
          imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
          # fix title
-         if(is.null(imageArgs$title)){
+         if(is.null(imageArgs$main)){
                   if(length(obj$sppMoi$metaData$mzVals) > 1){
-                           imageArgs$title <- paste0("CPPM of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
+                           imageArgs$main <- paste0("CPPM of ", length(obj$sppMoi$metaData$mzVals)," m/z Values")
                   } else{
                            mz <- ifelse(is.numeric(obj$sppMoi$metaData$mzVals),
                                         as.character(round(obj$sppMoi$metaData$mzVals, 4)),
                                         obj$sppMoi$metaData$mzVals) # to account for simulation cases
 
-                           imageArgs$title <- paste0("m/z ", mz, " MPM")
+                           imageArgs$main <- paste0("m/z ", mz, " MPM")
                   }
          }
 

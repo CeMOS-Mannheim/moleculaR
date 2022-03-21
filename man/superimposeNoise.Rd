@@ -12,7 +12,7 @@ superimposeNoise(
   fwhm,
   noiseFactor = 1L,
   searchFactor = 3L,
-  sigmaInterfering = 2L,
+  sigmainterference = 2L,
   mzTrim = 0,
   numSpikedPeaks = 10L,
   returnMat = FALSE,
@@ -27,7 +27,7 @@ superimposeNoise(
   fwhm,
   noiseFactor = 1L,
   searchFactor = 3L,
-  sigmaInterfering = 2L,
+  sigmainterference = 2L,
   mzTrim = 0,
   numSpikedPeaks = 10L,
   returnMat = FALSE,
@@ -35,11 +35,13 @@ superimposeNoise(
 )
 }
 \arguments{
+\item{sigmaInterfering:}{integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.}
+
 \item{x:}{dataset, a list of \code{MALDIquant::MassPeaks} objects.}
 
 \item{spData:}{a corresponding sparse MSI matrix of type 'sparseIntensityMatrix'.}
 
-\item{method:}{character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interfering").}
+\item{method:}{character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interference").}
 
 \item{mz:}{numeric, m/z value where the noise will be added.}
 
@@ -51,7 +53,7 @@ be plugged into \code{rnorm} to generate the intensities of the Gaussian noise.}
 \item{searchFactor:}{integer, search tolerance, how many standard deviations (sigma) around \code{mz} to include in the search of
 \code{mz} peak presence.}
 
-\item{sigmaInterfering:}{integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.}
+\item{sigmainterference:}{integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.}
 
 \item{mzTrim:}{numeric, this will trim the m/z axis to only include \code{[mz-mzTrim,mz+mzTrim]}. Skipped if set to \code{0}
 (default) or \code{length(mz) > 1}.}

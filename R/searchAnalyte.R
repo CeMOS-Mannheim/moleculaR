@@ -42,7 +42,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
 
        # find sigma of the gaussian --> corresponds to search window
-       s             = fwhm / 2.355 # sigma i.e. std
+       s             = fwhm / (2*sqrt(2*log(2))) # sigma i.e. std
        fiveS         = s * 5
 
 

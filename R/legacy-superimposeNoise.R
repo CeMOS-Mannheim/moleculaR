@@ -45,7 +45,7 @@ superimposeNoise        = function(x, method, mz, fwhm, noiseFactor = 3L,
 
       # generate noise vector based on intensities of the query mass
       idx         = MALDIquant::match.closest(x = mz, table = as.numeric(colnames(sptmp)),
-                                              tolerance = (fwhm / 2.355) * searchFactor)
+                                              tolerance = (fwhm / (2*sqrt(2*log(2)))) * searchFactor)
 
 
 
@@ -118,7 +118,7 @@ superimposeNoise        = function(x, method, mz, fwhm, noiseFactor = 3L,
       md = x@metaData
 
       # add a new mass
-      m1 = mz + (fwhm / 2.355) * sigmaInterfering
+      m1 = mz + (fwhm / (2*sqrt(2*log(2)))) * sigmaInterfering
 
       m  = append(x = m, values = m1, after = idx)
       s = append(x = s, values = n, after = idx)

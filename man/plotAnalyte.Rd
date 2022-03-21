@@ -9,9 +9,10 @@ plotAnalyte(
   colourPal = "inferno",
   uniformCol = NULL,
   transpFactor = 0.7,
+  rescale = TRUE,
   pch = 19,
   size = 0.4,
-  title = NULL,
+  main = NULL,
   ...
 )
 }
@@ -25,11 +26,14 @@ plotAnalyte(
 \item{transpFactor}{Transparency fraction. Numerical value or vector of values between 0 and 1,
 giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
 
+\item{rescale}{logical, whether to scale the intensities of the output plot
+to [0,1] interval.}
+
 \item{pch}{a positive integer, or a single character. See `?par`.}
 
 \item{size}{the size of the symbol: a positive number or zero. see`?symbolmap`.}
 
-\item{title}{character, title of the plot. If not given, the m/z value of `obj` is used.}
+\item{main}{character, title of the plot. If not given, the m/z value of `obj` is used.}
 
 \item{...}{further arguments passed to `spatstat.geom::plot.ppp`.}
 }

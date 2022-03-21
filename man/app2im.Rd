@@ -9,10 +9,10 @@ app2im(obj, rescale = FALSE, zero.rm = FALSE)
 \arguments{
 \item{obj}{S3 object of type `anlaytePointPattern` (and `spp`).}
 
-\item{zero.rm}{for internal use only.}
-
-\item{scale}{logical, whether to scale the intensities of the output `im` object
+\item{rescale}{logical, whether to scale the intensities of the output `im` object
 to [0,1] interval.}
+
+\item{zero.rm}{for internal use only.}
 }
 \value{
 an object of type `im` (see `spatstat` documentation).

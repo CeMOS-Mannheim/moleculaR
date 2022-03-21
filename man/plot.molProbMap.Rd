@@ -34,6 +34,9 @@
 \item{fArgs}{a named list of arguments to be passed to `base::plot` for plotting
 "kdeIntensitiesDistr". There are sensible defaults.}
 
+\item{rescale}{logical, whether to scale the intensities of the output plot
+to [0,1] interval.}
+
 \item{signifArea}{a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").}
 
 \item{ionImage}{an optional rastered image of type `im` of the corresponding "regular"

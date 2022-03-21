@@ -5,14 +5,14 @@
 #'
 #' @param x: 	dataset, a list of \code{MALDIquant::MassPeaks} objects.
 #' @param spData: a corresponding sparse MSI matrix of type 'sparseIntensityMatrix'.
-#' @param method: character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interfering").
+#' @param method: character string, the method used to add noise c("Poisson", "Gaussian","intensityArtifacts","interference").
 #' @param mz:     numeric, m/z value where the noise will be added.
 #' @param fwhm:   numeric, the fwhm at the specified m/z.
 #' @param noiseFactor:    integer, this will be multiplied by the standard deviation of intensities at \code{mz} which will
 #' be plugged into \code{rnorm} to generate the intensities of the Gaussian noise.
 #' @param searchFactor:    integer, search tolerance, how many standard deviations (sigma) around \code{mz} to include in the search of
 #' \code{mz} peak presence.
-#' @param sigmaInterfering: integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.
+#' @param sigmainterference: integer, how many standard deviations (sigma) away from \code{mz} to place the interfering peak.
 #' @param mzTrim:   numeric, this will trim the m/z axis to only include \code{[mz-mzTrim,mz+mzTrim]}. Skipped if set to \code{0}
 #' (default) or \code{length(mz) > 1}.
 #' @param numSpikedPeaks:     integer, number of spiked peaks for \code{intensityArtifacts} method.
@@ -28,7 +28,7 @@
 #'
 
 superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, noiseFactor = 1L,
-                                   searchFactor = 3L, sigmaInterfering = 2L, mzTrim = 0,
+                                   searchFactor = 3L, sigmainterference = 2L, mzTrim = 0,
                                    numSpikedPeaks = 10L, returnMat = FALSE, verbose = FALSE) {
 
 
@@ -60,8 +60,8 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
                   }
          }
 
-         if((method == "interfering") & (sigmaInterfering > searchFactor)) {
-                  stop("sigma interfering must be smaller than searchFactor. \n")
+         if((method == "interference") & (sigmainterference > searchFactor)) {
+                  stop("sigma interference must be smaller than searchFactor. \n")
          }
 
 
@@ -79,7 +79,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
          # generate noise vector based on intensities of the query mass
          idx         = MALDIquant::match.closest(x = mz, table = mzAxis,
-                                                 tolerance = (fwhm / 2.355) * searchFactor)
+                                                 tolerance = (fwhm / (2*sqrt(2*log(2)))) * searchFactor)
 
 
 
@@ -175,7 +175,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
 
                  },
-                 "interfering" = {
+                 "interference" = {
 
 
 
@@ -203,7 +203,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
                                    # add a new mass
                                    m0      = mz[i]
-                                   m1      = m0 + (fwhm[i] / 2.355 * sigmaInterfering)
+                                   m1      = m0 + (fwhm[i] / (2*sqrt(2*log(2))) * sigmainterference)
                                    idxi    = findInterval(x = m1, mzAxis)
                                    mzAxis  = append(x = mzAxis, values = m1, after = idxi)
 

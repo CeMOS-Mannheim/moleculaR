@@ -43,7 +43,7 @@ searchLipid          = function(m, fwhm, massAxis, spData, coords, mtspc = NA,
 
 
        #// find sigma of the gaussian --> corresponds to search window
-       sgma          = fwhm / 2.355 # sigma i.e. std
+       sgma          = fwhm / (2*sqrt(2*log(2))) # sigma i.e. std
        fiveSgma      = sgma * 5
 
        #// check if listed in mtspc

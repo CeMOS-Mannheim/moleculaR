@@ -4,7 +4,14 @@
 \alias{plotImg}
 \title{Plot raster images of type `im`}
 \usage{
-plotImg(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, ...)
+plotImg(
+  obj,
+  colourPal = "inferno",
+  uniformCol = NULL,
+  rescale = TRUE,
+  transpFactor = 0.7,
+  ...
+)
 }
 \arguments{
 \item{obj}{S3 object of type `im`.}
@@ -12,6 +19,9 @@ plotImg(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7, ...)
 \item{colourPal}{the colourmap to be used, see `?viridis::viridis_pal`.}
 
 \item{uniformCol}{a character specifying a single colour. This will override `colourPal`.}
+
+\item{rescale}{logical, whether to scale the intensities of the output plot
+to [0,1] interval.}
 
 \item{transpFactor}{Transparency fraction. Numerical value or vector of values between 0 and 1,
 giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
