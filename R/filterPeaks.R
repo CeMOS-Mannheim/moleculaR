@@ -24,7 +24,7 @@ filterPeaks     <- function(x, minFreq = 0.01) {
 
        # find which peaks (columns) occur in less than 1% of the tissue
        relFreq              <- diff(spData$spmat@p) / nrow(spData$spmat)
-       kpIdx                <- which(relFreq >= 0.01)
+       kpIdx                <- which(relFreq >= minFreq)
        .uniqueMass          <- spData$mzAxis
        kpMass               <- .uniqueMass[kpIdx]
 
@@ -33,6 +33,11 @@ filterPeaks     <- function(x, minFreq = 0.01) {
               xm            <- MALDIquant::mass(i)
               xkpIdx        <- which(xm %in% kpMass)
               mt            <- MALDIquant::metaData(i)
+
+              if(!is.null(mt$fwhm)){
+                       mt$fwhm <-  mt$fwhm[xkpIdx]
+              }
+
 
 
               MALDIquant::createMassPeaks(mass = xm[xkpIdx],

@@ -89,7 +89,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
          }
 
          if(any(is.na(idx))){
-                  warning(paste0("m/z ", idx[is.na(idx)], " was not found in the dataset.\n"))
+                  warning(paste0("m/z ", mz[is.na(idx)], " was not found in the dataset.\n"))
                   idx   = idx[!is.na(idx)]
                   fwhm  = fwhm[!is.na(idx)]
                   mz    = mz[!is.na(idx)]

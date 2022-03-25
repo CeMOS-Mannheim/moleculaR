@@ -738,6 +738,11 @@ ncc <- function(im0, im1){
 
          stopifnot(class(im0) == "im", class(im1) == "im")
 
+         # have to have the same scale
+         im0 <- .rescale(im0)
+         im1 <- .rescale(im1)
+
+
          mu0 <- mean(im0)
          mu1 <- mean(im1)
          sd0 <- sd(im0)
@@ -767,6 +772,10 @@ ncc <- function(im0, im1){
 nssd <- function(im0, im1){
 
          stopifnot(class(im0) == "im", class(im1) == "im")
+
+         # have to have the same scale
+         im0 <- .rescale(im0)
+         im1 <- .rescale(im1)
 
          numerator <- sum((im0 - im1)^2)
          denominator <- sqrt(sum(im0^2) * sum(im1^2))
