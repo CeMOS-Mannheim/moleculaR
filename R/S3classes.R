@@ -471,7 +471,7 @@ app2im <- function(obj, rescale = FALSE, zero.rm = FALSE){
 
 .rescale <- function(obj){
 
-         if(class(obj) == "im"){
+         if(identical(class(obj), "im")){
 
                   im <- (obj - min(obj)) / (max(obj) - min(obj))
 

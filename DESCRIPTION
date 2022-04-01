@@ -54,6 +54,7 @@ Collate:
     'recreateExData.R'
     'runShiny.R'
     'searchAnalyte.R'
+    'simulation-functions.R'
     'subsetAnalytes.R'
     'superImposeAnalytes.R'
     'superimposeNoise.R'

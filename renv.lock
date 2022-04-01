@@ -247,6 +247,13 @@
       "Repository": "CRAN",
       "Hash": "65e865802fe6dd1bafef1dae5b80a844"
     },
+    "import": {
+      "Package": "import",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d387ef61b97f930c4737d59ab91a9885"
+    },
     "isoband": {
       "Package": "isoband",
       "Version": "0.2.5",
@@ -473,10 +480,10 @@
     },
     "spatstat": {
       "Package": "spatstat",
-      "Version": "2.2-0",
+      "Version": "2.3-0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "b5a819a8a3f85f9fdbc129fb941f4afa"
+      "Hash": "85d9cebb7c11985d162071330beadae9"
     },
     "spatstat.core": {
       "Package": "spatstat.core",

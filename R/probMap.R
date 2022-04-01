@@ -8,6 +8,10 @@
 #' will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
 #' see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.
 #' @param bwMethod The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
+#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
+#' Could be of of  `c("spline", "loess")`. For internal use only.
+#' @param spwMat  a spatial weights square matrix with odd length (3,5,...), see `?raster::Moran`.
+#' Used only for `bwMethod="spAutoCor"`. For internal use only.
 #' @param bwPlot    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
 #' @param csrIntensities How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").
 #' @param sqrtTansform whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
@@ -18,7 +22,12 @@
 #' could be useful when generating hotspot-bw curves.
 #' @param pvalThreshold The p-value threshold to be used for the hypothesis testing.
 #' @param pvalCorrection The method used for p-values correction, see '?p.adjust' for more details.
+#' @param seed    a single value, interpreted as integer or `NULL` (default) controlling the process of random
+#' number generation. If set, ensures that the same CSR model is generated at different runs for the
+#' same input `sppMoi`
 #' @param verbose   whether to output progress.
+#' @param ...: arguments passed to `plot` for bandwidth plotting when `bwMethod="spAutoCor"`.
+
 #' @return
 #' #' An S3 object of type molProbMap with the following entries \cr
 #' \itemize{
@@ -39,17 +48,29 @@
 #' @export
 #' @include manualSpatstatImport.R
 #'
-probMap                     <- function(sppMoi,  control = NULL,
-                                       bw = seq(1, 10, 1), bwMethod = "spAutoCor",
-                                       csrIntensities = "resample", sqrtTansform = FALSE,
-                                       csrMoi = NULL, pvalThreshold = 0.05, pvalCorrection = "BH",
-                                       bwPlot = FALSE, verbose = TRUE) {
+probMap                     <- function(sppMoi,
+                                        control = NULL,
+                                        bw = seq(1, 10),
+                                        bwMethod = "spAutoCor",
+                                        smoothingMethod = "spline",
+                                        spwMat = matrix(c(1,1,1,1,0,1,1,1,1), 3,3),
+                                        csrIntensities = "resample",
+                                        sqrtTansform = FALSE,
+                                        csrMoi = NULL,
+                                        pvalThreshold = 0.05,
+                                        pvalCorrection = "BH",
+                                        bwPlot = FALSE,
+                                        seed = NULL,
+                                        verbose = TRUE,
+                                        ...) {
 
 
 
       if(!("analytePointPattern" %in% class(sppMoi))){
          stop("sppMoi must be of 'analytePointPattern' and 'ppp' class. \n")
       }
+
+         set.seed(seed)
 
        if(is.null(csrMoi)) {
 
@@ -150,15 +171,20 @@ probMap                     <- function(sppMoi,  control = NULL,
               bw        <- switch(bwMethod,
                                  spAutoCor = {
                                          .bw.spAutoCorr(sppMoi = sppMoi,
-                                                           plot = bwPlot,
-                                                           bw = bw,
-                                                           verbose = verbose)
+                                                        plot = bwPlot,
+                                                        bw = bw,
+                                                        smoothingMethod = smoothingMethod,
+                                                        spwMat = spwMat,
+                                                        verbose = verbose,
+                                                        ...)
                                  },
                                  iterative = {
                                          .bw.iterative(sppMoi = sppMoi,
                                                        bw = bw,
+                                                       smoothingMethod = smoothingMethod,
                                                        csrMoi = csrMoi, plot = bwPlot,
-                                                       verbose = verbose)
+                                                       verbose = verbose,
+                                                       ...)
                                  },
                                  scott = {
                                          .bw.scott.iso2(sppMoi)
@@ -288,26 +314,30 @@ probMap                     <- function(sppMoi,  control = NULL,
 #'
 #' @param sppMoi: 	   The spatial point pattern, object of type `ppp`.
 #' @param bw:        bandwidth steps at which to compute density and the corresponding Moran's I statistic.
+#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
+#' Could be of of  `c("spline", "loess")`.
 #' @param plot:      whether to plot the result.
 #' @param verbose:   whether to output progress.
+#' @param ...: arguments passed to `plot` for bandwidth plotting.
 #' @return
 #' A numeric, the estimated Gaussian bandwidth.
 #'
 #' @export
 #' @keywords internal
 
-.bw.spAutoCorr <- function(sppMoi, bw = seq(1, 10, 1),
-                           plot = FALSE, verbose = FALSE) {
+.bw.spAutoCorr <- function(sppMoi, bw = c(0.5, seq(1, 9, 1)),
+                           smoothingMethod = "spline",
+                           spwMat =matrix(c(1,1,1,1,0,1,1,1,1), 3,3),
+                           plot = FALSE, verbose = FALSE, ...) {
 
 
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
-      sppMoiw        <- sppMoi$marks$intensity
       win         <- as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange) + 1,
                                                     diff(sppMoi$window$xrange) + 1))
 
 
-      if(is.null(sppMoiw)){
+      if(is.null(sppMoi$marks$intensity)){
             stop("sppMoi does not have intensity weights")
       }
 
@@ -327,10 +357,12 @@ probMap                     <- function(sppMoi,  control = NULL,
 
             # create a density map for the image
             rhoMoi      <- density.ppp(x = sppMoi, sigma = bwi,
-                                                 weights = sppMoiw,
+                                                 weights = sppMoi$marks$intensity,
                                                  W = win)
 
-            moransppMoi    <- raster::Moran(raster::raster(rhoMoi), w = matrix(c(1,1,1,1,0,1,1,1,1), nrow=3))
+
+
+            moransppMoi    <- raster::Moran(raster::raster(rhoMoi), w = spwMat)
 
 
             return(data.frame(bw = bwi, moransI = moransppMoi))
@@ -343,15 +375,16 @@ probMap                     <- function(sppMoi,  control = NULL,
       bwdf <- do.call("rbind", bwdf)
 
 
-
       #// compute the elbow point
-      ep                <- .inflictPoint(x = bwdf$bw, y = bwdf$moransI, plot = plot)
+      ep                <- kneePoint(x = bwdf$bw, y = bwdf$moransI,
+                                     smoothingMethod = smoothingMethod,
+                                     plot = plot, ...)
 
 
       if(verbose)
             cat("done.\n")
 
-      return(c(bw = ep$inflictPoint))
+      return(c(bw = ep))
 
 }
 
@@ -360,10 +393,12 @@ probMap                     <- function(sppMoi,  control = NULL,
 #'
 #' This function calculates the Gaussian bandwidth to be used for analyte probability maps by
 #' finding the curve infliction point for a curve that represents hotspot area as a function
-#' of bandwidth. This is used internally in `moleculaR::probMap`.
+#' of bandwidth. This is used internally in `moleculaR::probMap`. **Deprecated**
 #'
 #' @param sppMoi: 	The spatial point pattern.
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
+#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
+#' Could be of of  `c("spline", "loess")`.
 #' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 #' speeds up the computation and is mostly used for troubleshooting.
 #' @param pvalThreshold: The p-value threshold to be used for the hypothesis testing.
@@ -371,6 +406,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 #' @param plot:      Whether to plot the hotspot area as function of bandwidth.
 #' @param plotEach:  whether to plot the resulting significance area of each bandwidth iteration.
 #' @param verbose:   Whether to show progress.
+#' @param ...: arguments passed to `plot` for bandwidth plotting.
 #' @return
 #' A list ..
 #'
@@ -378,9 +414,13 @@ probMap                     <- function(sppMoi,  control = NULL,
 #' @keywords internal
 #'
 
-.bw.iterative                 <- function(sppMoi,  bw = seq(1, 10, 1), csrMoi = NULL,
-                                         pvalThreshold = 0.05, pvalCorrection = "bonferroni",
-                                         plot = FALSE, plotEach = FALSE, verbose = FALSE) {
+.bw.iterative                 <- function(sppMoi,  bw = seq(1, 10, 1),
+                                          csrMoi = NULL,
+                                          smoothingMethod = "spline",
+                                          pvalThreshold = 0.05,
+                                          pvalCorrection = "bonferroni",
+                                         plot = FALSE, plotEach = FALSE,
+                                         verbose = FALSE, ...) {
 
 
 
@@ -494,8 +534,11 @@ probMap                     <- function(sppMoi,  control = NULL,
              return(c(bw = 3)) # arbitrary bw
        }
 
-       ep                          <- .inflictPoint(x = bwdf$bw, y = bwdf$area,
-                                                   plot = plot, ylabel = "Relative Area")
+       ep                          <- kneePoint(x = bwdf$bw,
+                                                y = bwdf$area,
+                                                smoothingMethod = smoothingMethod,
+                                                plot = plot,
+                                                ...)
 
 
        if(verbose)
@@ -504,105 +547,164 @@ probMap                     <- function(sppMoi,  control = NULL,
        # return(list(bwdf = bwdf,
        #             inflictPointData = ep))
 
-       return(c(bw = ep$inflictPoint))
+       return(c(bw = ep))
 
 
 
 }
 
-#' Inflection point of a curve
+
+#' Find Knee (or elbow) point of a curve
 #'
-#' This function calculates the infliction point of a curve based on the 2nd derivative.
-#' This is used internally in `moleculaR::.calcGaussBW`.
+#' This function calculates the infliction point of a curve based on the kneedle
+#' algorithm (satopaa et al, 2011). This is used internally in `moleculaR::.calcGaussBW`.
 #'
-#' @param x: 	   x values.
-#' @param y:         y values.
+#' @param x: 	   x values representing the bandwidth values
+#' @param y:         y values representing the Moran's I statistic.
+#' @param smoothingMethod: The method used for smoothing the curve used for
+#' determining the optimal bw value. Could be of of  `c("spline", "loess")`.
 #' @param df:        degrees of freedom for the smoothing spline.
-#' @param adjRange:  whether to adjust the range of the second derivative to match
-#' the range of y so it could be displayed along the original data.
 #' @param plot:   whether to plot the result.
-#' @param xQuery:    x values, at which to evaluate the fitted spline.
-#' A list ..
+#' @param xQuery:    x values to be used for smoothing the original curve via
+#' a fitted spline.
+#' @param sign +1 for increasing values (knee) and  -1 for decreasing values (elbow).
+#' @param ...: arguments passed to `plot`.
+#'
+#' @return
+#' Returns a numeric, the calculated knee point representing the optimum bandwidth.
 #'
 #' @export
 #' @keywords internal
 #'
-.inflictPoint     <- function(x, y, df = 7, adjRange = TRUE, plot = FALSE,
-                             xQuery = seq(range(x)[1], range(x)[2], 0.1),
-                             ylabel = "Moran's I") {
+#' @references
+#' Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points
+#' in system behavior." 2011 31st international conference on distributed computing
+#' systems workshops. IEEE, 2011. (doi: 10.1109/ICDCSW.2011.20)
+#'
+
+
+kneePoint     <- function(x, y, smoothingMethod = "spline", df = 7,
+                          xQuery = seq(range(x)[1], range(x)[2], 0.1),
+                          plot = FALSE, sign = +1, ...) {
 
 
 
-      # fit a smoothing spline and fine the 2nd derivative.
-      smoothspl      <- smooth.spline(x = x, y = y, df = df)
+
+         # fit a smoothing spline/loess
+         smoothx   <- xQuery
+
+         smoothy <- switch(smoothingMethod,
+                        "spline" = {
+                                 smoothspl <- smooth.spline(x = x, y = y, df = df)
+                                 predict(smoothspl, x = smoothx)$y
+                        },
+                        "loess" = {
+                                 smoothcurve <- loess(y ~ x)
+                                 predict(smoothcurve, newdata = smoothx)
+                        })
 
 
-      #deriv1        <- predict(smoothspl, x = xQuery, deriv = 1)$y
-      #deriv2        <- predict(smoothspl, x = xQuery, deriv = 2)$y
-      spl           <- predict(smoothspl, x = xQuery)$y
+      # normalize points of the smoothing curve to unit square
+      smoothnx     <- (smoothx - min(smoothx)) / (max(smoothx) - min(smoothx))
+      smoothny     <- (smoothy - min(smoothy)) / (max(smoothy) - min(smoothy))
 
 
-      if(adjRange) { # adjust the range of the  derivative to be able to plot it alongside x
-
-            linMap <- function(i, a, b) approxfun(range(i), c(a, b))(i)
-
-            #deriv1   <- linMap(deriv1, range(spl)[1],  range(spl)[2])
-            #deriv2   <- linMap(deriv2, range(spl)[1],  range(spl)[2])
-
-      }
-
-      mxCurve <- .getMaxCurve(xQuery, spl)
-      #mxCurve <- .getMaxCurve(xQuery, deriv1)
-      #mxCurve <- .getMaxCurve(xQuery, deriv2)
-
+      # apply kneedle
+      k <- .kneedle(x = smoothnx, y = smoothny, sign = sign)
 
 
       if(plot){
-            plot(x = xQuery, y = spl, type = "b", main = "Maximum Curvature",
-                 xlab = "bw",
-                 ylab = ylabel)
+               par(mar=c(5.1, 5.1, 4.1, 2.1))
+            plot(x = smoothx, y = smoothy, type = "l",
+                 main = "Knee-point estimation",
+                 xlab = "Gaussian Bandwidth",
+                 ylab = "Moran's I",
+                 ...)
+
+            # defaults
+            lwd <- 1; cex <- 1
+
+            # extract size arg from ...
+            pargs <- list(...)
+
+            if(length(pargs) > 0){
+                     n <- names(pargs)
+
+                     if("lwd" %in% n){
+                              lwd <- pargs$lwd
+                     }
 
 
-            #lines(x = xQuery, y = deriv1, lty = "solid" ,  col = rgb(0,0,1,0.5), lwd = 2)
-            #lines(x = xQuery, y = deriv2, lty = "solid" ,  col = rgb(0,1,0,0.5), lwd = 2)
+                     if("cex.lab" %in% n){
+                              cex <- pargs$cex.lab
+                     }
+            }
 
-            abline(v = mxCurve, col = "chocolate1", lty ="dashed", lwd = 2)
+            abline(v = smoothx[k], col = "chocolate1", lty ="dashed", lwd = lwd)
 
             legend("right", bty = "n",
-                   legend = c(paste0(ylabel," (bw)"),
-                              #"1st-derivative",
-                              #"2nd-derivative",
-                              paste0("infliction=", round(mxCurve, 2))
+                   legend = c(paste0("Moran's I"),
+                              paste0("Knee pnt=", round(smoothx[k], 2))
                    ),
                    col = c("black",
-                           #"blue",
-                           #"green",
                            "chocolate1"
                    ),
                    lty = c("solid",
-                           #"solid",
-                           #"solid",
                            "dashed"
-                   ))
+                   ),
+                   lwd = lwd, cex = cex)
       }
 
-      return(list(inflictPoint = mxCurve,
-                  x = xQuery,
-                  #deriv1 = deriv1,
-                  #deriv2 = deriv2,
-                  spl = spl))
-
-
+      return(smoothx[k])
 
 
 }
 
+
+#' Find the knee/elbow point in a vector using the Kneedle algorithm.
+#'
+#' This function uses the Kneedle algorithm to find the index of the knee point
+#' in the provided x,y-vectors.
+#'
+#' @param x numeric vector, x-values.
+#' @param y numeric vector, y-values.
+#' @param sign +1 for increasing values and  -1 for decreasing values.
+#'
+#' @return The index of the knee/elbow.
+#'
+.kneedle <- function(x, y, sign = 1) {
+
+         if(length(x) != length(y))
+                  stop("error in internal function .kneedle; x and y of different lengths.\n")
+
+         start = c(x[1], y[1])
+         end = c(x[length(x)], y[length(y)])
+
+         k <- which.max(lapply(1:length(x), function(i) {
+                  sign * -1 * .dist2d(c(x[i], y[i]),
+                                      start,
+                                      end)
+         }))
+
+
+         k
+
+}
+
+
+.dist2d <- function(a,b,c) {
+         v1 <- b - c
+         v2 <- a - b
+         m <- cbind(v1,v2)
+         d <- det(m)/sqrt(sum(v1*v1))
+         d
+}
 
 
 #'  Maximum curvature
 #'
 #' Finds the maximum curvature (elbow point) of vector of values representing a curve by finding the maximum distance from the
-#' curve to the line drawn between the peak and tail of that curve.
+#' curve to the line drawn between the peak and tail of that curve. **Deprecated**.
 #'
 #' @param x:    a numeric vector.
 #' @param plot: a logical to plot the result for validation purposes. Defaults to FALSE.
@@ -610,7 +712,7 @@ probMap                     <- function(sppMoi,  control = NULL,
 #'
 #' @return Returns the maximum curvature threshold (elbow point) of `x`.
 #'
-#' @export
+#'
 #' @keywords internal
 #'
 #' @author Denis Abu Sammour, \email{d.abu-sammour@hs-mannheim.de}
@@ -786,3 +888,68 @@ nssd <- function(im0, im1){
 
 }
 
+
+#' Dice Similarity Coefficient of two window objects
+#'
+#' This function Calculates the Dice similarity coefficient of two
+#' window objects of type `owin` (see `?spatstat.geom::owin`).
+#'
+#' @param win0:    a reference image object of type `owin`.
+#' @param win1:    a second image object of type `owin`.
+#' @param winBackground: an optional bounding window of type `owin` which acts as
+#' the background window for both `win0` and `win1`. This is only used for
+#' visualization.
+#' @param plot:   whether to plot the result.
+#' @return
+#' A numeric, the calculated Dice similarity coefficient.
+#'
+#' @export
+#' @keywords internal
+#'
+dsc <- function(win0, win1, winBackground = NULL, plot = FALSE){
+
+         stopifnot(class(win0) == "owin", class(win1) == "owin")
+
+         s   <- intersect.owin(win0, win1)
+
+         if(is.null(s)) {
+
+                  warning("No intersection of win0 and win1, zero DSC is returned.\n")
+
+                  return(0)
+
+         }
+
+         dscVal   = (2 * area.owin(s))/(area.owin(win0) + area.owin(win1))
+
+         if(plot){
+                  if(!is.null(winBackground)){
+                           plot.owin(winBackground,
+                                     ylim = rev(winBackground$yrange),
+                                     main = paste0("Dice Similarity Coefficient = ", round(dscVal, 3)))
+                           plot.owin(win0, col = rgb(0,1,0,1), add = TRUE)
+                           plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
+                           plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
+                  } else {
+                           plot.owin(win0,
+                                     ylim = rev(win0$yrange),
+                                     col = rgb(0,1,0,1),
+                                     main = paste0("Dice Similarity Coefficient = ", round(dscVal, 3)))
+                           plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
+                           plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
+                  }
+
+                  legend("topleft", bty = "n", horiz = FALSE,
+                         legend = c("win0", "win1", "intersection"),
+                         col = c( rgb(0,1,0,1), rgb(1,0,0,1), rgb(1,1,0,1)),
+                         pch = 15, cex = 1)
+
+
+
+         }
+
+         return(dscVal)
+
+
+
+}

@@ -16,7 +16,7 @@ Returns the maximum curvature threshold (elbow point) of `x`.
 }
 \description{
 Finds the maximum curvature (elbow point) of vector of values representing a curve by finding the maximum distance from the
-curve to the line drawn between the peak and tail of that curve.
+curve to the line drawn between the peak and tail of that curve. **Deprecated**.
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Unimodal_thresholding}

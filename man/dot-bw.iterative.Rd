@@ -8,17 +8,22 @@
   sppMoi,
   bw = seq(1, 10, 1),
   csrMoi = NULL,
+  smoothingMethod = "spline",
   pvalThreshold = 0.05,
   pvalCorrection = "bonferroni",
   plot = FALSE,
   plotEach = FALSE,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \arguments{
 \item{sppMoi:}{The spatial point pattern.}
 
 \item{bw:}{A vector, The gaussian band width pool used for Kernel density estimation.}
+
+\item{smoothingMethod:}{The method used for smoothing the curve used for determining the optimal bw value.
+Could be of of  `c("spline", "loess")`.}
 
 \item{csrMoi:}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 speeds up the computation and is mostly used for troubleshooting.}
@@ -32,6 +37,8 @@ speeds up the computation and is mostly used for troubleshooting.}
 \item{plotEach:}{whether to plot the resulting significance area of each bandwidth iteration.}
 
 \item{verbose:}{Whether to show progress.}
+
+\item{...:}{arguments passed to `plot` for bandwidth plotting.}
 }
 \value{
 A list ..
@@ -39,6 +46,6 @@ A list ..
 \description{
 This function calculates the Gaussian bandwidth to be used for analyte probability maps by
 finding the curve infliction point for a curve that represents hotspot area as a function
-of bandwidth. This is used internally in `moleculaR::probMap`.
+of bandwidth. This is used internally in `moleculaR::probMap`. **Deprecated**
 }
 \keyword{internal}

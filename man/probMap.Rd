@@ -7,15 +7,19 @@
 probMap(
   sppMoi,
   control = NULL,
-  bw = seq(1, 10, 1),
+  bw = seq(1, 10),
   bwMethod = "spAutoCor",
+  smoothingMethod = "spline",
+  spwMat = matrix(c(1, 1, 1, 1, 0, 1, 1, 1, 1), 3, 3),
   csrIntensities = "resample",
   sqrtTansform = FALSE,
   csrMoi = NULL,
   pvalThreshold = 0.05,
   pvalCorrection = "BH",
   bwPlot = FALSE,
-  verbose = TRUE
+  seed = NULL,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -31,6 +35,9 @@ see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
 
 \item{bwMethod}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
 
+\item{spwMat}{a spatial weights square matrix with odd length (3,5,...), see `?raster::Moran`.
+Used only for `bwMethod="spAutoCor"`. For internal use only.}
+
 \item{csrIntensities}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
 
 \item{sqrtTansform}{whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
@@ -45,7 +52,16 @@ could be useful when generating hotspot-bw curves.}
 
 \item{bwPlot}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
 
+\item{seed}{a single value, interpreted as integer or `NULL` (default) controlling the process of random
+number generation. If set, ensures that the same CSR model is generated at different runs for the
+same input `sppMoi`}
+
 \item{verbose}{whether to output progress.}
+
+\item{smoothingMethod:}{The method used for smoothing the curve used for determining the optimal bw value.
+Could be of of  `c("spline", "loess")`. For internal use only.}
+
+\item{...:}{arguments passed to `plot` for bandwidth plotting when `bwMethod="spAutoCor"`.}
 }
 \value{
 #' An S3 object of type molProbMap with the following entries \cr
