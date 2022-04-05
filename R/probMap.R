@@ -8,10 +8,6 @@
 #' will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
 #' see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.
 #' @param bwMethod The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
-#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
-#' Could be of of  `c("spline", "loess")`. For internal use only.
-#' @param spwMat  a spatial weights square matrix with odd length (3,5,...), see `?raster::Moran`.
-#' Used only for `bwMethod="spAutoCor"`. For internal use only.
 #' @param bwPlot    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
 #' @param csrIntensities How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").
 #' @param sqrtTansform whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
@@ -50,10 +46,8 @@
 #'
 probMap                     <- function(sppMoi,
                                         control = NULL,
-                                        bw = seq(1, 10),
+                                        bw = seq(0.5, 10),
                                         bwMethod = "spAutoCor",
-                                        smoothingMethod = "spline",
-                                        spwMat = matrix(c(1,1,1,1,0,1,1,1,1), 3,3),
                                         csrIntensities = "resample",
                                         sqrtTansform = FALSE,
                                         csrMoi = NULL,
@@ -173,16 +167,14 @@ probMap                     <- function(sppMoi,
                                          .bw.spAutoCorr(sppMoi = sppMoi,
                                                         plot = bwPlot,
                                                         bw = bw,
-                                                        smoothingMethod = smoothingMethod,
-                                                        spwMat = spwMat,
                                                         verbose = verbose,
                                                         ...)
                                  },
                                  iterative = {
                                          .bw.iterative(sppMoi = sppMoi,
                                                        bw = bw,
-                                                       smoothingMethod = smoothingMethod,
-                                                       csrMoi = csrMoi, plot = bwPlot,
+                                                       csrMoi = csrMoi,
+                                                       plot = bwPlot,
                                                        verbose = verbose,
                                                        ...)
                                  },
@@ -314,8 +306,6 @@ probMap                     <- function(sppMoi,
 #'
 #' @param sppMoi: 	   The spatial point pattern, object of type `ppp`.
 #' @param bw:        bandwidth steps at which to compute density and the corresponding Moran's I statistic.
-#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
-#' Could be of of  `c("spline", "loess")`.
 #' @param plot:      whether to plot the result.
 #' @param verbose:   whether to output progress.
 #' @param ...: arguments passed to `plot` for bandwidth plotting.
@@ -326,8 +316,6 @@ probMap                     <- function(sppMoi,
 #' @keywords internal
 
 .bw.spAutoCorr <- function(sppMoi, bw = c(0.5, seq(1, 9, 1)),
-                           smoothingMethod = "spline",
-                           spwMat =matrix(c(1,1,1,1,0,1,1,1,1), 3,3),
                            plot = FALSE, verbose = FALSE, ...) {
 
 
@@ -362,7 +350,7 @@ probMap                     <- function(sppMoi,
 
 
 
-            moransppMoi    <- raster::Moran(raster::raster(rhoMoi), w = spwMat)
+            moransppMoi    <- raster::Moran(raster::raster(rhoMoi))
 
 
             return(data.frame(bw = bwi, moransI = moransppMoi))
@@ -377,7 +365,6 @@ probMap                     <- function(sppMoi,
 
       #// compute the elbow point
       ep                <- kneePoint(x = bwdf$bw, y = bwdf$moransI,
-                                     smoothingMethod = smoothingMethod,
                                      plot = plot, ...)
 
 
@@ -397,8 +384,6 @@ probMap                     <- function(sppMoi,
 #'
 #' @param sppMoi: 	The spatial point pattern.
 #' @param bw:        A vector, The gaussian band width pool used for Kernel density estimation.
-#' @param smoothingMethod: The method used for smoothing the curve used for determining the optimal bw value.
-#' Could be of of  `c("spline", "loess")`.
 #' @param csrMoi:       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 #' speeds up the computation and is mostly used for troubleshooting.
 #' @param pvalThreshold: The p-value threshold to be used for the hypothesis testing.
@@ -416,7 +401,6 @@ probMap                     <- function(sppMoi,
 
 .bw.iterative                 <- function(sppMoi,  bw = seq(1, 10, 1),
                                           csrMoi = NULL,
-                                          smoothingMethod = "spline",
                                           pvalThreshold = 0.05,
                                           pvalCorrection = "bonferroni",
                                          plot = FALSE, plotEach = FALSE,
@@ -536,7 +520,6 @@ probMap                     <- function(sppMoi,
 
        ep                          <- kneePoint(x = bwdf$bw,
                                                 y = bwdf$area,
-                                                smoothingMethod = smoothingMethod,
                                                 plot = plot,
                                                 ...)
 
@@ -556,13 +539,12 @@ probMap                     <- function(sppMoi,
 
 #' Find Knee (or elbow) point of a curve
 #'
-#' This function calculates the infliction point of a curve based on the kneedle
+#' This function calculates the knee/elbow point of a curve based on the kneedle
 #' algorithm (satopaa et al, 2011). This is used internally in `moleculaR::.calcGaussBW`.
+#' This is a simplified implementation.
 #'
 #' @param x: 	   x values representing the bandwidth values
 #' @param y:         y values representing the Moran's I statistic.
-#' @param smoothingMethod: The method used for smoothing the curve used for
-#' determining the optimal bw value. Could be of of  `c("spline", "loess")`.
 #' @param df:        degrees of freedom for the smoothing spline.
 #' @param plot:   whether to plot the result.
 #' @param xQuery:    x values to be used for smoothing the original curve via
@@ -583,7 +565,7 @@ probMap                     <- function(sppMoi,
 #'
 
 
-kneePoint     <- function(x, y, smoothingMethod = "spline", df = 7,
+kneePoint     <- function(x, y, df = 7,
                           xQuery = seq(range(x)[1], range(x)[2], 0.1),
                           plot = FALSE, sign = +1, ...) {
 
@@ -592,16 +574,8 @@ kneePoint     <- function(x, y, smoothingMethod = "spline", df = 7,
 
          # fit a smoothing spline/loess
          smoothx   <- xQuery
-
-         smoothy <- switch(smoothingMethod,
-                        "spline" = {
-                                 smoothspl <- smooth.spline(x = x, y = y, df = df)
-                                 predict(smoothspl, x = smoothx)$y
-                        },
-                        "loess" = {
-                                 smoothcurve <- loess(y ~ x)
-                                 predict(smoothcurve, newdata = smoothx)
-                        })
+         smoothspl <- smooth.spline(x = x, y = y, df = df)
+         smoothy <- predict(smoothspl, x = smoothx)$y
 
 
       # normalize points of the smoothing curve to unit square
