@@ -14,7 +14,8 @@ simulatespp(
   shape = "centralCircle",
   backgroundLength = 100,
   seed = NULL,
-  plot = TRUE
+  gtPlot = FALSE,
+  sppPlot = TRUE
 )
 }
 \value{

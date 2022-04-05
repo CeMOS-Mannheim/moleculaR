@@ -7,7 +7,6 @@
 kneePoint(
   x,
   y,
-  smoothingMethod = "spline",
   df = 7,
   xQuery = seq(range(x)[1], range(x)[2], 0.1),
   plot = FALSE,
@@ -22,9 +21,6 @@ kneePoint(
 
 \item{y:}{y values representing the Moran's I statistic.}
 
-\item{smoothingMethod:}{The method used for smoothing the curve used for
-determining the optimal bw value. Could be of of  `c("spline", "loess")`.}
-
 \item{df:}{degrees of freedom for the smoothing spline.}
 
 \item{plot:}{whether to plot the result.}
@@ -38,8 +34,9 @@ a fitted spline.}
 Returns a numeric, the calculated knee point representing the optimum bandwidth.
 }
 \description{
-This function calculates the infliction point of a curve based on the kneedle
+This function calculates the knee/elbow point of a curve based on the kneedle
 algorithm (satopaa et al, 2011). This is used internally in `moleculaR::.calcGaussBW`.
+This is a simplified implementation.
 }
 \references{
 Satopaa, Ville, et al. "Finding a" kneedle" in a haystack: Detecting knee points

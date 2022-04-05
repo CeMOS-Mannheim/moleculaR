@@ -7,8 +7,6 @@
 .bw.spAutoCorr(
   sppMoi,
   bw = c(0.5, seq(1, 9, 1)),
-  smoothingMethod = "spline",
-  spwMat = matrix(c(1, 1, 1, 1, 0, 1, 1, 1, 1), 3, 3),
   plot = FALSE,
   verbose = FALSE,
   ...
@@ -18,9 +16,6 @@
 \item{sppMoi:}{The spatial point pattern, object of type `ppp`.}
 
 \item{bw:}{bandwidth steps at which to compute density and the corresponding Moran's I statistic.}
-
-\item{smoothingMethod:}{The method used for smoothing the curve used for determining the optimal bw value.
-Could be of of  `c("spline", "loess")`.}
 
 \item{plot:}{whether to plot the result.}
 
