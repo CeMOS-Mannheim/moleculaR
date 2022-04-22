@@ -10,6 +10,7 @@ plotImg(
   uniformCol = NULL,
   rescale = TRUE,
   transpFactor = 0.7,
+  irange = NULL,
   ...
 )
 }
@@ -25,6 +26,9 @@ to [0,1] interval.}
 
 \item{transpFactor}{Transparency fraction. Numerical value or vector of values between 0 and 1,
 giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
+
+\item{irange}{a numeric of length 2, a custome intensity range for plotting. Incompatible with `rescale`;
+if provided, `rescale` will be set to `FALSE`.}
 
 \item{...}{further arguments passed to `plot.im`.}
 }

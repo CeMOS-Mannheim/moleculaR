@@ -35,12 +35,7 @@ evalSpatialExpr <- function(exprn, dataList, ppwin, sqrtTransform = FALSE){
 
 
             # create a pixellated image and assign back
-            dataList[[ivar]] <- pixellate(dataList[[ivar]],
-                                      weights = dataList[[ivar]]$marks$intensity,
-                                      W = as.mask(ppwin,
-                                                            dimyx=c(diff(ppwin$yrange),
-                                                                    diff(ppwin$xrange))),
-                                      padzero = FALSE, savemap = FALSE)
+            dataList[[ivar]] <-  spp2im(dataList[[ivar]])
 
 
       }

@@ -42,11 +42,7 @@ annotation result.}
 
 \item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
 
-\item{verbose}{ignored for now.}
-
-\item{metaData}{optional named list with additional identifiers for the analyte
-under study, ex. list(lipidID = "..", sumformular = "..", ..). This will be passed to the `metaData`
-slot of the resulting `analytePointPattern` object.}
+\item{verbose}{whether to show progress.}
 }
 \value{
 An analyte point patter of type `ppp` and `analytePointPattern` containing all lipid hits identified in the

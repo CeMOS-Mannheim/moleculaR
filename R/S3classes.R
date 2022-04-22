@@ -248,7 +248,9 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 
       #if(length(metaData) > 0 & is.list(metaData)){
          #metaData <- metaData[!sapply(metaData, is.null)] # to remove residual null entries
-         spp$metaData <- as.data.frame(c(mtdt, metaData), stringsAsFactors  = FALSE)
+         spp$metaData <- as.data.frame(c(mtdt, metaData),
+                                       stringsAsFactors = FALSE,
+                                       row.names = FALSE)
       # } else {
       #    spp$metaData <- mtdt
       # }
@@ -300,10 +302,19 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 
   }
 
+   # msi uses reversed y axis
+   args <- list(...)
+
+   if("ylim" %in% names(args)){
+    yrange <- rev(args[["ylim"]])
+   } else {
+    yrange <- rev(obj$window$yrange)
+   }
+
   if(obj$n == 0){
 
     plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-             ylim = rev(obj$window$yrange),
+             ylim = yrange,
              main = main)
 
   } else{
@@ -320,7 +331,7 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
                           range = range(obj$marks$intensity))
 
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-               ylim = rev(obj$window$yrange),
+               ylim = yrange,
                main = main,
                symap = symbolmap(pch = pch,
                                  cols = colfun,
@@ -338,7 +349,7 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
       col <- to.transparent(uniformCol, transpFactor)
 
       plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
-               ylim = rev(obj$window$yrange),
+               ylim = yrange,
                main = main,
                symap = symbolmap(pch = pch,
                                  cols = col,
@@ -367,6 +378,8 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' to [0,1] interval.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
+#' @param irange a numeric of length 2, a custome intensity range for plotting. Incompatible with `rescale`;
+#' if provided, `rescale` will be set to `FALSE`.
 #' @param ... further arguments passed to `plot.im`.
 #'
 #' @return nothing, plots only.
@@ -375,53 +388,57 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #'
 #'
 plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRUE,
-                    transpFactor = 0.7, ...){
+                    transpFactor = 0.7, irange = NULL, ...){
 
-         if(class(obj) != "im"){
-                  stop("provided obj must be of type 'im'.\n")
-         }
+  if(class(obj) != "im"){
+    stop("provided obj must be of type 'im'.\n")
+  }
 
-         if(is.null(uniformCol)){
+   # msi uses reversed y axis
+   imageArgs <- list(...)
 
-                  if(rescale){
+   if("ylim" %in% names(imageArgs)){
+    yrange <- rev(imageArgs[["ylim"]])
+   } else {
+    yrange <- rev(obj$yrange)
+   }
 
-                           obj <- .rescale(obj)
-                  }
+
+  if(is.null(uniformCol)){
+
+    if(rescale & is.null(irange)){
+
+      obj <- .rescale(obj)
+    }
+
+    if(is.null(irange)){
+      irange <- range(obj$v, na.rm = T)
+    }
 
 
-                  imageDefaults  <- list(main = NULL,
-                                         col = colourmap(viridis::viridis_pal(option = colourPal)(100),
-                                                         range = range(obj$v, na.rm = T)),
-                                         ylim = rev(obj$yrange),
-                                         box = FALSE)
 
-                  imageArgs <- list(...)
+    plot.im(x = obj,
+            col = colourmap(viridis::viridis_pal(option = colourPal)(100),
+                            range = irange),
+            ylim = yrange,
+            box = FALSE,
+            ...)
 
-                  imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
-                  do.call(plot.im, c(list(x = obj), imageArgs))
+  } else{
 
-         } else{
 
-                  if(rescale){
 
-                           obj <- .rescale(obj)
-                  }
+    col <- to.transparent(uniformCol, transpFactor)
 
-                  col <- to.transparent(uniformCol, transpFactor)
 
-                  imageDefaults  <- list(main = NULL,
-                                         col = col,
-                                         ylim = rev(obj$yrange),
-                                         box = FALSE)
+    plot.im(x = obj,
+            col = col,
+            ylim = yrange,
+            box = FALSE,
+            ...)
 
-                  imageArgs <- list(...)
-
-                  imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
-
-                  do.call(plot.im, c(list(x = obj), imageArgs))
-
-         }
+  }
 
 
 
@@ -436,6 +453,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRU
 #' @param rescale logical, whether to scale the intensities of the output `im` object
 #' to [0,1] interval.
 #' @param zero.rm for internal use only.
+#' @param ... additional arguments passed to `spatstat.geom::pixellate`.
 #'
 #' @return an object of type `im` (see `spatstat` documentation).
 #'
@@ -443,7 +461,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRU
 #' @keywords internal
 #'
 
-app2im <- function(obj, rescale = FALSE, zero.rm = FALSE){
+spp2im <- function(obj, rescale = FALSE, zero.rm = FALSE, ...){
 
          if(!("analytePointPattern" %in% class(obj))){
                   stop("provided obj is not of type 'analytePointPattern'. \n")
@@ -454,7 +472,9 @@ app2im <- function(obj, rescale = FALSE, zero.rm = FALSE){
          im <- pixellate(obj,
                          weights = obj$marks$intensity,
                          W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
-                         padzero = FALSE, savemap = FALSE)
+                         ...)
+
+         im <- as.im(im) # fix coordinates inconsistancies
 
          if(zero.rm){
                   im[im == 0] <- NA
@@ -618,6 +638,11 @@ plot.molProbMap <- function(obj, what = "detailed",
                             col.hotspot = "red",
                             col.coldspot = "blue"){
 
+         # checks
+         if(!(signifArea %in% c("hotspot", "coldspot", "both"))){
+                  stop("'signifArea' must be one of c('hotspot', 'coldspot', 'both').\n")
+         }
+
 
 
    switch (what,
@@ -628,9 +653,9 @@ plot.molProbMap <- function(obj, what = "detailed",
                }
 
                # workout the plotting arguments
-               sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
-                                      pch = 19, size = 0.4, main = NULL)
-               sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
+               # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+               #                        pch = 19, size = 0.4, main = NULL)
+               # sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
                # call the plotting function
                do.call(plotAnalyte, c(list(obj = obj$sppMoi), sppArgs))
@@ -644,9 +669,9 @@ plot.molProbMap <- function(obj, what = "detailed",
                }
 
                # workout the plotting arguments
-               sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
-                                      pch = 19, size = 0.4, main = NULL)
-               sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
+               # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+               #                        pch = 19, size = 0.4, main = NULL)
+               # sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
 
 
@@ -661,18 +686,14 @@ plot.molProbMap <- function(obj, what = "detailed",
                         obj$rhoMoi <- .rescale(obj$rhoMoi)
                }
 
-               # workout the plotting arguments
-               imageDefaults  <- list(main = expression(paste(rho["MOI"], "(x,y)")),
-                                      col = colourmap(viridis::viridis_pal(option = "inferno")(100),
-                                                      range = range(obj$rhoMoi, na.rm = T)),
-                                      ylim = rev(obj$sppMoi$window$yrange),
-                                      box = FALSE)
+               #workout the plotting arguments
+               imageDefaults  <- list(main = expression(paste(rho["MOI"], "(x,y)")))
 
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
 
                # call the plotting function
-               do.call(plot.im, c(list(x = obj$rhoMoi), imageArgs))
+               do.call(plotImg, c(list(obj = obj$rhoMoi), imageArgs))
 
 
       },
@@ -683,11 +704,7 @@ plot.molProbMap <- function(obj, what = "detailed",
                }
 
                # workout the plotting arguments
-               imageDefaults  <- list(main = expression(paste(rho["CSR"], "(x,y)")),
-                                      col = colourmap(viridis::viridis_pal(option = "inferno")(100),
-                                                      range = range(obj$rhoCsr, na.rm = T)),
-                                      ylim = rev(obj$sppMoi$window$yrange),
-                                      box = FALSE)
+               imageDefaults  <- list(main = expression(paste(rho["CSR"], "(x,y)")))
 
                imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
@@ -695,7 +712,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
 
                # call the plotting function
-               do.call(plot.im, c(list(x = obj$rhoCsr), imageArgs))
+               do.call(plotImg, c(list(obj = obj$rhoCsr), imageArgs))
 
 
       },
@@ -772,19 +789,22 @@ plot.molProbMap <- function(obj, what = "detailed",
       },
       "MPM" = {
 
-         spwin <- obj$sppMoi$window
+         #spwin <- obj$sppMoi$window
 
-         if(length(obj$sppMoi$metaData$mzVals) > 1){ # this indicates CPPM -> use the density image
+         if(length(obj$sppMoi$metaData$mzVals) > 1 | obj$sppMoi$metaData$mzVals[1] == "expr"){
+            # this indicates CPPM -> use the density image
 
             imgMpm <- obj$rhoMoi
 
          } else { # this is a single-analyte MPM -> use rasterized image
 
             # raster image of the spp
-            imgMpm  <- pixellate(obj$sppMoi,
-                                 weights = obj$sppMoi$marks$intensity,
-                                 W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
-                                 padzero = FALSE, savemap = FALSE)
+            # imgMpm  <- pixellate(obj$sppMoi,
+            #                      weights = obj$sppMoi$marks$intensity,
+            #                      W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
+            #                      padzero = FALSE, savemap = FALSE)
+
+            imgMpm <- spp2im(obj$sppMoi)
 
          }
 
@@ -793,11 +813,7 @@ plot.molProbMap <- function(obj, what = "detailed",
          }
 
          # workout the plotting arguments
-         imageDefaults  <- list(main = NULL,
-                                col = colourmap(viridis::viridis_pal(option = "inferno")(100),
-                                                range = range(imgMpm, na.rm = T)),
-                                ylim = rev(range(spwin$y)),
-                                box = FALSE)
+         imageDefaults  <- list(main = NULL)
 
          imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
@@ -817,7 +833,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
 
          # call the plotting function
-         do.call(plot.im, c(list(x = imgMpm), imageArgs))
+         do.call(plotImg, c(list(obj = imgMpm), imageArgs))
 
 
          if(signifArea == "both" | signifArea == "hotspot"){
@@ -923,18 +939,14 @@ plot.molProbMap <- function(obj, what = "detailed",
                   }
 
                   # workout the plotting arguments
-                  imageDefaults  <- list(main = "Corresponding Ion Image",
-                                         col = colourmap(viridis::viridis_pal(option = "inferno")(100),
-                                                         range = range(ionImage, na.rm = T)),
-                                         ylim = rev(obj$sppMoi$window$yrange),
-                                         box = FALSE)
+                  imageDefaults  <- list(main = "Corresponding Ion Image")
 
                   imageArgs      <- .mergeArgs(imageArgs, imageDefaults)
 
 
 
                   # call the plotting function
-                  do.call(plot.im, c(list(x = ionImage), imageArgs))
+                  do.call(plotImg, c(list(obj = ionImage), imageArgs))
 
          }
 

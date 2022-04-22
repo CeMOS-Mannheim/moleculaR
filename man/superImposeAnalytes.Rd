@@ -11,7 +11,7 @@ superimposeAnalytes(pppObjs, spWin = NULL, check = TRUE)
 
 \item{spWin}{the spatial window where all points will be projected.}
 
-\item{check}{logical, passed to `superimpose`.}
+\item{check}{logical, passed to `spatstat.geom::superimpose.ppp`.}
 }
 \value{
 An analyte point patter of type `ppp` and `analytePointPattern` containing all supplied analytes.

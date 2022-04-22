@@ -28,14 +28,29 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              metaData = list()) {
 
 
+         if(!is.numeric(m) | !is.numeric(fwhm)){
+                  stop("'m' and 'fwhm' must have numeric value. \n")
+         }
+
         if(length(m) > 1){
                 stop("'m' length must be equal to one. \n")
         }
 
         if(!identical(spwin, NA)){
               owinInfo <- summary(spwin)
+
+              if(owinInfo$npoly > 1){
+
+                     if(any(owinInfo$nvertices <= 4)){
+                            warning("The provided window 'spwin' contains several polygonal areas, ",
+                            "one of which does not seem to be a tissue section with number of ",
+                            "vertices less or equal to 4. \n ")
+                     }
+
+              }
               if(owinInfo$nvertices <= 4){
-                    warning("The provided window 'spwin' does not seem to be a tissue section. \n ")
+                    warning("The provided window 'spwin' does not seem to be a tissue section ",
+                    "with number of vertices less or equal to 4. \n ")
               }
         }
 
@@ -43,7 +58,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
        # find sigma of the gaussian --> corresponds to search window
        s             = fwhm / (2*sqrt(2*log(2))) # sigma i.e. std
-       fiveS         = s * 5
+       threeS         = s * 3
 
 
        #// check if listed in verifiedMasses
@@ -75,14 +90,14 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                }
        }
 
-       idx           <- MALDIquant::match.closest(m , spData$mzAxis, fiveS, NA)
+       idx           <- MALDIquant::match.closest(m , spData$mzAxis, threeS, NA)
 
 
        if(!is.na(idx))
        {
 
-              idxlwr        <- MALDIquant::match.closest((m - fiveS), spData$mzAxis, fiveS, idx)
-              idxupr        <- MALDIquant::match.closest((m + fiveS), spData$mzAxis, fiveS, idx)
+              idxlwr        <- MALDIquant::match.closest((m - threeS), spData$mzAxis, threeS, idx)
+              idxupr        <- MALDIquant::match.closest((m + threeS), spData$mzAxis, threeS, idx)
 
 
               coi           <- as(spData$spmat[ , (idxlwr:idxupr), drop = FALSE], "matrix")  #columns of interest

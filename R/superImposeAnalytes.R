@@ -4,7 +4,7 @@
 #'
 #' @param pppObjs  a list of any number of `ppp` and `analytePointPatterns` objects.
 #' @param spWin the spatial window where all points will be projected.
-#' @param check logical, passed to `superimpose`.
+#' @param check logical, passed to `spatstat.geom::superimpose.ppp`.
 #'
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` containing all supplied analytes.
 #'

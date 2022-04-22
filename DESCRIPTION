@@ -48,6 +48,7 @@ Collate:
     'loadSwissDB.R'
     'moleculaR.R'
     'normalizeIntensity.R'
+    'plotting-functions.R'
     'probMap.R'
     'readCentrData.R'
     'readSingleSpect.R'
