@@ -6,7 +6,7 @@
 \alias{installedPckgs}
 \title{import spatstat sub-packages}
 \format{
-An object of class \code{character} of length 160.
+An object of class \code{character} of length 190.
 }
 \usage{
 installedPckgs

@@ -13,6 +13,8 @@ plotAnalyte(
   pch = 19,
   size = 0.4,
   main = NULL,
+  leg.side = "right",
+  leg.args = list(cex = 3, cex.axis = 1.25),
   ...
 )
 }
@@ -34,6 +36,11 @@ to [0,1] interval.}
 \item{size}{the size of the symbol: a positive number or zero. see`?symbolmap`.}
 
 \item{main}{character, title of the plot. If not given, the m/z value of `obj` is used.}
+
+\item{leg.side}{position of legend relative to main plot.}
+
+\item{leg.args}{list of additional arguments passed to control the legend. see
+`?spatstat.geom::plot.ppp` for more details.}
 
 \item{...}{further arguments passed to `spatstat.geom::plot.ppp`.}
 }

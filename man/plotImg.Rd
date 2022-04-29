@@ -11,6 +11,8 @@ plotImg(
   rescale = TRUE,
   transpFactor = 0.7,
   irange = NULL,
+  ribargs = list(las = 2, cex.axis = 1.25),
+  ribsep = 0.05,
   ...
 )
 }
@@ -29,6 +31,11 @@ giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
 
 \item{irange}{a numeric of length 2, a custome intensity range for plotting. Incompatible with `rescale`;
 if provided, `rescale` will be set to `FALSE`.}
+
+\item{ribargs}{a list of additional arguments to control the display of the ribbon. see
+`?spatstat.geom::plot.im` for details.}
+
+\item{ribsep}{a numeric controlling the space between the ribbon and the image.}
 
 \item{...}{further arguments passed to `plot.im`.}
 }

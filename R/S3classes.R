@@ -249,8 +249,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       #if(length(metaData) > 0 & is.list(metaData)){
          #metaData <- metaData[!sapply(metaData, is.null)] # to remove residual null entries
          spp$metaData <- as.data.frame(c(mtdt, metaData),
-                                       stringsAsFactors = FALSE,
-                                       row.names = FALSE)
+                                       stringsAsFactors = FALSE)
       # } else {
       #    spp$metaData <- mtdt
       # }
@@ -276,6 +275,9 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 #' @param pch     a positive integer, or a single character. See `?par`.
 #' @param size    the size of the symbol: a positive number or zero. see`?symbolmap`.
 #' @param main  character, title of the plot. If not given, the m/z value of `obj` is used.
+#' @param leg.side position of legend relative to main plot.
+#' @param leg.args list of additional arguments passed to control the legend. see
+#' `?spatstat.geom::plot.ppp` for more details.
 #' @param ... further arguments passed to `spatstat.geom::plot.ppp`.
 #'
 #' @return nothing, plots only.
@@ -283,7 +285,8 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
 #' @export
 #'
 plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
-                        rescale = TRUE, pch = 19, size = 0.4, main = NULL, ...){
+                        rescale = TRUE, pch = 19, size = 0.4, main = NULL,
+                        leg.side = "right", leg.args = list(cex = 3, cex.axis = 1.25), ...){
 
   if(!("analytePointPattern" %in% class(obj))){
     stop("provided obj is not of type 'analytePointPattern'. \n")
@@ -337,6 +340,8 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
                                  cols = colfun,
                                  size = size,
                                  range = range(obj$marks$intensity)),
+               leg.side = leg.side,
+               leg.args = leg.args,
                ...) # colors according to intensity
 
     } else{
@@ -354,6 +359,8 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
                symap = symbolmap(pch = pch,
                                  cols = col,
                                  size = size),
+               leg.side = leg.side,
+               leg.args = leg.args,
                ...)
 
     }
@@ -380,6 +387,9 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
 #' @param irange a numeric of length 2, a custome intensity range for plotting. Incompatible with `rescale`;
 #' if provided, `rescale` will be set to `FALSE`.
+#' @param ribargs a list of additional arguments to control the display of the ribbon. see
+#' `?spatstat.geom::plot.im` for details.
+#' @param ribsep a numeric controlling the space between the ribbon and the image.
 #' @param ... further arguments passed to `plot.im`.
 #'
 #' @return nothing, plots only.
@@ -387,8 +397,10 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' @export
 #'
 #'
-plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRUE,
-                    transpFactor = 0.7, irange = NULL, ...){
+plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
+                    rescale = TRUE, transpFactor = 0.7,
+                    irange = NULL, ribargs = list(las = 2, cex.axis =1.25),
+                    ribsep = 0.05, ...){
 
   if(class(obj) != "im"){
     stop("provided obj must be of type 'im'.\n")
@@ -422,6 +434,8 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRU
                             range = irange),
             ylim = yrange,
             box = FALSE,
+            ribargs = ribargs,
+            ribsep = ribsep,
             ...)
 
 
@@ -436,6 +450,8 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL, rescale = TRU
             col = col,
             ylim = yrange,
             box = FALSE,
+            ribargs = ribargs,
+            ribsep = ribsep,
             ...)
 
   }
