@@ -28,13 +28,19 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              metaData = list()) {
 
 
+
+
+        if(length(m) > 1 | length(fwhm) > 1){
+                stop("'m' length must be equal to one. \n")
+        }
+
          if(!is.numeric(m) | !is.numeric(fwhm)){
                   stop("'m' and 'fwhm' must have numeric value. \n")
          }
 
-        if(length(m) > 1){
-                stop("'m' length must be equal to one. \n")
-        }
+         if(is.na(m) | is.na(fwhm)){
+                  stop("'m' and 'fwhm' must have numeric value. \n")
+         }
 
         if(!identical(spwin, NA)){
               owinInfo <- summary(spwin)
@@ -71,7 +77,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
 
                # match closest
-               idxConf        = MALDIquant::match.closest(m, verifiedMasses, (s * 3), NA_integer_)
+               idxConf        = MALDIquant::match.closest(m, verifiedMasses, threeS, NA_integer_)
 
                # record
                mzConfirmed    = ifelse(identical(idxConf, NA_integer_), FALSE, TRUE)

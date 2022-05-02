@@ -245,11 +245,12 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
       return(approxfun(x = sm$x, y = sm$y, rule = 2))
 }
 
-#// compute the fwhm interpolating function by super smoother method
+#// compute the fwhm interpolating function by loess method
 .loess <- function(data){
 
       #// use loess to get a smooth curve
-      lo           <- loess(fwhmValues ~ peaks, data)
+      lo           <- loess(fwhmValues ~ peaks, data,
+                            control=loess.control(surface="direct"))
 
       #// create the linear interpolation function
       return(function(x) {predict(object = lo, newdata = x)})
