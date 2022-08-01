@@ -18,7 +18,7 @@
 #' be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
 #' annotation result.
 #' @param confirmedOnly if `TRUE`, returns detections only if confirmed by `verifiedMasses`.
-#' @param verbose whether to show progress.
+#' @param verbose whether to show progress. Ignored when `numCores > 1`.
 #'
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` containing all lipid hits identified in the
 #' MSI dataset `spData` for the specified `adduct` formations taking into account the `fwhm` information.
@@ -29,29 +29,29 @@
 
 
 batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H", "M+H", "M+Na", "M+K"),
-                             numCores = 1L, wMethod = "Gaussian", verifiedMasses = NA,
-                             confirmedOnly = FALSE, verbose = TRUE) {
+                              numCores = 1L, wMethod = "Gaussian", verifiedMasses = NA,
+                              confirmedOnly = FALSE, verbose = TRUE) {
 
 
-        # check for sldb
-        if(!("numDoubleBond" %in% colnames(sldb))){
-              stop("'numDoubleBond' column is not detecetd in 'sldb'. Please load 'sldb' via 'moleculaR::loadSwissDB' function. \n")
-        }
-        if(!("numDoubleBond" %in% colnames(sldb))){
+      # check for sldb
+      if(!("numDoubleBond" %in% colnames(sldb))){
+            stop("'numDoubleBond' column is not detecetd in 'sldb'. Please load 'sldb' via 'moleculaR::loadSwissDB' function. \n")
+      }
+      if(!("numDoubleBond" %in% colnames(sldb))){
             stop("'lipidGroup' column is not detecetd in 'sldb'. Please load 'sldb' via 'moleculaR::loadSwissDB' function. \n")
-        }
+      }
 
-        # check OS type
-        if(.Platform$OS.type == "windows" & numCores > 1){
-      	warning("Only single-core operation is supported on windows. \n")
-      	numCores <- 1L
-        }
+      # check OS type
+      if(.Platform$OS.type == "windows" & numCores > 1){
+            warning("Only single-core operation is supported on windows. \n")
+            numCores <- 1L
+      }
 
       #// sort verifiedMasses
-        if(!identical(verifiedMasses, NA)){
-              verifiedMasses <- sort(verifiedMasses)
+      if(!identical(verifiedMasses, NA)){
+            verifiedMasses <- sort(verifiedMasses)
 
-        }
+      }
 
       #// create sp window
       if(identical(spwin, NA)){
@@ -82,222 +82,222 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 
 
-      if(verbose){
+      if(verbose & numCores == 1){
             pb <- utils::txtProgressBar(min = 1, max = nrow(sldb), style = 3, width = 20)
       }
 
 
 
 
-      hitsList <- parallel::mclapply(X = seq(1, nrow(sldb)),
-                                     mc.cores = numCores, FUN = function(i) {
+      hitsList <- parallel::mclapply(X = seq(1, nrow(sldb)), mc.cores = numCores,
+                                     FUN = function(i) {
 
 
-                   if(verbose){
-                            utils::setTxtProgressBar(pb, i)
-                            #count <- count + 1
-                   }
+                                           if(verbose & numCores == 1){
+                                                 utils::setTxtProgressBar(pb, i)
+                                                 #count <- count + 1
+                                           }
 
+                                           #cat("\r", i)
 
+                                           #sppCotainer <- list(emptyspp = ppp(x = integer(0), y = integer(0)))
+                                           #sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
 
-                   #sppCotainer <- list(emptyspp = ppp(x = integer(0), y = integer(0)))
-                   #sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
+                                           # initialize empty spp objects for each adduct
+                                           sppCotainer <- .initializeEmptySppList(adduct, spwin)
 
-                   # initialize empty spp objects for each adduct
-                   sppCotainer <- .initializeEmptySppList(adduct, spwin)
 
+                                           #// de-protonated ----
+                                           if("M-H" %in% adduct) {
 
-                   #// de-protonated ----
-                   if("M-H" %in% adduct) {
+                                                 lipTmp    <- sldb$`Exact m/z of [M-H]-`[i]
 
-                            lipTmp    <- sldb$`Exact m/z of [M-H]-`[i]
+                                                 massNotNA <- !(is.na(lipTmp)) # for example there is no protonated version of this lipid species
+                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
-                            massNotNA <- !(is.na(lipTmp)) # for example there is no protonated version of this lipid species
-                            massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 if(massNotNA & massInRange) {
 
-                            if(massNotNA & massInRange) {
+                                                       # metaData list
+                                                       mt  <- list(mode = "negative",
+                                                                   adduct = "M-H",
+                                                                   lipidID = sldb$`Lipid ID`[i],
+                                                                   sumformula = sldb$`Formula (pH7.3)`[i],
+                                                                   abbrev = sldb$`Abbreviation*`[i],
+                                                                   numDoubleBonds = sldb$numDoubleBond[i],
+                                                                   lipidClass = sldb$lipidGroup[i],
+                                                                   chainLength = sldb$chainLength[i])
 
-                                     # metaData list
-                                     mt  <- list(mode = "negative",
-                                                 adduct = "M-H",
-                                                 lipidID = sldb$`Lipid ID`[i],
-                                                 sumformula = sldb$`Formula (pH7.3)`[i],
-                                                 abbrev = sldb$`Abbreviation*`[i],
-                                                 numDoubleBonds = sldb$numDoubleBond[i],
-                                                 lipidClass = sldb$lipidGroup[i],
-                                                 chainLength = sldb$chainLength[i])
+                                                       sppCotainer[["M-H"]] <- searchAnalyte(m = lipTmp,
+                                                                                             fwhm = getFwhm(fwhmObj, lipTmp),
+                                                                                             spData = spData,
+                                                                                             spwin = spwin,
+                                                                                             wMethod = wMethod,
+                                                                                             verifiedMasses = verifiedMasses,
+                                                                                             confirmedOnly = confirmedOnly,
+                                                                                             metaData = mt)
 
-                                     sppCotainer[["M-H"]] <- searchAnalyte(m = lipTmp,
-                                                                           fwhm = getFwhm(fwhmObj, lipTmp),
-                                                                           spData = spData,
-                                                                           spwin = spwin,
-                                                                           wMethod = wMethod,
-                                                                           verifiedMasses = verifiedMasses,
-                                                                           confirmedOnly = confirmedOnly,
-                                                                           metaData = mt)
+                                                       #sppCotainer <- c(sppCotainer, list(hitsDeprot))
 
-                                     #sppCotainer <- c(sppCotainer, list(hitsDeprot))
+                                                       rm(mt)
 
-                                     rm(mt)
 
+                                                 }
 
-                            }
+                                                 rm(lipTmp, massNotNA, massInRange)
 
-                            rm(lipTmp, massNotNA, massInRange)
+                                           }
 
-                   }
 
+                                           #// protonated ----
+                                           if("M+H" %in% adduct){
+                                                 lipTmp        = sldb$`Exact m/z of [M+H]+`[i]
 
-                   #// protonated ----
-                   if("M+H" %in% adduct){
-                            lipTmp        = sldb$`Exact m/z of [M+H]+`[i]
+                                                 massNotNA <- !(is.na(lipTmp))
+                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
-                            massNotNA <- !(is.na(lipTmp))
-                            massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 if(massNotNA & massInRange) {
 
-                            if(massNotNA & massInRange) {
 
+                                                       # metaData list
+                                                       mt  <- list(mode = "positive",
+                                                                   adduct = "M+H",
+                                                                   lipidID = sldb$`Lipid ID`[i],
+                                                                   sumformula = sldb$`Formula (pH7.3)`[i],
+                                                                   abbrev = sldb$`Abbreviation*`[i],
+                                                                   numDoubleBonds = sldb$numDoubleBond[i],
+                                                                   lipidClass = sldb$lipidGroup[i],
+                                                                   chainLength = sldb$chainLength[i])
 
-                                     # metaData list
-                                     mt  <- list(mode = "positive",
-                                                 adduct = "M+H",
-                                                 lipidID = sldb$`Lipid ID`[i],
-                                                 sumformula = sldb$`Formula (pH7.3)`[i],
-                                                 abbrev = sldb$`Abbreviation*`[i],
-                                                 numDoubleBonds = sldb$numDoubleBond[i],
-                                                 lipidClass = sldb$lipidGroup[i],
-                                                 chainLength = sldb$chainLength[i])
+                                                       sppCotainer[["M+H"]] <- searchAnalyte(m = lipTmp,
+                                                                                             fwhm = getFwhm(fwhmObj, lipTmp),
+                                                                                             spData = spData,
+                                                                                             wMethod = wMethod,
+                                                                                             spwin = spwin,
+                                                                                             verifiedMasses = verifiedMasses,
+                                                                                             confirmedOnly = confirmedOnly,
+                                                                                             metaData = mt)
 
-                                     sppCotainer[["M+H"]] <- searchAnalyte(m = lipTmp,
-                                                                           fwhm = getFwhm(fwhmObj, lipTmp),
-                                                                           spData = spData,
-                                                                           wMethod = wMethod,
-                                                                           spwin = spwin,
-                                                                           verifiedMasses = verifiedMasses,
-                                                                           confirmedOnly = confirmedOnly,
-                                                                           metaData = mt)
+                                                       #sppCotainer <- c(sppCotainer, list(hitsProt))
 
-                                     #sppCotainer <- c(sppCotainer, list(hitsProt))
 
+                                                       rm(mt)
 
-                                     rm(mt)
 
 
+                                                 }
+                                                 rm(lipTmp, massNotNA, massInRange)
+                                           }
 
-                            }
-                            rm(lipTmp, massNotNA, massInRange)
-                   }
 
 
+                                           #// Na+ adduct ----
+                                           if("M+Na" %in% adduct){
 
-                   #// Na+ adduct ----
-                   if("M+Na" %in% adduct){
+                                                 lipTmp               = sldb$`Exact m/z of [M+Na]+`[i]
+                                                 massNotNA <- !(is.na(lipTmp))
+                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
-                            lipTmp               = sldb$`Exact m/z of [M+Na]+`[i]
-                            massNotNA <- !(is.na(lipTmp))
-                            massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 if(massNotNA & massInRange) {
 
-                            if(massNotNA & massInRange) {
 
 
+                                                       # metaData list
+                                                       mt  <- list(mode = "positive",
+                                                                   adduct = "M+Na",
+                                                                   lipidID = sldb$`Lipid ID`[i],
+                                                                   sumformula = sldb$`Formula (pH7.3)`[i],
+                                                                   abbrev = sldb$`Abbreviation*`[i],
+                                                                   numDoubleBonds = sldb$numDoubleBond[i],
+                                                                   lipidClass = sldb$lipidGroup[i],
+                                                                   chainLength = sldb$chainLength[i])
 
-                                     # metaData list
-                                     mt  <- list(mode = "positive",
-                                                 adduct = "M+Na",
-                                                 lipidID = sldb$`Lipid ID`[i],
-                                                 sumformula = sldb$`Formula (pH7.3)`[i],
-                                                 abbrev = sldb$`Abbreviation*`[i],
-                                                 numDoubleBonds = sldb$numDoubleBond[i],
-                                                 lipidClass = sldb$lipidGroup[i],
-                                                 chainLength = sldb$chainLength[i])
+                                                       sppCotainer[["M+Na"]] <- searchAnalyte(m = lipTmp,
+                                                                                              fwhm = getFwhm(fwhmObj, lipTmp),
+                                                                                              spData = spData,
+                                                                                              wMethod = wMethod,
+                                                                                              spwin = spwin,
+                                                                                              verifiedMasses = verifiedMasses,
+                                                                                              confirmedOnly = confirmedOnly,
+                                                                                              metaData = mt)
 
-                                     sppCotainer[["M+Na"]] <- searchAnalyte(m = lipTmp,
-                                                                            fwhm = getFwhm(fwhmObj, lipTmp),
-                                                                            spData = spData,
-                                                                            wMethod = wMethod,
-                                                                            spwin = spwin,
-                                                                            verifiedMasses = verifiedMasses,
-                                                                            confirmedOnly = confirmedOnly,
-                                                                            metaData = mt)
+                                                       #sppCotainer <- c(sppCotainer, list(hitsSod))
 
-                                     #sppCotainer <- c(sppCotainer, list(hitsSod))
 
+                                                       rm(mt)
 
-                                     rm(mt)
 
 
+                                                 }
+                                                 rm(lipTmp, massNotNA, massInRange)
 
-                            }
-                            rm(lipTmp, massNotNA, massInRange)
+                                           }
 
-                   }
 
+                                           #// K+ adduct ----
+                                           if("M+K" %in% adduct | "M+k" %in% adduct){
 
-                   #// K+ adduct ----
-                   if("M+K" %in% adduct | "M+k" %in% adduct){
+                                                 lipTmp        = sldb$`Exact m/z of [M+K]+`[i]
+                                                 massNotNA <- !(is.na(lipTmp))
+                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
-                            lipTmp        = sldb$`Exact m/z of [M+K]+`[i]
-                            massNotNA <- !(is.na(lipTmp))
-                            massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 if(massNotNA & massInRange) { # for example there is no Na-adduct version
 
-                            if(massNotNA & massInRange) { # for example there is no Na-adduct version
+                                                       # metaData list
+                                                       mt  <- list(mode = "positive",
+                                                                   adduct = "M+K",
+                                                                   lipidID = sldb$`Lipid ID`[i],
+                                                                   sumformula = sldb$`Formula (pH7.3)`[i],
+                                                                   abbrev = sldb$`Abbreviation*`[i],
+                                                                   numDoubleBonds = sldb$numDoubleBond[i],
+                                                                   lipidClass = sldb$lipidGroup[i],
+                                                                   chainLength = sldb$chainLength[i])
 
-                                     # metaData list
-                                     mt  <- list(mode = "positive",
-                                                 adduct = "M+K",
-                                                 lipidID = sldb$`Lipid ID`[i],
-                                                 sumformula = sldb$`Formula (pH7.3)`[i],
-                                                 abbrev = sldb$`Abbreviation*`[i],
-                                                 numDoubleBonds = sldb$numDoubleBond[i],
-                                                 lipidClass = sldb$lipidGroup[i],
-                                                 chainLength = sldb$chainLength[i])
+                                                       sppCotainer[["M+K"]] <- searchAnalyte(m = lipTmp,
+                                                                                             fwhm = getFwhm(fwhmObj, lipTmp),
+                                                                                             spData = spData,
+                                                                                             wMethod = wMethod,
+                                                                                             spwin = spwin,
+                                                                                             verifiedMasses = verifiedMasses,
+                                                                                             confirmedOnly = confirmedOnly,
+                                                                                             metaData = mt)
 
-                                     sppCotainer[["M+K"]] <- searchAnalyte(m = lipTmp,
-                                                                           fwhm = getFwhm(fwhmObj, lipTmp),
-                                                                           spData = spData,
-                                                                           wMethod = wMethod,
-                                                                           spwin = spwin,
-                                                                           verifiedMasses = verifiedMasses,
-                                                                           confirmedOnly = confirmedOnly,
-                                                                           metaData = mt)
+                                                       #sppCotainer <- c(sppCotainer, list(hitsPotas))
 
-                                     #sppCotainer <- c(sppCotainer, list(hitsPotas))
 
+                                                       rm(mt)
 
-                                     rm(mt)
 
 
+                                                 }
+                                                 rm(lipTmp, massNotNA, massInRange)
 
-                            }
-                            rm(lipTmp, massNotNA, massInRange)
+                                           }
 
-                   }
+                                           # noDetections <- sapply(sppCotainer, is.null)
+                                           #
+                                           # if(all(!noDetections)){ # if there are no detections return empty ppp object
+                                           #       return(ppp(x = integer(0), y = integer(0), window = spwin))
+                                           # } else{
+                                           #       return(superimposeAnalytes(sppCotainer, spWin = spwin))
+                                           # }
 
-                   # noDetections <- sapply(sppCotainer, is.null)
-                   #
-                   # if(all(!noDetections)){ # if there are no detections return empty ppp object
-                   #       return(ppp(x = integer(0), y = integer(0), window = spwin))
-                   # } else{
-                   #       return(superimposeAnalytes(sppCotainer, spWin = spwin))
-                   # }
+                                           superimposeAnalytes(sppCotainer, spWin = spwin, check = FALSE)
 
-                   superimposeAnalytes(sppCotainer, spWin = spwin, check = FALSE)
 
+                                     })
 
-                  })
 
 
 
+      #// merge
+      hitsList <- superimposeAnalytes(hitsList, spWin = spwin, check = FALSE)
 
-            #// merge
-            hitsList <- superimposeAnalytes(hitsList, spWin = spwin)
+      # if(confirmedOnly){ # manually set this flag
+      #       hitsList$metaData$mzConfirmed <- TRUE
+      # }
 
-            # if(confirmedOnly){ # manually set this flag
-            #       hitsList$metaData$mzConfirmed <- TRUE
-            # }
 
-
-      if(verbose)
+      if(verbose & numCores == 1)
             close(pb)
 
 
@@ -326,8 +326,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
       # spwin is the spatial window of type owin
 
       emptyspp <- ppp(x = integer(0), y = integer(0),
-                                     marks = data.frame(idx = integer(0), intensity = numeric(0)),
-                                     window = spwin, checkdup = FALSE, drop = FALSE)
+                      marks = data.frame(idx = integer(0), intensity = numeric(0)),
+                      window = spwin, checkdup = FALSE, drop = FALSE)
 
       cont <- replicate(length(vec), emptyspp, simplify = FALSE)
 
@@ -356,8 +356,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
 
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M-H]-`,
-                                              table = sort(verifiedMasses),
-                                              tolerance = tol)
+                                             table = sort(verifiedMasses),
+                                             tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
       }
 
@@ -370,8 +370,8 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
             }
 
             tmp <- MALDIquant::match.closest(x = sldb$`Exact m/z of [M+H]+`,
-                                              table = sort(verifiedMasses),
-                                              tolerance = tol)
+                                             table = sort(verifiedMasses),
+                                             tolerance = tol)
             idxToKeep <- c(idxToKeep, which(!is.na(tmp)))
 
       }

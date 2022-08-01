@@ -7,8 +7,8 @@
 #' of m/z for the given MSI modality.
 #'
 #'
-#'#' @param userMassRes: a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
-#' at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modelity`.
+#' @param userMassRes: a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
+#' at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modality`.
 #' @param modality: a character specifying the type of the MSI measurement device. Curretly only
 #' `c("FTICR", "TOF-reflector", "TIMS-TOF")` are supported.
 #' @param constant:  a logical, when set to `TRUE`, the fwhm value computed from `userMassRes` is used for the entire

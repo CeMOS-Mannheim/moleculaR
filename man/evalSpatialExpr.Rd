@@ -4,16 +4,18 @@
 \alias{evalSpatialExpr}
 \title{Evaluates an expression of SPP objects}
 \usage{
-evalSpatialExpr(exprn, dataList, ppwin, sqrtTransform = FALSE)
+evalSpatialExpr(exprn, dataList, win, normMethod = "imageMean")
 }
 \arguments{
-\item{expr:}{A character vector representing tha arithmetic expression of 'ppp' objects listed in 'dataList'.}
+\item{expr:}{A character vector representing the arithmetic expression of 'ppp' objects listed in 'dataList'.}
 
 \item{dataList:}{A named list containing the 'ppp' objects involved in 'expr'.}
 
-\item{ppwin:}{The window 'owin' object which all elements of 'dataList' share.}
+\item{win:}{The window 'owin' object which all elements of 'dataList' share.}
 
-\item{sqrtTransform:}{Optional square root transofmation of the 'ppp' objects in 'dataList'.}
+\item{normMethod:}{a character, the method used for normalizing intensities of `ppp` objects
+in `dataList`. This is particularly important when `CPPMs` are considered i.e. `ppp` objects
+carrying more than one analyte. One of `c("imageMean", "pixelMean")`. Defaults to `imageMean`.}
 }
 \value{
 An object of type 'ppp' and 'moleculaR::analytePointPattern' holding the result of
@@ -22,4 +24,12 @@ the applied expression 'expr'.
 \description{
 This evaluates an arbitrary expression involving spatial point pattern objects 'ppp' which encode
 analyte distributions of MSI data.
+}
+\details{
+For `normMethod='imageMean'` if the terms of `expr` are CPPMs (i.e. holding
+several analytes) each pixel intensity within CPPM image is divided by the
+number of analytes contributing to the CPPM. For `normMethod='pixelWise'`,
+each pixel is down-weighted by the absolute number of analytes present in it.
+Both normalization types are applied before applying the arithmetic expression
+and do not have any effect of `spp`s that hold a single analyte.
 }

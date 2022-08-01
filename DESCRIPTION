@@ -1,7 +1,7 @@
 Package: moleculaR
 Type: Package
 Title: Spatial Probabilistic Mapping of Metabolite Ensembles in Mass Spectrometry Imaging
-Version: 0.8.9
+Version: 0.9.0
 Author: Denis Abu Sammour
 Maintainer: 
     Denis Abu Sammour <d.abu-sammour@hs-mannheim.de>
@@ -39,12 +39,12 @@ Collate:
     'downloadExData.R'
     'estimateFwhm.R'
     'evalspatialExpr.R'
+    'filterDuplicates.R'
     'filterPeaks.R'
     'gaussWeight.R'
     'icon.R'
     'legacy-initLipidSearch.R'
     'legacy-searchLipid.R'
-    'legacy-superimposeNoise.R'
     'loadSwissDB.R'
     'moleculaR.R'
     'normalizeIntensity.R'
@@ -59,4 +59,5 @@ Collate:
     'subsetAnalytes.R'
     'superImposeAnalytes.R'
     'superimposeNoise.R'
+    'transformIntensity.R'
     'useDefaultFwhm.R'

@@ -7,11 +7,12 @@
 #' then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
 #' will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
 #' see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.
+#' @param edgeCorrection   a logical. Whether to apply edge correction through
+#' erosion by calling `spatstat.geom::erosion`. This could be beneficial for
+#' removing edge artifacts which might otherwise impact the result.
 #' @param bwMethod The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").
 #' @param bwPlot    whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.
 #' @param csrIntensities How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").
-#' @param sqrtTansform whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
-#' 'sppMoi' cotains a set of different analytes as in the case of collective projection maps.
 #' @param control   An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
 #' csrMoi model will be generated from the intensities of this object.
 #' @param csrMoi       Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
@@ -47,9 +48,9 @@
 probMap                     <- function(sppMoi,
                                         control = NULL,
                                         bw = seq(0.5, 10),
+                                        edgeCorrection = FALSE,
                                         bwMethod = "spAutoCor",
                                         csrIntensities = "resample",
-                                        sqrtTansform = FALSE,
                                         csrMoi = NULL,
                                         pvalThreshold = 0.05,
                                         pvalCorrection = "BH",
@@ -66,12 +67,15 @@ probMap                     <- function(sppMoi,
 
          set.seed(seed)
 
+         if(edgeCorrection){ # apply slight erosion to edges
+
+                  sppMoi <- .erosion(sppMoi)
+
+         }
+
        if(is.null(csrMoi)) {
 
 
-             if(sqrtTansform){
-                   sppMoi$marks$intensity <- sqrt(sppMoi$marks$intensity)
-             }
 
              if(is.null(control)){ # if control is not supplied generate the csrMoi model from sppMoi
 
@@ -102,10 +106,6 @@ probMap                     <- function(sppMoi,
                       stop("control must be of 'analytePointPattern' and 'ppp' class. \n")
                    }
 
-                   if(sqrtTansform){
-                         sppMoi$marks$intensity <- sqrt(sppMoi$marks$intensity)
-                         control$marks$intensity <- sqrt(control$marks$intensity)
-                   }
 
                    csrMoi              <- rpoint(n = sppMoi$n, win = sppMoi$window)
 
@@ -200,7 +200,8 @@ probMap                     <- function(sppMoi,
 
        # create a density map for csrMoi
        rhoCsr           <- density.ppp(x = csrMoi, sigma = bw,
-                                                weights = csrMoiw, W = win, positive = TRUE)
+                                       weights = csrMoiw,
+                                       W = win, positive = TRUE)
 
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
@@ -208,7 +209,8 @@ probMap                     <- function(sppMoi,
 
        # create a density map for the image
        rhoMoi           <- density.ppp(x = sppMoi, sigma = bw,
-                                                 weights = sppMoiw, W = win, positive = TRUE)
+                                       weights = sppMoiw, W = win,
+                                       positive = TRUE)
 
        # scale such that sum{pixels} <= 1 i.e. a probability density function
        rhoMoi           <- rhoMoi/sum(rhoMoi)
@@ -795,6 +797,29 @@ kneePoint     <- function(x, y, df = 7,
 
 .bw.scott.iso2 <- function(X) { .bw.scott2(X, isotropic=TRUE) }
 
+
+
+#' Apply erosion to an spp
+#'
+#' This function is equivalent to `spatstat.geom::erosion` but applied to the `spp`
+#' object and retains its attributes
+#'
+#' @param spp: 	   A spatial point pattern (object of class \code{spp}).
+#' @return
+#' Another `spp` object with its window eroded on the edges with a fixed r = 0.5
+#' length units (pixels).
+#'
+.erosion <- function(spp){
+
+         if (!("analytePointPattern" %in% class(spp))) {
+                  stop(".erosion: spp must be of 'analytePointPattern' and 'ppp' class. \n")
+         }
+         erodedWin <- erosion(w = spp$window, r = 0.5)
+         spp <- analytePointPattern(x = spp$x, y = spp$y, intensity = spp$marks$intensity,
+                                    win = erodedWin, mzVals = spp$metaData$mzVals, metaData = as.list(spp$metaData))
+         return(spp)
+
+}
 
 
 #' Normalized cross correlation

@@ -27,9 +27,9 @@
 #'
 #'
 
-superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, noiseFactor = 1L,
-                                   searchFactor = 3L, sigmainterference = 2L, mzTrim = 0,
-                                   numSpikedPeaks = 10L, returnMat = FALSE, verbose = FALSE) {
+superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, noiseFactor = 1,
+                                   searchFactor = 3, sigmainterference = 2, mzTrim = 0,
+                                   numSpikedPeaks = 10, returnMat = FALSE, verbose = FALSE) {
 
 
          #// checks
@@ -210,7 +210,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
 
                                    spData$spmat   = cbind(spData$spmat[ , seq(1,idxi)],
                                                           Matrix::Matrix(data = n[[i]], nrow = nrow(spData$spmat), sparse = TRUE),
-                                                          spData$spmat[ , seq((idxi+1),ncol(spData$spmat))])
+                                                          spData$spmat[ , seq((idxi+1), ncol(spData$spmat))])
 
                                    spData$mzAxis = mzAxis
 

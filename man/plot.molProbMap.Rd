@@ -7,10 +7,13 @@
 \method{plot}{molProbMap}(
   obj,
   what = "detailed",
+  densityAsBase = FALSE,
   sppArgs = list(),
   imageArgs = list(),
   fArgs = list(),
   rescale = TRUE,
+  smooth = FALSE,
+  zero.rm = FALSE,
   signifArea = "both",
   ionImage = NA,
   figLegend = TRUE,
@@ -25,6 +28,10 @@
 \item{what}{What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
 "csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.}
 
+\item{densityAsBase}{a logical, if set to `TRUE`, the base image, ontop of which
+hotspot/coldspot contours are plotted, is taken from the estimated density image
+of m/z MOI. Otherwise (default), the Gaussian-weighted ion image is used.}
+
 \item{sppArgs}{a named list of arguments to be passed to `plotAnalyte` or plotting
 "analytePointPattern" and "csrPointPattern". There are sensible defaults.}
 
@@ -36,6 +43,12 @@
 
 \item{rescale}{logical, whether to scale the intensities of the output plot
 to [0,1] interval.}
+
+\item{smooth}{logical, whether to apply image smoothing via an isotropic
+Gaussian kernel.}
+
+\item{zero.rm}{logical, whether to remove zero-valued pixels from the intensity
+image.}
 
 \item{signifArea}{a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").}
 

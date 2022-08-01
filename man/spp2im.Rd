@@ -4,10 +4,12 @@
 \alias{spp2im}
 \title{Convert `anlaytePointPattern` to `im`}
 \usage{
-spp2im(obj, rescale = FALSE, zero.rm = FALSE, ...)
+spp2im(obj, weighted = TRUE, rescale = FALSE, zero.rm = FALSE, ...)
 }
 \arguments{
 \item{obj}{S3 object of type `anlaytePointPattern` (and `spp`).}
+
+\item{weighted}{a logical, whether to scale points by their intensities.}
 
 \item{rescale}{logical, whether to scale the intensities of the output `im` object
 to [0,1] interval.}

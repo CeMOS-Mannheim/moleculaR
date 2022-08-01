@@ -382,7 +382,9 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #' @param colourPal the colourmap to be used, see `?viridis::viridis_pal`.
 #' @param uniformCol a character specifying a single colour. This will override `colourPal`.
 #' @param rescale logical, whether to scale the intensities of the output plot
-#' to [0,1] interval.
+#' to (0,1] interval.
+#' @param smooth logical, whether to apply image smoothing via an isotropic
+#' Gaussian kernel.
 #' @param transpFactor Transparency fraction. Numerical value or vector of values between 0 and 1,
 #' giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.
 #' @param irange a numeric of length 2, a custome intensity range for plotting. Incompatible with `rescale`;
@@ -398,7 +400,7 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #'
 #'
 plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
-                    rescale = TRUE, transpFactor = 0.7,
+                    rescale = TRUE, smooth = FALSE, transpFactor = 0.7,
                     irange = NULL, ribargs = list(las = 2, cex.axis =1.25),
                     ribsep = 0.05, ...){
 
@@ -417,6 +419,11 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 
 
   if(is.null(uniformCol)){
+
+         if(smooth){
+                  obj <- Smooth.im(obj, sigma = 0.5,
+                                   bleed = FALSE, normalise = TRUE)
+         }
 
     if(rescale & is.null(irange)){
 
@@ -466,6 +473,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 #' A method to convert `anlaytePointPattern` objects to `im` objects.
 #'
 #' @param obj S3 object of type `anlaytePointPattern` (and `spp`).
+#' @param weighted a logical, whether to scale points by their intensities.
 #' @param rescale logical, whether to scale the intensities of the output `im` object
 #' to [0,1] interval.
 #' @param zero.rm for internal use only.
@@ -477,7 +485,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 #' @keywords internal
 #'
 
-spp2im <- function(obj, rescale = FALSE, zero.rm = FALSE, ...){
+spp2im <- function(obj, weighted = TRUE, rescale = FALSE, zero.rm = FALSE, ...){
 
          if(!("analytePointPattern" %in% class(obj))){
                   stop("provided obj is not of type 'analytePointPattern'. \n")
@@ -485,8 +493,14 @@ spp2im <- function(obj, rescale = FALSE, zero.rm = FALSE, ...){
 
          win <- obj$window
 
+         if(weighted){
+                  w <- obj$marks$intensity
+         } else{
+                  w <- NULL
+         }
+
          im <- pixellate(obj,
-                         weights = obj$marks$intensity,
+                         weights = w,
                          W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
                          ...)
 
@@ -505,11 +519,70 @@ spp2im <- function(obj, rescale = FALSE, zero.rm = FALSE, ...){
          return(im)
 }
 
+#' Convert `im` to `anlaytePointPattern`
+#'
+#' A method to convert `im` objects to `anlaytePointPattern` objects.
+#'
+#' @param obj S3 object of type `im`.
+#' @param win S3 object of type `owin` representing the window or the resulting
+#' `anlaytePointPattern` object.
+#' @param rescale logical, whether to scale the intensities of the output `im` object
+#' to [0,1] interval.
+#' @param zero.rm for internal use only.
+#' @param mzVal optional, the m/z value of the analyte represnted in `obj`.
+#'
+#' @return an object of type `anlaytePointPattern`.
+#'
+#' @export
+#' @keywords internal
+#'
+
+im2spp <- function(obj, win , rescale = FALSE, zero.rm = TRUE, mzVal = "mz"){
+
+         if(!(class(obj) == "im")){
+                  stop("provided obj is not of type 'im'. \n")
+         }
+
+
+         # remove zeroes which might be a result of ceorcing from ppp to im
+         if(zero.rm){
+                  obj[obj == 0] <- NA
+         }
+
+         obj <- as.im(obj) # fix coordinates inconsistancies
+
+
+
+         if(rescale){
+
+                  obj <- .rescale(obj)
+         }
+
+         # convert back to dataframe
+         imdf <- as.data.frame.im(x = obj)
+
+         if(any(is.infinite(imdf$value))){
+                  imdf <- imdf[which(is.finite(imdf$value)), ]
+         }
+
+
+         sppObj <- analytePointPattern(x = imdf$x, y = imdf$y,
+                                       intensity = imdf$value,
+                                       win = win, mzVals = "expr")
+
+
+         return(sppObj)
+}
+
+
 .rescale <- function(obj){
 
          if(identical(class(obj), "im")){
 
-                  im <- (obj - min(obj)) / (max(obj) - min(obj))
+                  # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
+                  minVal <- min(obj) - 0.0001
+
+                  im <- (obj - minVal) / (max(obj) - minVal)
 
                   return(im)
          }
@@ -518,12 +591,16 @@ spp2im <- function(obj, rescale = FALSE, zero.rm = FALSE, ...){
 
                   intens <- obj$marks$intensity
 
-                  obj$marks$intensity <- (intens - min(intens)) / (max(intens) - min(intens))
+                  # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
+                  minVal <- min(intens) - 0.0001
+
+                  obj$marks$intensity <- (intens - minVal) / (max(intens) - minVal)
 
                   return(obj)
 
          }
 }
+
 
 
 #' molProbMap Class Constructor
@@ -619,6 +696,9 @@ print.molProbMap <- function(obj) {
 #' @param obj S3 object of type `molProbMap`.
 #' @param what What to plot, c("detailed", "analytePointPattern", "csrPointPattern", "analyteDensityImage",
 #' "csrDensityImage", "kdeIntensitiesDistr", "MPM"). The "detailed" option plots all options.
+#' @param densityAsBase a logical, if set to `TRUE`, the base image, ontop of which
+#' hotspot/coldspot contours are plotted, is taken from the estimated density image
+#' of m/z MOI. Otherwise (default), the Gaussian-weighted ion image is used.
 #' @param sppArgs a named list of arguments to be passed to `plotAnalyte` or plotting
 #' "analytePointPattern" and "csrPointPattern". There are sensible defaults.
 #' @param imageArgs a named list of arguments to be passed to `spatstat.geom::plot.im` for plotting
@@ -627,6 +707,10 @@ print.molProbMap <- function(obj) {
 #' "kdeIntensitiesDistr". There are sensible defaults.
 #' @param rescale logical, whether to scale the intensities of the output plot
 #' to [0,1] interval.
+#' @param smooth logical, whether to apply image smoothing via an isotropic
+#' Gaussian kernel.
+#' @param zero.rm logical, whether to remove zero-valued pixels from the intensity
+#' image.
 #' @param signifArea a character indicating which significance area to plot i.e. c("both", "hotspot", "coldspot").
 #' @param ionImage an optional rastered image of type `im` of the corresponding "regular"
 #' ion image, used for comparison. Could be generated via `moleculaR::searchAnalyte(..., wMethod = "sum")`
@@ -642,11 +726,15 @@ print.molProbMap <- function(obj) {
 #'
 #' @export
 #'
-plot.molProbMap <- function(obj, what = "detailed",
+plot.molProbMap <- function(obj,
+                            what = "detailed",
+                            densityAsBase = FALSE,
                             sppArgs = list(),
                             imageArgs = list(),
                             fArgs = list(),
                             rescale = TRUE,
+                            smooth = FALSE,
+                            zero.rm = FALSE,
                             signifArea = "both",
                             ionImage = NA,
                             figLegend = TRUE,
@@ -807,21 +895,19 @@ plot.molProbMap <- function(obj, what = "detailed",
 
          #spwin <- obj$sppMoi$window
 
-         if(length(obj$sppMoi$metaData$mzVals) > 1 | obj$sppMoi$metaData$mzVals[1] == "expr"){
-            # this indicates CPPM -> use the density image
+         if(densityAsBase){
 
             imgMpm <- obj$rhoMoi
 
-         } else { # this is a single-analyte MPM -> use rasterized image
+         } else {
 
-            # raster image of the spp
-            # imgMpm  <- pixellate(obj$sppMoi,
-            #                      weights = obj$sppMoi$marks$intensity,
-            #                      W = as.mask(spwin,dimyx=c(diff(spwin$yrange) + 1, diff(spwin$xrange) + 1)),
-            #                      padzero = FALSE, savemap = FALSE)
-
-            imgMpm <- spp2im(obj$sppMoi)
-
+               if(smooth){
+                     imgMpm <- spp2im(obj$sppMoi, zero.rm = zero.rm)
+                     imgMpm <- Smooth.im(imgMpm, sigma = 0.5,
+                                         bleed = FALSE, normalise = TRUE)
+               }else{
+                     imgMpm <- spp2im(obj$sppMoi, zero.rm = zero.rm)
+               }
          }
 
          if(rescale){
@@ -875,6 +961,7 @@ plot.molProbMap <- function(obj, what = "detailed",
          par(mfrow = c(3, 2))
 
          plot(obj = obj, what = "csrPointPattern",
+              densityAsBase = densityAsBase,
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
@@ -887,6 +974,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               col.coldspot = col.coldspot)
 
          plot(obj = obj, what = "analytePointPattern",
+              densityAsBase = densityAsBase,
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
@@ -899,6 +987,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               col.coldspot = col.coldspot)
 
          plot(obj = obj, what = "csrDensityImage",
+              densityAsBase = densityAsBase,
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
@@ -911,6 +1000,7 @@ plot.molProbMap <- function(obj, what = "detailed",
               col.coldspot = col.coldspot)
 
          plot(obj = obj, what = "analyteDensityImage",
+              densityAsBase = densityAsBase,
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
@@ -924,6 +1014,7 @@ plot.molProbMap <- function(obj, what = "detailed",
 
          if(identical(ionImage, NA)){
                   plot(obj = obj, what = "kdeIntensitiesDistr",
+                       densityAsBase = densityAsBase,
                        sppArgs = sppArgs,
                        imageArgs = imageArgs,
                        fArgs = fArgs,
@@ -937,10 +1028,13 @@ plot.molProbMap <- function(obj, what = "detailed",
          }
 
          plot(obj = obj, what = "MPM",
+              densityAsBase = densityAsBase,
               sppArgs = sppArgs,
               imageArgs = imageArgs,
               fArgs = fArgs,
               rescale = rescale,
+              zero.rm = zero.rm,
+              smooth = smooth,
               signifArea = signifArea,
               ionImage = ionImage,
               figLegend = figLegend,

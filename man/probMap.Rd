@@ -8,9 +8,9 @@ probMap(
   sppMoi,
   control = NULL,
   bw = seq(0.5, 10),
+  edgeCorrection = FALSE,
   bwMethod = "spAutoCor",
   csrIntensities = "resample",
-  sqrtTansform = FALSE,
   csrMoi = NULL,
   pvalThreshold = 0.05,
   pvalCorrection = "BH",
@@ -31,12 +31,13 @@ then it will be used for the computation of KDE. If a vector is supplied (in inc
 will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
 see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
 
+\item{edgeCorrection}{a logical. Whether to apply edge correction through
+erosion by calling `spatstat.geom::erosion`. This could be beneficial for
+removing edge artifacts which might otherwise impact the result.}
+
 \item{bwMethod}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
 
 \item{csrIntensities}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
-
-\item{sqrtTansform}{whether to apply square root transformation to the intensities of `sppMoi`. Set to 'TRUE' when
-'sppMoi' cotains a set of different analytes as in the case of collective projection maps.}
 
 \item{csrMoi}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
 could be useful when generating hotspot-bw curves.}

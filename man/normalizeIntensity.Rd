@@ -4,23 +4,28 @@
 \alias{normalizeIntensity}
 \title{Normalize Intensity}
 \usage{
-normalizeIntensity(x, method, meanMethod = "mean")
+normalizeIntensity(x, method, meanMethod = "mean", mz = NULL, tol = NULL)
 }
 \arguments{
 \item{x:}{a list of \code{MassPeaks} objects.}
 
-\item{method:}{the normalization method,  has to be one of c('medianFoldChange', 'RMS', 'TIC', 'median').}
+\item{method:}{the normalization method,  has to be one of
+c('medianFoldChange', 'RMS', 'TIC', 'median', 'IS').}
 
 \item{meanMethod:}{only used for `medianFoldChange` normalization. See
 \code{?MALDIquant::mergeMassPeaks} for more info.}
+
+\item{mz:}{a numeric, the m/z value of the internal standard (IS) -
+only relevant for `method='IS'`.}
+
+\item{tol:}{a numeric, the absolute tolerance for m/z (in Da) -
+only relevant for `method='IS'`.}
 }
 \value{
 Intensity-normalized list of \code{MassPeaks} objects.
 }
 \description{
-This normalizes spectral intensities based on a number of different methods. such that for every spectrum a median
-fold-change of peak intensities is calculated with reference to the mean spectrum
-which is then taken as a normalization factor for that particular spectrum.
+This normalizes spectral intensities based on a number of different methods.
 }
 \details{
 The `medianFoldChange` normalization is done such that for every spectrum a median
@@ -30,6 +35,8 @@ reference [1]). The `RMS`, `TIC` and `median` normalization methods are
 equivalent to their counterparts in other packages (ex. MALDIquant), they are
 just adapted to process centroided data of `MassPeak` Objects. Note that for
 `medianFoldChange` normalization, it is important to run peak binning beforehand.
+The `IS` method assumes the presence of an internal standard at `mz` m/z against
+which all intensities are normalized (pixel-wise).
 }
 \references{
 1. Veselkov, Kirill, et al. "BASIS: High-performance bioinformatics platform for processing of large-scale mass

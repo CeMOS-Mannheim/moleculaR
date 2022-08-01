@@ -30,7 +30,8 @@ spatstatFuncs <- c("ppp", "as.ppp", "is.ppp", "plot.ppp",
                    "coords", "colourmap", "to.transparent", "symbolmap",
                    "im", "plot.im", "pixellate", "eval.im", "as.data.frame.im", "as.im.data.frame",
                    "subset.ppp", "superimpose", "superimpose.ppp",
-                   "is.empty.ppp", "intersect.owin", "rpoispp", "disc", "as.im")
+                   "is.empty.ppp", "intersect.owin", "rpoispp", "disc", "as.im",
+                   "erosion", "Window", "Smooth.im")
 
 correspondPckgs <- setNames(vector("character", length(spatstatFuncs)), spatstatFuncs)
 

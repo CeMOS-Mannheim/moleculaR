@@ -7,6 +7,9 @@
 useDefaultFwhm(userMassRes, modality = "FTICR", constant = FALSE)
 }
 \arguments{
+\item{userMassRes:}{a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
+at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modality`.}
+
 \item{modality:}{a character specifying the type of the MSI measurement device. Curretly only
 `c("FTICR", "TOF-reflector", "TIMS-TOF")` are supported.}
 
@@ -24,10 +27,6 @@ m/z values of the peaks and their corresponding fwhm values.
 \details{
 This creates a linear interpolator function that approximats fwhm as a function
 of m/z for the given MSI modality.
-
-
-#' @param userMassRes: a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
-at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modelity`.
 
 
 The defaults are pre-computed and might not represent the true FWHM(m/z) curve for a given dataset.

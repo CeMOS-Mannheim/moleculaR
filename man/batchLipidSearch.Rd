@@ -42,7 +42,7 @@ annotation result.}
 
 \item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
 
-\item{verbose}{whether to show progress.}
+\item{verbose}{whether to show progress. Ignored when `numCores > 1`.}
 }
 \value{
 An analyte point patter of type `ppp` and `analytePointPattern` containing all lipid hits identified in the

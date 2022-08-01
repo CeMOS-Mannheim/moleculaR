@@ -9,6 +9,7 @@ plotImg(
   colourPal = "inferno",
   uniformCol = NULL,
   rescale = TRUE,
+  smooth = FALSE,
   transpFactor = 0.7,
   irange = NULL,
   ribargs = list(las = 2, cex.axis = 1.25),
@@ -24,7 +25,10 @@ plotImg(
 \item{uniformCol}{a character specifying a single colour. This will override `colourPal`.}
 
 \item{rescale}{logical, whether to scale the intensities of the output plot
-to [0,1] interval.}
+to (0,1] interval.}
+
+\item{smooth}{logical, whether to apply image smoothing via an isotropic
+Gaussian kernel.}
 
 \item{transpFactor}{Transparency fraction. Numerical value or vector of values between 0 and 1,
 giving the opaqueness of a colour. A fully opaque colour has `transpFactor=1`.}
