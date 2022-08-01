@@ -148,6 +148,17 @@ ls()
 ```
 `msData` represents a centroided MALDI MSI dataset stored as a list of `MassPeaks` objects (see `?MALDIquant::MassPeaks` for more details), `fwhmObj` is an S3 object of type `fwhm` storing the calculated full width at half maximum (FWHM) information of `msData` (see `?moleculaR::fwhm` for more details), `mtspc` is a data frame storing the associated annotations file (≤0.2 FDR) which is downloaded directly from METASPACE (https://metaspace2020.eu) and `sldb` is a data frame storing the SwissLipids database filtered to only include the identifications outlined in `mtspc`.
 
+Since _moleculaR_ relies internally on spatial data, a spatial window can be created to represent the tissue bounderies: 
+
+```{r spWindow}
+spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData), 
+                                 clean = TRUE,
+                                 plot = TRUE)
+
+
+```
+
+
 To investigate FWHM as a function of m/z axis one could simply plot `fwhmObj`:
 
 ```{r plotFwhm}
@@ -170,30 +181,29 @@ spData <- createSparseMat(x = msData)
 
 # Molecular Probability Maps (MPMs)
 
-_moleculaR_ introduces the idea of molecular probability maps (MPMs) the main goal of which is to reduce the reliance on user's subjective opinion on the extent of spatial distribution of analytes within a given tissue section. Instead MPMs provide a user-unbiased statistical testing on the likelihood that a certain spatial intensity distribution has a significant abundance (i.e. analyte hotspot) or deficiency (i.e. analyte coldspot) within the tissue space. To illustrate this, consider as an example a peak-of-interest (POI) of 788.5447 m/z. 
+_moleculaR_ introduces the idea of molecular probability maps (MPMs) the main goal of which is to reduce the reliance on user's subjective opinion on the extent of spatial distribution of analytes within a given tissue section. Instead MPMs provide a user-unbiased statistical testing on the likelihood that a certain spatial intensity distribution has a significant relative abundance (i.e. analyte hotspot) or deficiency (i.e. analyte coldspot) within the tissue space. To illustrate this, consider as an example a peak-of-interest (POI) of 788.5447 m/z. 
 
 ```{r query}
 # input by m/z value
 queryMass         <- 788.5447 
 ```
 
-_moleculaR_ provides `searchAnalyte` method to retrieve inensity values at a specific m/z with a mass-window dictated by the estimated FWHM at that same m/z value (see `?moleculaR::searchAnalyte` for more info). Moreover, `searchAnalyte` gives the user the possibility to choose which weighting method to choose, for example, setting the argument `wMethod="sum"`  will generate the so called "ion image" as all peaks appearing within the estimated mass-window will be summed up: 
+_moleculaR_ provides `searchAnalyte` method to retrieve inensity values at a specific m/z with a mass-window dictated by the estimated FWHM at that same m/z value (see `?moleculaR::searchAnalyte` for more info). Moreover, `searchAnalyte` gives the user the possibility to choose which weighting method to choose, for example, setting the argument `wMethod="sum"`  will generate the so called "ion image" as all peaks appearing within the estimated mass-window will be summed up (i.e. uniform mass-window weighting): 
 
 ```{r ionImage}
 # compute the regular ion image - returns an AnalytePiontPattern
 sppIonImage      <- searchAnalyte(m = queryMass, 
                                   fwhm = getFwhm(fwhmObj, queryMass), 
                                   spData = spData, 
+                                  spwin = spwin, 
                                   wMethod = "sum")
 
 
 # compute a raster image of the sppIonImage 
-ionImage        <- spatstat.geom::pixellate(sppIonImage,
-                          weights = sppIonImage$marks$intensity,
-                          W = spatstat.geom::as.mask(sppIonImage$window,
-                                                dimyx=c(diff(sppIonImage$window$yrange),
-                                                        diff(sppIonImage$window$xrange))),
-                          padzero = FALSE)
+ionImage        <- spp2im(sppIonImage)
+
+# plot ion image
+plotImg(ionImage)
 
 
 ```
@@ -205,10 +215,14 @@ Now to compute a FWHM-dependent Gaussian weighted analyte point pattern represen
 sppMoi          <- searchAnalyte(m = queryMass, 
                             fwhm = getFwhm(fwhmObj, queryMass), 
                             spData = spData,
+                            spwin = spwin, 
                             wMethod = "Gaussian")
 
+# plot SPP
+plotAnalyte(sppMoi, main = paste0("SPP of m/z ", round(queryMass, 4)))
 
-plotAnalyte(sppMoi, analyte = paste0("m/z ", round(queryMass, 4)))
+# plot the corresponding raster image
+plotImg(spp2im(sppMoi), main = paste0("Raster image of m/z ", round(queryMass, 4)))
 ```
 
 
@@ -218,11 +232,10 @@ The `probMap` could then be called with the default parameters to calculate the 
 #// compute MPM - default parameters
 probImg         <- probMap(sppMoi)
 
-txt  <- paste0("m/z ", round(queryMass, 4), " ± ", round(getFwhm(fwhmObj, queryMass), 4))
 
 #// plot everything together
 par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
-plot(probImg, what = "detailed", analyte = txt, ionImage = ionImage)
+plot(probImg, what = "detailed",  ionImage = ionImage)
 
 
 ```
@@ -239,6 +252,7 @@ As _moleculaR_ is lipidome-focused in its current implementation, the test MSI d
 cat("Batch lipid search is ongoing - this will take several minutes - \n")
 
 lipidHits <- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
+                              spwin = spwin,
                                adduct = c("M+H", "M+Na", "M+K"),
                                numCores = 4, 
                                verifiedMasses = as.numeric(mtspc$mz),
@@ -261,9 +275,13 @@ To list all lipid classes which were detected (and confirmed by METASPACE; if `c
 # whow all detected lipid classes
 unique(lipidHits$metaData$lipidClass)
 ```
-To generate class-specific lipid maps, `subsetAnalytes` could be used to filter `lipidHits` according to lipid classes. Note that `subsetAnalytes` subsetting is always based on the column names of `lipidHits$metaData`. Afterwards one could directly apply `probMap` method and produce a CPPM for all hit instances for a given lipid class : 
+
+To generate class-specific lipid maps, `subsetAnalytes` could be used to filter `lipidHits` according to lipid classes. Note that `subsetAnalytes` subsetting is always based on the column names of `lipidHits$metaData`. Afterwards one could directly apply `probMap` method and produce a CPPM for all hit instances for a given lipid class. Note that for CPPMs it is highly recommended to apply z-score transformation to account for differences in inonization effeciency of the MOIs constituting the CPPM: 
 
 ```{r CPPM.plot, results='hide', fig.width=12, fig.height=16, warning=FALSE}
+# z-score transformation
+lipidHits <- transformIntensity(lipidHits, method = "z-score")
+
 # choose one lipid species
 lipidClass <- "PA(x:x)"
 
@@ -272,18 +290,16 @@ paHits <- subsetAnalytes(lipidHits, lipidClass == "PA(x:x)")
 
 
 # compute MPM - default parameters
-probImg    <- probMap(paHits, bwMethod = "scott", sqrtTansform = TRUE)
+probImg    <- probMap(paHits)
 
 
 #// plot everything together
 par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
-plot(probImg, what = "detailed", 
-      analyte = paste0(lipidClass, " - n=", 
-                       length(probImg$sppMoi$metaData$mzVals)))
+plot(probImg, what = "detailed")
 
 ```
 
-Note that for CPPMs it is recommended to use square root transformation `sqrtTansform=TRUE` for the intensities to limit the impact of unequal ionization effeciency across analytes. It is also advisable to use `bwMethod="scott"` for computational effeciency. 
+
 
 ## CPPMs - Ion Milieus
 
@@ -331,14 +347,14 @@ To apply CPPMs and plot the result for [M+K]+:
 ```{r ions.plot.K, results='hide', fig.width=12, fig.height=16, warning=FALSE}
 
 # compute CPPM
-probImg    = probMap(kHits, bwMethod = "scott", sqrtTansform = TRUE)
+probImg    = probMap(kHits)
 
 if(probImg$sppMoi$n > 50000) {
   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
 }
 par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
 
-plot(probImg, what = "detailed", analyte = paste0("[M+k]+ of (lyso)GPLs - n=", length(probImg$sppMoi$metaData$mzVals)))
+plot(probImg, what = "detailed")
 
 
 
@@ -365,13 +381,13 @@ input for the specific saturation
 
 ```{r cppms.unsat.plot,results='hide', fig.width=12, fig.height=16, warning=FALSE}
 # compute CPPM
-probImg    = probMap(satHits, bwMethod = "scott", sqrtTansform = TRUE)
+probImg    = probMap(satHits)
 
 if(probImg$sppMoi$n > 50000) {
   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
 }
 par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
-plot(probImg, what = "detailed", analyte = paste0("mono-unsat of ", "(lyso)GPLs", " - n=", length(probImg$sppMoi$metaData$mzVals)))
+plot(probImg, what = "detailed")
 
 ```
 

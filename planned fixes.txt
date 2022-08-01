@@ -1,0 +1,6 @@
+# plotting of empty spp - plotAnalyte
+# applying mpm on empty spp or spp with 1 point
+# provide filter duplicates within probMap
+# add polygons2win
+# add window transformations (to optical coordinates)
+# add function for creating spatial windows based on MSI data and functions to clean them. 

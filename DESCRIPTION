@@ -36,6 +36,7 @@ Collate:
     'batchLipidSearch.R'
     'classDefinitions.R'
     'createSparseMat.R'
+    'createSpatialWindow.R'
     'downloadExData.R'
     'estimateFwhm.R'
     'evalspatialExpr.R'
