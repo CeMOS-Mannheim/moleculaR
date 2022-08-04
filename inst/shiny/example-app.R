@@ -153,9 +153,17 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
+
+
+               spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                                   clean = TRUE,
+                                                   plot = TRUE)
+
+               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 1L, verifiedMasses = as.numeric(mtspc$mz),
                                                confirmedOnly = TRUE, verbose = TRUE)
+
+               searchList <<- transformIntensity(searchList, method = "z-score")
 
                searchListcreated <<- reactiveVal(TRUE)
             }
@@ -178,11 +186,20 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
-                                               confirmedOnly = TRUE, verbose = TRUE)
 
-               searchListcreated <<- reactiveVal(TRUE)
+
+                  spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                                   clean = TRUE,
+                                                   plot = TRUE)
+
+                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                  adduct = c("M+H", "M+Na", "M+K"), numCores = 1L, verifiedMasses = as.numeric(mtspc$mz),
+                                                  confirmedOnly = TRUE, verbose = TRUE)
+
+                  searchList <<- transformIntensity(searchList, method = "z-score")
+
+                  searchListcreated <<- reactiveVal(TRUE)
+
             }
 
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
@@ -215,11 +232,19 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
-                                               confirmedOnly = TRUE, verbose = TRUE)
 
-               searchListcreated <<- reactiveVal(TRUE)
+
+                  spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                                   clean = TRUE,
+                                                   plot = TRUE)
+
+                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                  adduct = c("M+H", "M+Na", "M+K"), numCores = 1L, verifiedMasses = as.numeric(mtspc$mz),
+                                                  confirmedOnly = TRUE, verbose = TRUE)
+
+                  searchList <<- transformIntensity(searchList, method = "z-score")
+
+                  searchListcreated <<- reactiveVal(TRUE)
             }
 
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
@@ -259,27 +284,30 @@ server <- function(input, output, session) {
                par(mfrow = c(1, 1))
                #// image without masking
                spatstat.geom::plot.owin(rv$go_mz$hitsIonImage$window,
-                                   main = paste0("No insances of m/z ", round(queryMass, 4), " were detected"),
+                                   main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
                                    ylim = rev(rv$go_mz$hitsIonImage$window$yrange),
                                    box = FALSE)
 
-               rm(rv$go_mz$hitsIonImage)
+               # rm(rv$go_mz$hitsIonImage)
 
             } else{ # if there are hits then proceed with MPM computations
 
                # compute rastered image of the sppIonImage
-               ionImage        <- spatstat.geom::pixellate(rv$go_mz$hitsIonImage,
-                                                      weights = rv$go_mz$hitsIonImage$marks$intensity,
-                                                      W = spatstat.geom::as.mask(rv$go_mz$hitsIonImage$window,
-                                                                            dimyx=c(diff(rv$go_mz$hitsIonImage$window$yrange),
-                                                                                    diff(rv$go_mz$hitsIonImage$window$xrange))),
-                                                      padzero = FALSE)
+
+
+
+
 
 
                # compute sppMoi (spatial point pattern of the analyte)
+               spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                                   clean = TRUE,
+                                                   plot = TRUE)
+
                sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
                                                 fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
                                                 spData = spData,
+                                                spwin = spwin,
                                                 wMethod = "Gaussian")
 
 
@@ -287,11 +315,8 @@ server <- function(input, output, session) {
 
                #// compute MPM - default parameters
                probImg         <- probMap(sppMoi)
-               txt  <- paste0("m/z ", round(rv$go_mz$mz_updated, 4), " ± ", round(getFwhm(fwhmObj, rv$go_mz$mz_updated), 4))
 
-               plot(probImg, what = "detailed", analyte = txt, ionImage = ionImage)
-
-               rm(probImg, txt, sppMoi, ionImage)
+               plot(probImg, what = "detailed", ionImage = ionImage)
 
             }
 
@@ -319,6 +344,8 @@ server <- function(input, output, session) {
                #// empty window
                spwin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
 
+
+
                spatstat.geom::plot.owin(spwin,
                                    main = paste0("No insances of ", lipidClass_iso, " were detected"),
                                    ylim = rev(spwin$yrange),
@@ -327,9 +354,9 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg <- probMap(paHits, bwMethod = "scott", sqrtTansform = TRUE) # fixed arguments
+               probImg <- probMap(paHits) # fixed arguments
 
-               plot(probImg, what = "detailed", analyte = paste0(lipidClass_iso, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+               plot(probImg, what = "detailed")
 
                rm(probImg)
 
@@ -369,12 +396,14 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
                }
-               plot(probImg, what = "detailed", analyte = paste0(igroup, " of ", lipidGroup, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+
+               par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
+               plot(probImg, what = "detailed")
 
                rm(probImg)
 
@@ -429,12 +458,13 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
                }
-               plot(probImg, what = "detailed", analyte = paste0(igroup, " of ", lipidGroup, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+               par(cex.lab = 2, cex.main = 2, cex.axis = 1.5)
+               plot(probImg, what = "detailed")
 
 
             }

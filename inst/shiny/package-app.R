@@ -110,12 +110,8 @@ server <- function(input, output, session) {
    msSpectr <- reactiveVal()
    fwhmObj <- reactiveVal()
    mtspc <- reactiveVal()
-   msCoordinates <- reactiveVal()
-   env <- environment()
-   spwin <- reactiveVal()
-   spwiny <- reactiveVal()
-   .uniqueMass <- reactiveVal()
    isVerified <- reactiveVal()
+   spwin <- reactiveVal()
 
    # reactive values for which image to output
    plot_output <- reactiveVal("initial")
@@ -158,6 +154,8 @@ server <- function(input, output, session) {
          detail="Loading Data...",
          value=0.2,{
             n<-6
+
+            plot_output("initial")
 
             if (length(input$imzmlFile$name)!=2){
                plot_output("loading_error")
@@ -232,10 +230,11 @@ server <- function(input, output, session) {
 
             incProgress(1/n, detail = paste("Creating sparse matrix..."))
 
-            spwin <<- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
-            spData             <<- createSparseMat(x = msData)
+            spwin     <<- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                             clean = TRUE,
+                                             plot = TRUE)
 
-            bwMethod          <<- "spAutoCor"
+            spData             <<- createSparseMat(x = msData)
 
             gc()
          })
@@ -280,7 +279,7 @@ server <- function(input, output, session) {
             if (searchListcreated() != TRUE){
                #// Possible inputs: {
 
-               adduct <- c("M-H", "M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+               adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
                confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
 
                #}
@@ -292,10 +291,12 @@ server <- function(input, output, session) {
                }
 
 
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                              adduct = adduct, numCores = 4L,
+               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                              adduct = adduct, numCores = 1L,
                                               verifiedMasses = verifiedMasses,
                                               confirmedOnly = confirmedOnly, verbose = TRUE)
+
+               searchList <<- transformIntensity(searchList, method = "z-score")
 
                searchListcreated <<- reactiveVal(TRUE)
             }
@@ -318,11 +319,28 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
-                                               confirmedOnly = TRUE, verbose = TRUE)
+                  #// Possible inputs: {
 
-               searchListcreated <<- reactiveVal(TRUE)
+                  adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+                  confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
+
+                  #}
+
+                  if(isVerified){
+                        verifiedMasses = as.numeric(mtspc$mz)
+                  }else{
+                        verifiedMasses = NA
+                  }
+
+
+                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                  adduct = adduct, numCores = 1L,
+                                                  verifiedMasses = verifiedMasses,
+                                                  confirmedOnly = confirmedOnly, verbose = TRUE)
+
+                  searchList <<- transformIntensity(searchList, method = "z-score")
+
+                  searchListcreated <<- reactiveVal(TRUE)
             }
 
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
@@ -359,11 +377,28 @@ server <- function(input, output, session) {
             # User needs to be notified that they have to wait
 
             if (searchListcreated() != TRUE){
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
-                                               adduct = c("M+H", "M+Na", "M+K"), numCores = 4L, verifiedMasses = as.numeric(mtspc$mz),
-                                               confirmedOnly = TRUE, verbose = TRUE)
+                  #// Possible inputs: {
 
-               searchListcreated <<- reactiveVal(TRUE)
+                  adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+                  confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
+
+                  #}
+
+                  if(isVerified){
+                        verifiedMasses = as.numeric(mtspc$mz)
+                  }else{
+                        verifiedMasses = NA
+                  }
+
+
+                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                  adduct = adduct, numCores = 1L,
+                                                  verifiedMasses = verifiedMasses,
+                                                  confirmedOnly = confirmedOnly, verbose = TRUE)
+
+                  searchList <<- transformIntensity(searchList, method = "z-score")
+
+                  searchListcreated <<- reactiveVal(TRUE)
             }
 
             incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
@@ -410,30 +445,17 @@ server <- function(input, output, session) {
             } else{ # if there are hits then proceed with MPM computations
 
                # compute rastered image of the sppIonImage
-               ionImage        <- spatstat.geom::pixellate(rv$go_mz$hitsIonImage,
-                                                      weights = rv$go_mz$hitsIonImage$marks$intensity,
-                                                      W = spatstat.geom::as.mask(rv$go_mz$hitsIonImage$window,
-                                                                            dimyx=c(diff(rv$go_mz$hitsIonImage$window$yrange),
-                                                                                    diff(rv$go_mz$hitsIonImage$window$xrange))),
-                                                      padzero = FALSE)
 
-
-               # compute sppMoi (spatial point pattern of the analyte)
                sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
                                                 fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
                                                 spData = spData,
+                                                spwin = spwin,
                                                 wMethod = "Gaussian")
-
-
-
 
                #// compute MPM - default parameters
                probImg         <- probMap(sppMoi)
 
-               txt  <- paste0("m/z ", round(rv$go_mz$mz_updated, 4), " ± ", round(getFwhm(fwhmObj, rv$go_mz$mz_updated), 4))
-               plot(probImg, what = "detailed", analyte = txt, ionImage = ionImage)
-
-               rm(probImg, txt, sppMoi, ionImage)
+               plot(probImg, what = "detailed", ionImage = ionImage)
 
             }
 
@@ -469,9 +491,9 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg <- probMap(paHits, bwMethod = "scott", sqrtTansform = TRUE) # fixed arguments
+               probImg <- probMap(paHits) # fixed arguments
 
-               plot(probImg, what = "detailed", analyte = paste0(lipidClass_iso, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+               plot(probImg, what = "detailed")
 
                rm(probImg)
 
@@ -511,12 +533,12 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
                }
-               plot(probImg, what = "detailed", analyte = paste0(igroup, " of ", lipidGroup, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+               plot(probImg, what = "detailed")
 
                rm(probImg)
 
@@ -569,12 +591,12 @@ server <- function(input, output, session) {
 
             } else {
 
-               probImg    = probMap(spp_tmp, bwMethod = "scott", sqrtTansform = TRUE)
+               probImg    = probMap(spp_tmp)
 
                if(probImg$sppMoi$n > 50000) {
                   cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
                }
-               plot(probImg, what = "detailed", analyte = paste0(igroup, " of ", lipidGroup, " - n=", length(probImg$sppMoi$metaData$mzVals)))
+               plot(probImg, what = "detailed")
 
 
             }
