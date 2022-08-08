@@ -18,75 +18,75 @@ searchList_reactive <<- initLipidSearch(swissdb = sldb)
 ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in Mass Spectrometry Imaging", HTML('&emsp;'), HTML('&emsp;')), theme = shinytheme("flatly"), selected="Main",
                  tabPanel("Main",
                           tags$head(
-                             tags$style(HTML("hr {border-top: 1px solid #000000;}"))
+                                tags$style(HTML("hr {border-top: 1px solid #000000;}"))
                           ),
                           pageWithSidebar(
-                             headerPanel(''),
-                             sidebarPanel(
+                                headerPanel(''),
+                                sidebarPanel(
 
 
-                                fluidRow(
-                                   column(12,
-                                          HTML(paste0("<b>","Upload your Files","</b>")),
-                                          fileInput("imzmlFile", NULL, multiple = TRUE, buttonLabel = "imzML & ibd File",
-                                                    accept = c(".imzML",".ibd")
-                                          )),
-                                   column(12,
-                                          fileInput("spectrFile", NULL, multiple = FALSE, buttonLabel = "Spectrum .tsv File",
-                                                    accept = c(".tsv")
-                                          )),
-                                   column(12,
-                                          fileInput("mtspcFile", NULL, multiple = FALSE, buttonLabel = "Metaspace .csv File",
-                                                    accept = c(".csv")
-                                          )),
-                                ),
-                                hr(),
+                                      fluidRow(
+                                            column(12,
+                                                   HTML(paste0("<b>","Upload your Files","</b>")),
+                                                   fileInput("imzmlFile", NULL, multiple = TRUE, buttonLabel = "imzML & ibd File",
+                                                             accept = c(".imzML",".ibd")
+                                                   )),
+                                            column(12,
+                                                   fileInput("spectrFile", NULL, multiple = FALSE, buttonLabel = "Spectrum .tsv File",
+                                                             accept = c(".tsv")
+                                                   )),
+                                            column(12,
+                                                   fileInput("mtspcFile", NULL, multiple = FALSE, buttonLabel = "Metaspace .csv File",
+                                                             accept = c(".csv")
+                                                   )),
+                                      ),
+                                      hr(),
 
-                                fluidRow(
-                                   column(12,HTML(paste0("<b>","Peaks FWHM Estimation","</b>"))),
-                                   column(12,
-                                          actionButton(inputId = "go_load", label = "Initialize",style='padding:6px; font-size:80%'),
-                                   )),
-                                hr(),
+                                      fluidRow(
+                                            column(12,HTML(paste0("<b>","Peaks FWHM Estimation","</b>"))),
+                                            column(12,
+                                                   actionButton(inputId = "go_load", label = "Initialize",style='padding:6px; font-size:80%'),
+                                            )),
+                                      hr(),
 
-                                fluidRow(
-                                   column(12,HTML(paste0("<b>","Molecular Probability Maps","</b>"))),
-                                   column(12,
+                                      fluidRow(
+                                            column(12,HTML(paste0("<b>","Molecular Probability Maps","</b>"))),
+                                            column(12,
 
-                                          numericInput("mz", label = "", value = 788.5447),
-                                          prettyCheckbox(
-                                             inputId = "adjustmz", label = "Find Closest Detectable m/z", value = TRUE, icon = icon("check"), animation = "pulse"
-                                          ),
-                                          actionButton(inputId = "go_mz", label = "Generate Plot",style='padding:6px; font-size:80%'),
+                                                   numericInput("mz", label = "", value = 788.5447),
+                                                   prettyCheckbox(
+                                                         inputId = "adjustmz", label = "Find Closest Detectable m/z", value = TRUE, icon = icon("check"), animation = "pulse"
+                                                   ),
+                                                   actionButton(inputId = "go_mz", label = "Generate Plot",style='padding:6px; font-size:80%'),
 
-                                   )),
-                                hr(),
-                                fluidRow(
-                                   column(12,
-                                          selectInput(inputId = "lipidSpecies", label = "Collective Projection Maps - Lipid Classes", choices = searchList$allClasses, selected = "PI(x:x)"),
-                                          actionButton(inputId = "go_lipid", label = "Generate Plot",style='padding:6px; font-size:80%')
+                                            )),
+                                      hr(),
+                                      fluidRow(
+                                            column(12,
+                                                   selectInput(inputId = "lipidSpecies", label = "Collective Projection Maps - Lipid Classes", choices = searchList$allClasses, selected = "PI(x:x)"),
+                                                   actionButton(inputId = "go_lipid", label = "Generate Plot",style='padding:6px; font-size:80%')
 
-                                   )),
-                                hr(),
-                                fluidRow(
-                                   column(12,
-                                          selectInput(inputId = "lipidIon", label = "Collective Projection Maps - Ion Milieu", choices = c("M+K", "M+Na", "M+H")),
-                                          actionButton(inputId = "go_lipid_ion", label = "Generate Plot",style='padding:6px; font-size:80%')
+                                            )),
+                                      hr(),
+                                      fluidRow(
+                                            column(12,
+                                                   selectInput(inputId = "lipidIon", label = "Collective Projection Maps - Ion Milieu", choices = c("M+K", "M+Na", "M+H")),
+                                                   actionButton(inputId = "go_lipid_ion", label = "Generate Plot",style='padding:6px; font-size:80%')
 
-                                   )),
-                                hr(),
-                                fluidRow(
-                                   column(12,
-                                          selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat", "di-unsat", "poly-unsat")),
-                                          actionButton(inputId = "go_lipid_sat", label = "Generate Plot",style='padding:6px; font-size:80%')
+                                            )),
+                                      hr(),
+                                      fluidRow(
+                                            column(12,
+                                                   selectInput(inputId = "lipidSat", label = "Collective Projection Maps - Lipid Saturation", choices = c("sat", "mono-unsat", "di-unsat", "poly-unsat")),
+                                                   actionButton(inputId = "go_lipid_sat", label = "Generate Plot",style='padding:6px; font-size:80%')
 
-                                   ))
+                                            ))
 
-                                , width = 3),
-                             mainPanel(
-                                plotOutput("imgs", width = 600, height=900)
+                                      , width = 3),
+                                mainPanel(
+                                      plotOutput("imgs", width = 600, height=900)
 
-                             )
+                                )
 
                           )),
                  tabPanel("About",
@@ -98,566 +98,575 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
 ####Backend ####
 
 server <- function(input, output, session) {
-   #increase maximum file uploade size to 48 GB
-   options(shiny.maxRequestSize=48000*1024^2)
-   # create empty reactive values
-   rv <- reactiveValues(go_mz = list(),
-                        go_lipid = list(searchList = searchList)
-   )
+      #increase maximum file uploade size to 48 GB
+      options(shiny.maxRequestSize=48000*1024^2)
+      # create empty reactive values
+      rv <- reactiveValues(go_mz = list(),
+                           go_lipid = list(searchList = searchList)
+      )
 
-   msData <- reactiveVal()
-   spmat <- reactiveVal()
-   msSpectr <- reactiveVal()
-   fwhmObj <- reactiveVal()
-   mtspc <- reactiveVal()
-   isVerified <- reactiveVal()
-   spwin <- reactiveVal()
+      msData <- reactiveVal()
+      spmat <- reactiveVal()
+      msSpectr <- reactiveVal()
+      fwhmObj <- reactiveVal()
+      mtspc <- reactiveVal()
+      isVerified <- reactiveVal()
+      spwin <- reactiveVal()
 
-   # reactive values for which image to output
-   plot_output <- reactiveVal("initial")
-   searchListcreated <- reactiveVal(FALSE)
-   lysocreated <- reactiveVal(FALSE)
+      # reactive values for which image to output
+      plot_output <- reactiveVal("initial")
+      searchListcreated <- reactiveVal(FALSE)
+      lysocreated <- reactiveVal(FALSE)
 
-   observeEvent(input$adjustmz,{
+      observeEvent(input$adjustmz,{
 
-      if(input$adjustmz==TRUE & plot_output()!="initial"){
-         #use the nearest mz in metaspace
-         rv$go_mz$mz <- as.numeric(mtspc$mz)[which.min(abs(as.numeric(mtspc$mz) - input$mz))]
-      }
-      else{
-         rv$go_mz$mz <- input$mz
-      }
-   })
+            if(input$adjustmz==TRUE & plot_output()!="initial"){
+                  #use the nearest mz in metaspace
+                  rv$go_mz$mz <- as.numeric(mtspc$mz)[which.min(abs(as.numeric(mtspc$mz) - input$mz))]
+            }
+            else{
+                  rv$go_mz$mz <- input$mz
+            }
+      })
 
-   observeEvent(input$mz,{
+      observeEvent(input$mz,{
 
-      mtspc_tmp = c()
-      if(length(input$mtspcFile$datapath)!=0){
-         mtspc_tmp <- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
-      }
-
-      if(input$adjustmz==TRUE & length(mtspc_tmp)!=0){
-         #use the nearest mz in the dataset
-         rv$go_mz$mz <- as.numeric(mtspc_tmp$mz)[which.min(abs(as.numeric(mtspc_tmp$mz) - input$mz))]
-      }
-      else{
-         rv$go_mz$mz <- input$mz
-      }
-
-
-
-   })
-
-   observeEvent(input$go_load, {
-      withProgress(
-         message="please wait",
-         detail="Loading Data...",
-         value=0.2,{
-            n<-6
-
-            plot_output("initial")
-
-            if (length(input$imzmlFile$name)!=2){
-               plot_output("loading_error")
-               return()
+            mtspc_tmp = c()
+            if(length(input$mtspcFile$datapath)!=0){
+                  mtspc_tmp <- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
             }
 
-            if (sum(str_detect(input$imzmlFile$datapath, ".imzML"))!=1){
-               plot_output("loading_error")
-               return()
+            if(input$adjustmz==TRUE & length(mtspc_tmp)!=0){
+                  #use the nearest mz in the dataset
+                  rv$go_mz$mz <- as.numeric(mtspc_tmp$mz)[which.min(abs(as.numeric(mtspc_tmp$mz) - input$mz))]
             }
-
-            if (sum(str_detect(input$imzmlFile$datapath, ".ibd"))!=1){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (str_detect(input$spectrFile$datapath, ".tsv")==FALSE){
-               plot_output("loading_error")
-               return()
-            }
-
-            if (str_detect(input$mtspcFile$datapath, ".csv")==FALSE){
-
-               isVerified        <<- FALSE
-
-            }
-
-            if (str_detect(input$mtspcFile$datapath, ".csv")!=FALSE){
-
-               isVerified        <<- TRUE
-
-            }
-
-            for(i in 1:length(input$imzmlFile$name)){
-               file.copy(input$imzmlFile$datapath[i], paste0(tempdir(),"/", input$imzmlFile$name[i]))
-            }
-            file <- input$imzmlFile
-            #find first imzml file in case more than one were uploaded
-            imzmlidx <- which(str_detect(file$datapath, ".imzML"))[1]
-            imzmlpath <- (paste0(tempdir(),"/", file$name[imzmlidx]))
-
-            incProgress(1/n, detail = paste("Reading Data..."))
-
-            if (length(imzmlidx)!=0){
-               msData            <<- readCentrData(path = imzmlpath)
-            }
-
-            ### spectr file
-            msSpectr          <<- readSingleSpect(isolate({input$spectrFile$datapath}))
-
-            ### metaspacefile
-            mtspc             <<- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
-
-            if(exists("mtspc")){
-               isVerified        <<- TRUE
-            } else {
-               isVerified        <<- FALSE
+            else{
+                  rv$go_mz$mz <- input$mz
             }
 
 
-            incProgress(1/n, detail = paste("Calculating fwhm..."))
 
-            plot_output("show_fwhm")
+      })
 
-            incProgress(1/n, detail = paste("Binning Data..."))
+      observeEvent(input$go_load, {
+            withProgress(
+                  message="please wait",
+                  detail="Loading Data...",
+                  value=0.2,{
+                        n<-6
 
-            msData            <<-  MALDIquant::binPeaks(msData,
-                                                        tolerance = fwhmObj(400)/400, #focusing on lipids
-                                                        method = "relaxed")
+                        plot_output("initial")
 
-            msData            <<- filterPeaks(x = msData, minFreq = 0.01)
+                        if (length(input$imzmlFile$name)!=2){
+                              plot_output("loading_error")
+                              return()
+                        }
 
-            incProgress(1/n, detail = paste("Creating sparse matrix..."))
+                        if (sum(str_detect(input$imzmlFile$datapath, ".imzML"))!=1){
+                              plot_output("loading_error")
+                              return()
+                        }
 
-            spwin     <<- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
-                                             clean = TRUE,
-                                             plot = TRUE)
+                        if (sum(str_detect(input$imzmlFile$datapath, ".ibd"))!=1){
+                              plot_output("loading_error")
+                              return()
+                        }
 
-            spData             <<- createSparseMat(x = msData)
+                        if (str_detect(input$spectrFile$datapath, ".tsv")==FALSE){
+                              plot_output("loading_error")
+                              return()
+                        }
 
-            gc()
-         })
-   })
+                        if (str_detect(input$mtspcFile$datapath, ".csv")==FALSE){
 
-   # routine for rv update in the m/z case
-   observeEvent(input$go_mz, {
+                              isVerified        <<- FALSE
 
-      withProgress(
-         message="please wait",
-         detail="Loading Data...",
-         value=0.2,{
-            n<-2
+                        }
 
-            updateNumericInput(session, "mz", value = round(rv$go_mz$mz,4))
+                        if (str_detect(input$mtspcFile$datapath, ".csv")!=FALSE){
 
-            rv$go_mz$mz_updated = rv$go_mz$mz
+                              isVerified        <<- TRUE
 
-            rv$go_mz$hitsIonImage              = searchAnalyte(m = rv$go_mz$mz_updated,
+                        }
+
+                        for(i in 1:length(input$imzmlFile$name)){
+                              file.copy(input$imzmlFile$datapath[i], paste0(tempdir(),"/", input$imzmlFile$name[i]))
+                        }
+
+                        file <- input$imzmlFile
+                        #find first imzml file in case more than one were uploaded
+                        imzmlidx <- which(str_detect(file$datapath, ".imzML"))[1]
+                        imzmlpath <- (paste0(tempdir(),"/", file$name[imzmlidx]))
+
+                        incProgress(1/n, detail = paste("Reading Data..."))
+
+                        if (length(imzmlidx)!=0){
+                              msData            <<- readCentrData(path = imzmlpath)
+                        }
+
+                        ### spectr file
+                        msSpectr          <<- readSingleSpect(isolate({input$spectrFile$datapath}))
+
+                        ### metaspacefile
+                        mtspc             <<- read.csv(file = input$mtspcFile$datapath, skip = 2,header = TRUE, colClasses = "character")
+
+                        if(exists("mtspc")){
+                              isVerified        <<- TRUE
+                        } else {
+                              isVerified        <<- FALSE
+                        }
+
+
+                        incProgress(1/n, detail = paste("Calculating fwhm..."))
+
+                        plot_output("show_fwhm")
+
+                        fwhmObj           <<- estimateFwhm(s = msSpectr, plot = F)
+
+                        incProgress(1/n, detail = paste("Binning Data..."))
+
+
+
+                        msData            <<-  MALDIquant::binPeaks(msData,
+                                                                    tolerance = fwhmObj$fwhmInterpolator(400)/400, #focusing on lipids
+                                                                    method = "relaxed")
+                        msData            <<- filterPeaks(x = msData, minFreq = 0.01)
+
+                        incProgress(1/n, detail = paste("Creating sparse matrix..."))
+
+                        spwin     <<- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
+                                                          clean = TRUE,
+                                                          plot = TRUE)
+
+                        spData             <<- createSparseMat(x = msData)
+
+                        gc()
+                  })
+      })
+
+      # routine for rv update in the m/z case
+      observeEvent(input$go_mz, {
+
+            withProgress(
+                  message="please wait",
+                  detail="Loading Data...",
+                  value=0.2,{
+                        n<-2
+
+                        updateNumericInput(session, "mz", value = round(rv$go_mz$mz,4))
+
+                        rv$go_mz$mz_updated = rv$go_mz$mz
+
+                        rv$go_mz$sppIonImage                    <<- searchAnalyte(m = rv$go_mz$mz_updated,
+                                                                           fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
+                                                                           spData = spData,
+                                                                           spwin = spwin,
+                                                                           wMethod = "sum")
+
+                        rv$go_mz$hitsIonImage         <<- spp2im(rv$go_mz$sppIonImage)
+
+
+                  })
+
+
+            plot_output("mz")
+
+      })
+
+      # routine for calculations of lipid species
+      observeEvent(input$go_lipid, {
+            rv$go_lipid$lipidClass         <- input$lipidSpecies
+
+            withProgress(
+                  message="please wait",
+                  detail="Batch lipid search is ongoing - this can take several minutes",
+                  value=0.1,{
+                        n <- 4
+                        # User needs to be notified that they have to wait
+
+                        if (searchListcreated() != TRUE){
+                              #// Possible inputs: {
+
+                              adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+                              confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
+
+                              #}
+
+                              if(isVerified){
+                                    verifiedMasses = as.numeric(mtspc$mz)
+                              }else{
+                                    verifiedMasses = NA
+                              }
+
+
+                              searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                              adduct = adduct, numCores = 1L,
+                                                              verifiedMasses = verifiedMasses,
+                                                              confirmedOnly = confirmedOnly, verbose = TRUE)
+
+                              searchList <<- transformIntensity(searchList, method = "z-score")
+
+                              searchListcreated <<- reactiveVal(TRUE)
+                        }
+
+                        incProgress(1.5/n, detail = paste("Finished Lipid Hits"))
+
+                        plot_output("lipid")
+                  })
+      })
+
+      observeEvent(input$go_lipid_ion,{
+
+            rv$go_lipid$lipidClass         <- input$lipidSpecies
+
+            withProgress(
+                  message="please wait",
+                  detail="Batch lipid search is ongoing - this can take several minutes",
+                  value=0.1,{
+                        n <- 4
+                        # User needs to be notified that they have to wait
+
+                        if (searchListcreated() != TRUE){
+                              #// Possible inputs: {
+
+                              adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+                              confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
+
+                              #}
+
+                              if(isVerified){
+                                    verifiedMasses = as.numeric(mtspc$mz)
+                              }else{
+                                    verifiedMasses = NA
+                              }
+
+
+                              searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                              adduct = adduct, numCores = 1L,
+                                                              verifiedMasses = verifiedMasses,
+                                                              confirmedOnly = confirmedOnly, verbose = TRUE)
+
+                              searchList <<- transformIntensity(searchList, method = "z-score")
+
+                              searchListcreated <<- reactiveVal(TRUE)
+                        }
+
+                        incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
+
+                        if (lysocreated() != TRUE){
+
+                              ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
+                                              "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
+
+                              lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
+
+                              lysocreated <<- reactiveVal(TRUE)
+
+                        }
+
+
+                        lipidGroup <<-"(lyso)GPLs"
+
+
+
+                        plot_output("lipid_ion")
+                  })
+
+      })
+
+      observeEvent(input$go_lipid_sat,{
+            rv$go_lipid$lipidClass         <- input$lipidSpecies
+
+            withProgress(
+                  message="please wait",
+                  detail="Batch lipid search is ongoing - this can take several minutes",
+                  value=0.1,{
+                        n <- 4
+                        # User needs to be notified that they have to wait
+
+                        if (searchListcreated() != TRUE){
+                              #// Possible inputs: {
+
+                              adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
+                              confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
+
+                              #}
+
+                              if(isVerified){
+                                    verifiedMasses = as.numeric(mtspc$mz)
+                              }else{
+                                    verifiedMasses = NA
+                              }
+
+
+                              searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
+                                                              adduct = adduct, numCores = 1L,
+                                                              verifiedMasses = verifiedMasses,
+                                                              confirmedOnly = confirmedOnly, verbose = TRUE)
+
+                              searchList <<- transformIntensity(searchList, method = "z-score")
+
+                              searchListcreated <<- reactiveVal(TRUE)
+                        }
+
+                        incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
+
+                        if (lysocreated() != TRUE){
+
+                              ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
+                                              "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
+
+                              lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
+
+                              lysocreated <<- reactiveVal(TRUE)
+
+                        }
+
+                        lipidGroup <<-"(lyso)GPLs"
+
+                        plot_output("lipid_sat")
+                  })
+
+
+      })
+
+      mz <- eventReactive(input$go_mz,{
+            withProgress(
+                  message="please wait",
+                  detail="Calculating plot...",
+                  value=0.1,{
+                        n<-3
+
+                        incProgress(1/n, detail = paste("Generating plot...."))
+
+                        #// check if hits is empty
+                        if(rv$go_mz$sppIonImage$n == 0)
+                        {
+
+                              par(mfrow = c(1, 1))
+                              #// image without masking
+                              spatstat.geom::plot.owin(rv$go_mz$sppIonImage$window,
+                                                       main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
+                                                       ylim = rev(rv$go_mz$sppIonImage$window$yrange),
+                                                       box = FALSE)
+
+                        } else{ # if there are hits then proceed with MPM computations
+
+                              # compute rastered image of the sppIonImage
+
+                              sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
                                                                fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
                                                                spData = spData,
-                                                               wMethod = "sum")
-
-         })
-
-
-      plot_output("mz")
-
-   })
-
-   # routine for calculations of lipid species
-   observeEvent(input$go_lipid, {
-      rv$go_lipid$lipidClass         <- input$lipidSpecies
-
-      withProgress(
-         message="please wait",
-         detail="Batch lipid search is ongoing - this can take several minutes",
-         value=0.1,{
-            n <- 4
-            # User needs to be notified that they have to wait
-
-            if (searchListcreated() != TRUE){
-               #// Possible inputs: {
-
-               adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
-               confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
-
-               #}
-
-               if(isVerified){
-                  verifiedMasses = as.numeric(mtspc$mz)
-               }else{
-                  verifiedMasses = NA
-               }
+                                                               spwin = spwin,
+                                                               wMethod = "Gaussian")
 
 
-               searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
-                                              adduct = adduct, numCores = 1L,
-                                              verifiedMasses = verifiedMasses,
-                                              confirmedOnly = confirmedOnly, verbose = TRUE)
+                              #// compute MPM - default parameters
+                              probImg         <- probMap(sppMoi)
 
-               searchList <<- transformIntensity(searchList, method = "z-score")
+                              plot(probImg, what = "detailed", ionImage = rv$go_mz$hitsIonImage)
 
-               searchListcreated <<- reactiveVal(TRUE)
+                        }
+
+
+
+                  })
+      })
+
+      lipid <- eventReactive(input$go_lipid,{
+            withProgress(
+                  message="please wait",
+                  detail="Generating first plot...",
+                  value=0.1,{
+                        n<-2
+
+                        lipidClass_iso <- isolate(input$lipidSpecies)
+
+                        # subset lipidHits
+                        paHits <- subsetAnalytes(searchList, lipidClass == lipidClass_iso)
+
+
+                        if(paHits$n==0) {
+
+                              par(mfrow = c(1, 1))
+                              #// empty window
+                              # spwin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
+
+                              spatstat.geom::plot.owin(spwin,
+                                                       main = paste0("No insances of ", lipidClass_iso, " were detected"),
+                                                       ylim = rev(spwin$yrange),
+                                                       box = FALSE)
+
+
+                        } else {
+
+                              probImg <- probMap(paHits) # fixed arguments
+
+                              plot(probImg, what = "detailed")
+
+                              rm(probImg)
+
+
+                        }
+
+                  })
+
+      })
+
+      lipid_ion <- eventReactive(input$go_lipid_ion,{
+
+            withProgress(
+                  message="please wait",
+                  detail="Plotting all lyso-GPLs points, this takes time",
+                  value=0.25,{
+
+                        n=5
+
+                        igroup              = isolate(input$lipidIon)
+
+                        spp_tmp <- subsetAnalytes(lysoGPLs, adduct == igroup)
+
+                        if(identical(spp_tmp, NULL)) {
+
+
+
+                              par(mfrow = c(1, 1))
+
+                              #// empty window
+                              spatstat.geom::plot.owin(lysoGPLs$window,
+                                                       main = paste0("No insances of ", igroup, " were detected"),
+                                                       ylim = rev(lysoGplsSumSpp$window$yrange),
+                                                       box = FALSE)
+
+
+
+                        } else {
+
+                              probImg    = probMap(spp_tmp)
+
+                              if(probImg$sppMoi$n > 50000) {
+                                    cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
+                              }
+                              plot(probImg, what = "detailed")
+
+                              rm(probImg)
+
+                        }
+
+
+                        incProgress(1/n, detail = paste("Calculating Plots...."))
+
+
+
+                  })
+
+
+      })
+
+      lipid_sat <- eventReactive(input$go_lipid_sat,{
+
+            withProgress(
+                  message="please wait",
+                  detail="Loading Data...",
+                  value=0.2,{
+
+                        n=4
+
+                        igroup = isolate(input$lipidSat)
+
+                        if(igroup=="sat"){
+                              spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
+                        }            else if (igroup=="mono-unsat"){
+                              spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
+                        }            else if (igroup=="di-unsat"){
+                              spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
+                        }            else if(igroup=="poly-unsat"){
+                              spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
+                        }
+
+
+                        if(identical(spp_tmp, NULL)) {
+
+
+
+                              par(mfrow = c(1, 1))
+
+                              #// empty window
+                              spatstat.geom::plot.owin(lysoGPLs$window,
+                                                       main = paste0("No insances of ", igroup, " lipids were detected"),
+                                                       ylim = rev(lysoGplsSumSpp$window$yrange),
+                                                       box = FALSE)
+
+
+                        } else {
+
+                              probImg    = probMap(spp_tmp)
+
+                              if(probImg$sppMoi$n > 50000) {
+                                    cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
+                              }
+                              plot(probImg, what = "detailed")
+
+
+                        }
+
+
+                  })
+
+
+
+
+
+
+      })
+
+      # plot for imgs
+      output$imgs <- renderPlot({
+            #// plotting
+            if(plot_output()=="loading_error"){
+                  plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+                  text(x = 0.5, y = 0.5, paste("Loading Error\n check if your uploaded .imzml matches your .ibd file\n as well if the\n .tsv and .csv are uploaded correct"),
+                       cex = 1.6, col = "black")
             }
 
-            incProgress(1.5/n, detail = paste("Finished Lipid Hits"))
-
-            plot_output("lipid")
-         })
-   })
-
-   observeEvent(input$go_lipid_ion,{
-
-      rv$go_lipid$lipidClass         <- input$lipidSpecies
-
-      withProgress(
-         message="please wait",
-         detail="Batch lipid search is ongoing - this can take several minutes",
-         value=0.1,{
-            n <- 4
-            # User needs to be notified that they have to wait
-
-            if (searchListcreated() != TRUE){
-                  #// Possible inputs: {
-
-                  adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
-                  confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
-
-                  #}
-
-                  if(isVerified){
-                        verifiedMasses = as.numeric(mtspc$mz)
-                  }else{
-                        verifiedMasses = NA
-                  }
-
-
-                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
-                                                  adduct = adduct, numCores = 1L,
-                                                  verifiedMasses = verifiedMasses,
-                                                  confirmedOnly = confirmedOnly, verbose = TRUE)
-
-                  searchList <<- transformIntensity(searchList, method = "z-score")
-
-                  searchListcreated <<- reactiveVal(TRUE)
+            if(plot_output()=="initial"){
+                  plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+                  text(x = 0.5, y = 0.5, paste("Initialize FWHM\n and then set your parameters\n to view and render the resulting plots.\n"),
+                       cex = 1.6, col = "black")
             }
 
-            incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
+            if(plot_output()=="show_fwhm"){
 
-            if (lysocreated() != TRUE){
-
-               ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
-                               "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
-
-               lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
-
-               lysocreated <<- reactiveVal(TRUE)
-
-            }
-
-
-            lipidGroup <<-"(lyso)GPLs"
-
-
-
-            plot_output("lipid_ion")
-         })
-
-   })
-
-   observeEvent(input$go_lipid_sat,{
-      rv$go_lipid$lipidClass         <- input$lipidSpecies
-
-      withProgress(
-         message="please wait",
-         detail="Batch lipid search is ongoing - this can take several minutes",
-         value=0.1,{
-            n <- 4
-            # User needs to be notified that they have to wait
-
-            if (searchListcreated() != TRUE){
-                  #// Possible inputs: {
-
-                  adduct <- c("M+H", "M+Na", "M+K") # <-- multiple choice possible, values =  c("M-H", "M+H", "M+Na", "M+K")
-                  confirmedOnly <- TRUE             # either TRUE of FALSE, whether to only include verified (confirmed) analytes.
-
-                  #}
-
-                  if(isVerified){
-                        verifiedMasses = as.numeric(mtspc$mz)
-                  }else{
-                        verifiedMasses = NA
-                  }
-
-
-                  searchList <<- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb, spwin = spwin,
-                                                  adduct = adduct, numCores = 1L,
-                                                  verifiedMasses = verifiedMasses,
-                                                  confirmedOnly = confirmedOnly, verbose = TRUE)
-
-                  searchList <<- transformIntensity(searchList, method = "z-score")
-
-                  searchListcreated <<- reactiveVal(TRUE)
-            }
-
-            incProgress(1.5/n, detail = paste("Combining all lyso-GPLs into one SPP object"))
-
-            if (lysocreated() != TRUE){
-
-               ofInterest <- c("LPA(x:x)", "LPC(x:x)", "LPE(x:x)", "LPG(x:x)","LPI(x:x)", "LPS(x:x)",
-                               "PA(x:x)", "PC(x:x)", "PE(x:x)","PG(x:x)", "PI(x:x)", "PS(x:x)")
-
-               lysoGPLs <<- subsetAnalytes(searchList, lipidClass %in% ofInterest)
-
-               lysocreated <<- reactiveVal(TRUE)
-
-            }
-
-            lipidGroup <<-"(lyso)GPLs"
-
-            plot_output("lipid_sat")
-         })
-
-
-   })
-
-   mz <- eventReactive(input$go_mz,{
-      withProgress(
-         message="please wait",
-         detail="Calculating plot...",
-         value=0.1,{
-            n<-3
-
-            incProgress(1/n, detail = paste("Generating plot...."))
-
-            #// check if hits is empty
-            if(rv$go_mz$hitsIonImage$n == 0)
-            {
-
-               par(mfrow = c(1, 1))
-               #// image without masking
-               spatstat.geom::plot.owin(rv$go_mz$hitsIonImage$window,
-                                   main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
-                                   ylim = rev(rv$go_mz$hitsIonImage$window$yrange),
-                                   box = FALSE)
-
-            } else{ # if there are hits then proceed with MPM computations
-
-               # compute rastered image of the sppIonImage
-
-               sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
-                                                fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
-                                                spData = spData,
-                                                spwin = spwin,
-                                                wMethod = "Gaussian")
-
-               #// compute MPM - default parameters
-               probImg         <- probMap(sppMoi)
-
-               plot(probImg, what = "detailed", ionImage = ionImage)
+                  estimateFwhm(s = msSpectr, plot = TRUE)
 
             }
 
+            if(plot_output()=="mz"){
 
-
-         })
-   })
-
-   lipid <- eventReactive(input$go_lipid,{
-      withProgress(
-         message="please wait",
-         detail="Generating first plot...",
-         value=0.1,{
-            n<-2
-
-            lipidClass_iso <- isolate(input$lipidSpecies)
-
-            # subset lipidHits
-            paHits <- subsetAnalytes(searchList, lipidClass == lipidClass_iso)
-
-
-            if(paHits$n==0) {
-
-               par(mfrow = c(1, 1))
-               #// empty window
-               spwin = spatstat.geom::as.polygonal(spatstat.geom::owin(mask = as.data.frame(MALDIquant::coordinates(msData))))
-
-               spatstat.geom::plot.owin(spwin,
-                                   main = paste0("No insances of ", lipidClass_iso, " were detected"),
-                                   ylim = rev(spwin$yrange),
-                                   box = FALSE)
-
-
-            } else {
-
-               probImg <- probMap(paHits) # fixed arguments
-
-               plot(probImg, what = "detailed")
-
-               rm(probImg)
-
+                  mz()
 
             }
 
-         })
+            if(plot_output()=="lipid"){
 
-   })
+                  lipid()
 
-   lipid_ion <- eventReactive(input$go_lipid_ion,{
+            }
 
-      withProgress(
-         message="please wait",
-         detail="Plotting all lyso-GPLs points, this takes time",
-         value=0.25,{
+            if(plot_output()=="lipid_ion"){
 
-            n=5
+                  lipid_ion()
 
-            igroup              = isolate(input$lipidIon)
+            }
 
-            spp_tmp <- subsetAnalytes(lysoGPLs, adduct == igroup)
+            if(plot_output()=="lipid_sat"){
 
-            if(identical(spp_tmp, NULL)) {
-
-
-
-               par(mfrow = c(1, 1))
-
-               #// empty window
-               spatstat.geom::plot.owin(lysoGPLs$window,
-                                   main = paste0("No insances of ", igroup, " were detected"),
-                                   ylim = rev(lysoGplsSumSpp$window$yrange),
-                                   box = FALSE)
-
-
-
-            } else {
-
-               probImg    = probMap(spp_tmp)
-
-               if(probImg$sppMoi$n > 50000) {
-                  cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
-               }
-               plot(probImg, what = "detailed")
-
-               rm(probImg)
+                  lipid_sat()
 
             }
 
 
-            incProgress(1/n, detail = paste("Calculating Plots...."))
-
-
-
-         })
-
-
-   })
-
-   lipid_sat <- eventReactive(input$go_lipid_sat,{
-
-      withProgress(
-         message="please wait",
-         detail="Loading Data...",
-         value=0.2,{
-
-            n=4
-
-            igroup = isolate(input$lipidSat)
-
-            if(igroup=="sat"){
-               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 0)
-               }            else if (igroup=="mono-unsat"){
-               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 1)
-               }            else if (igroup=="di-unsat"){
-               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds == 2)
-               }            else if(igroup=="poly-unsat"){
-               spp_tmp <- subsetAnalytes(lysoGPLs, numDoubleBonds > 2)
-               }
-
-
-            if(identical(spp_tmp, NULL)) {
-
-
-
-               par(mfrow = c(1, 1))
-
-               #// empty window
-               spatstat.geom::plot.owin(lysoGPLs$window,
-                                   main = paste0("No insances of ", igroup, " lipids were detected"),
-                                   ylim = rev(lysoGplsSumSpp$window$yrange),
-                                   box = FALSE)
-
-
-            } else {
-
-               probImg    = probMap(spp_tmp)
-
-               if(probImg$sppMoi$n > 50000) {
-                  cat("plotting ", format(probImg$sppMoi$n, big.mark = ","), " points - this takes time! \n")
-               }
-               plot(probImg, what = "detailed")
-
-
-            }
-
-
-         })
-
-
-
-
-
-
-   })
-
-   # plot for imgs
-   output$imgs <- renderPlot({
-      #// plotting
-      if(plot_output()=="loading_error"){
-         plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-         text(x = 0.5, y = 0.5, paste("Loading Error\n check if your uploaded .imzml matches your .ibd file\n as well if the\n .tsv and .csv are uploaded correct"),
-              cex = 1.6, col = "black")
-      }
-
-      if(plot_output()=="initial"){
-         plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-         text(x = 0.5, y = 0.5, paste("Initialize FWHM\n and then set your parameters\n to view and render the resulting plots.\n"),
-              cex = 1.6, col = "black")
-      }
-
-      if(plot_output()=="show_fwhm"){
-
-         fwhmObj           <<- estimateFwhm(s = msSpectr, plot = TRUE)
-
-      }
-
-      if(plot_output()=="mz"){
-
-         mz()
-
-      }
-
-      if(plot_output()=="lipid"){
-
-         lipid()
-
-      }
-
-      if(plot_output()=="lipid_ion"){
-
-         lipid_ion()
-
-      }
-
-      if(plot_output()=="lipid_sat"){
-
-         lipid_sat()
-
-      }
-
-
-   }, bg="transparent")
+      }, bg="transparent")
 
 }
 

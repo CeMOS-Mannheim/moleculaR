@@ -86,6 +86,7 @@ server <- function(input, output, session) {
    plot_output <- reactiveVal("initial")
    searchListcreated <- reactiveVal(FALSE)
    lysocreated <- reactiveVal(FALSE)
+   spwin <- reactiveVal()
 
    observeEvent(input$adjustmz,{
 
@@ -114,6 +115,9 @@ server <- function(input, output, session) {
    })
 
    observeEvent(input$go_load, {
+
+      spwin     <<- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData), clean = TRUE,  plot = TRUE)
+
       plot_output("show_fwhm")
    })
 
@@ -130,10 +134,13 @@ server <- function(input, output, session) {
 
             rv$go_mz$mz_updated = rv$go_mz$mz
 
-            rv$go_mz$hitsIonImage              = searchAnalyte(m = rv$go_mz$mz_updated,
-                                                               fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
-                                                               spData = spData,
-                                                               wMethod = "sum")
+            rv$go_mz$sppIonImage                    <<- searchAnalyte(m = rv$go_mz$mz_updated,
+                                                                      fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
+                                                                      spData = spData,
+                                                                      spwin = spwin,
+                                                                      wMethod = "sum")
+
+            rv$go_mz$hitsIonImage         <<- spp2im(rv$go_mz$sppIonImage)
 
             })
 
@@ -278,14 +285,14 @@ server <- function(input, output, session) {
             incProgress(1/n, detail = paste("Generating plot...."))
 
             #// check if hits is empty
-            if(rv$go_mz$hitsIonImage$n == 0)
+            if(rv$go_mz$sppIonImage$n == 0)
             {
 
                par(mfrow = c(1, 1))
                #// image without masking
-               spatstat.geom::plot.owin(rv$go_mz$hitsIonImage$window,
+               spatstat.geom::plot.owin(rv$go_mz$sppIonImage$window,
                                    main = paste0("No insances of m/z ", round(rv$go_mz$mz_updated, 4), " were detected"),
-                                   ylim = rev(rv$go_mz$hitsIonImage$window$yrange),
+                                   ylim = rev(rv$go_mz$sppIonImage$window$yrange),
                                    box = FALSE)
 
                # rm(rv$go_mz$hitsIonImage)
@@ -300,9 +307,6 @@ server <- function(input, output, session) {
 
 
                # compute sppMoi (spatial point pattern of the analyte)
-               spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData),
-                                                   clean = TRUE,
-                                                   plot = TRUE)
 
                sppMoi          <- searchAnalyte(m = rv$go_mz$mz_updated,
                                                 fwhm = getFwhm(fwhmObj, rv$go_mz$mz_updated),
@@ -316,7 +320,7 @@ server <- function(input, output, session) {
                #// compute MPM - default parameters
                probImg         <- probMap(sppMoi)
 
-               plot(probImg, what = "detailed", ionImage = ionImage)
+               plot(probImg, what = "detailed", ionImage = rv$go_mz$hitsIonImage )
 
             }
 
