@@ -2,6 +2,7 @@ library(shiny)
 library(shinyWidgets)
 library(moleculaR)
 library(shinythemes)
+library(shinyjs)
 
 data("processed-example-Data")
 spData             = createSparseMat(x = msData)
@@ -24,6 +25,8 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
                                           actionButton(inputId = "go_load", label = "Initialize",style='padding:6px; font-size:80%'),
                                    )),
                                 hr(),
+
+                                useShinyjs(),
 
                                 fluidRow(
                                    column(12,HTML(paste0("<b>","Molecular Probability Maps","</b>"))),
@@ -81,6 +84,11 @@ server <- function(input, output, session) {
                         go_lipid = list(searchList = searchList)
    )
 
+   shinyjs::hide(id="go_mz")
+   shinyjs::hide(id="go_lipid")
+   shinyjs::hide(id="go_lipid_ion")
+   shinyjs::hide(id="go_lipid_sat")
+
 
    # reactive values for which image to output
    plot_output <- reactiveVal("initial")
@@ -119,6 +127,14 @@ server <- function(input, output, session) {
       spwin     <<- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData), clean = TRUE,  plot = TRUE)
 
       plot_output("show_fwhm")
+
+      shinyjs::show(id="go_mz")
+      shinyjs::show(id="go_lipid")
+      shinyjs::show(id="go_lipid_ion")
+      shinyjs::show(id="go_lipid_sat")
+
+
+
    })
 
    # routine for rv update in the m/z case
