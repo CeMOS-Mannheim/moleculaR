@@ -575,30 +575,31 @@ im2spp <- function(obj, win , rescale = FALSE, zero.rm = TRUE, mzVal = "mz"){
 }
 
 
-.rescale <- function(obj){
 
-         if(identical(class(obj), "im")){
+.rescale <- function(obj, from = 0, to = 10){
 
-                  # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
-                  minVal <- min(obj) - 0.0001
+      if(identical(class(obj), "im")){
 
-                  im <- (obj - minVal) / (max(obj) - minVal)
+            # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
+            minVal <- min(obj) - 0.0001
 
-                  return(im)
-         }
+            im <- ((obj - minVal) / (max(obj) - minVal)) * (to - from) + from
 
-         if("analytePointPattern" %in% class(obj)){
+            return(im)
+      }
 
-                  intens <- obj$marks$intensity
+      if("analytePointPattern" %in% class(obj)){
 
-                  # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
-                  minVal <- min(intens) - 0.0001
+            intens <- obj$marks$intensity
 
-                  obj$marks$intensity <- (intens - minVal) / (max(intens) - minVal)
+            # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
+            minVal <- min(intens) - 0.0001
 
-                  return(obj)
+            obj$marks$intensity <- ((intens - minVal) / (max(intens) - minVal)) * (to - from) + from
 
-         }
+            return(obj)
+
+      }
 }
 
 
