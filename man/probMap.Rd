@@ -6,15 +6,14 @@
 \usage{
 probMap(
   sppMoi,
-  control = NULL,
+  reference = NULL,
   bw = seq(0.5, 10),
   edgeCorrection = FALSE,
   bwMethod = "spAutoCor",
-  csrIntensities = "resample",
   csrMoi = NULL,
   pvalThreshold = 0.05,
   pvalCorrection = "BH",
-  bwPlot = FALSE,
+  diagPlots = FALSE,
   seed = NULL,
   verbose = TRUE,
   ...
@@ -23,36 +22,36 @@ probMap(
 \arguments{
 \item{sppMoi}{The spatial point pattern.}
 
-\item{control}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
+\item{reference}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
 csrMoi model will be generated from the intensities of this object.}
 
 \item{bw}{The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
 then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
-will be passed to internal methods `spAutoCor` or `iterative` for computing the bandwidth based on cross validation,
-see `?moleculaR::.bw.spAutoCorr` and `?moleculaR::.bw.iterative`.}
+will be passed to internal method `spAutoCor` for computing the bandwidth based on cross validation,
+see `?moleculaR::.bw.spAutoCorr`.}
 
 \item{edgeCorrection}{a logical. Whether to apply edge correction through
 erosion by calling `spatstat.geom::erosion`. This could be beneficial for
 removing edge artifacts which might otherwise impact the result.}
 
-\item{bwMethod}{The method used for computing the Gaussian bandwidth, c("spAutoCor","iterative", "scott").}
-
-\item{csrIntensities}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
+\item{bwMethod}{The method used for computing the Gaussian bandwidth, c("spAutoCor", "scott").}
 
 \item{csrMoi}{Pre-computed wighted csrMoi model corresponding to the given sppMoi. This
-could be useful when generating hotspot-bw curves.}
+could be useful when generating hotspot-bw curves. For internal use only.}
 
 \item{pvalThreshold}{The p-value threshold to be used for the hypothesis testing.}
 
 \item{pvalCorrection}{The method used for p-values correction, see '?p.adjust' for more details.}
 
-\item{bwPlot}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
+\item{diagPlots}{whether to plot the Gaussian bw selection procedure, ignored when \code{bwMethod = "scott"}.}
 
 \item{seed}{a single value, interpreted as integer or `NULL` (default) controlling the process of random
 number generation. If set, ensures that the same CSR model is generated at different runs for the
 same input `sppMoi`}
 
 \item{verbose}{whether to output progress.}
+
+\item{csrIntensities}{How the intensities for the csrMoi model are generated, c("resample", "Poisson", "Gaussian").}
 
 \item{...:}{arguments passed to `plot` for bandwidth plotting when `bwMethod="spAutoCor"`.}
 }
