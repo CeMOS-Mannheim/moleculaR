@@ -53,11 +53,13 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                             "vertices less or equal to 4. \n ")
                      }
 
+              } else{
+                    if(owinInfo$nvertices <= 4){
+                          warning("The provided window 'spwin' does not seem to be a tissue section ",
+                                  "with number of vertices less or equal to 4. \n ")
+                    }
               }
-              if(owinInfo$nvertices <= 4){
-                    warning("The provided window 'spwin' does not seem to be a tissue section ",
-                    "with number of vertices less or equal to 4. \n ")
-              }
+
         }
 
 

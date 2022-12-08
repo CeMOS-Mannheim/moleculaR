@@ -36,7 +36,7 @@ transformIntensity <- function(spp, method = "z-score", irange = c(0, 1), forceR
          }
 
           # offset the lowest value (zero) because it is reserved to pixels with empty points in spatstat
-         if(min(irange) == 0){	
+         if(min(irange) == 0){
               irange[1] <- irange[1] + 0.0001
          }
 
@@ -102,4 +102,4 @@ transformIntensity <- function(spp, method = "z-score", irange = c(0, 1), forceR
 
 #.linMap <- function(x, irange) approxfun(range(x), irange)(x)
 # linear mapping of values into a custom range
-.linMap <- function(i, a, b) approxfun(range(i), c(a, b))(i)
+.linMap <- function(i, a, b) approxfun(range(i, na.rm = TRUE), c(a, b))(i)

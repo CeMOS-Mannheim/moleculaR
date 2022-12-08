@@ -158,7 +158,7 @@ superimposeNoise        = function(x = NULL, spData = NULL, method, mz, fwhm, no
                                    mx <- max(.extractCol(spData$spmat, icol), na.rm = TRUE)
                                    mx5 <- mx * 5
 
-                                   sample(seq(mx, mx5, (mx5-mx)/100), numSpikedPeaks)
+                                   sample(seq(mx, mx5, (mx5-mx)/100), numSpikedPeaks, replace = TRUE)
 
 
                           })
