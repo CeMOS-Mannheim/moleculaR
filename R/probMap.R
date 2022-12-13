@@ -160,10 +160,7 @@ probMap                     <- function(sppMoi,
       # to test the liklihood of each intensity in the test tissue belonging to
       # the distribution of the control (reference) tissue intensities.
       if(is.crossTissueCase){
-            # create and image out of the spp - CSR
-            #imCsr     <- spp2im(csrMoi)
-            # create and image out of the spp - MOI
-            #imMoi     <- spp2im(sppMoi)
+
 
             ## hypthothesis testing for intensities of test vs reference intensities ##
 
@@ -174,8 +171,8 @@ probMap                     <- function(sppMoi,
 
             if(diagPlots){
 
-                  # print(.ecdfPlot(reference, sppMoi))
-                  # print(.bvPlot(reference, sppMoi))
+                  print(.ecdfPlot(reference, sppMoi))
+                  print(.bvPlot(reference, sppMoi))
             }
 
       }
@@ -401,65 +398,61 @@ probMap                     <- function(sppMoi,
 
 }
 
-# .bvPlot <- function(sppRef, sppTest){
-#
-#       plotlist <- list(Test = sppTest$marks$intensity,
-#                        Reference = sppRef$marks$intensity)
-#
-#       plotdf          = reshape2::melt(plotlist, value.name = "Intensities")
-#
-#       plotdf$L1 <- factor(plotdf$L1, levels = c("Test", "Reference"))
-#
-#       # plot
-#       ggplot2::ggplot(plotdf, ggplot2::aes(x = .data$L1, y = .data$Intensities)) +
-#             ggplot2::geom_boxplot(#fill = "gold",  #colour = "black",
-#                   outlier.color = "gray", alpha = 0.5,  notch = F, width = 0.1) +
-#
-#             ggplot2::geom_violin(alpha = 0.7, ggplot2::aes(fill = .data$L1), scale = "width") +
-#
-#
-#             ggsignif::geom_signif(comparisons = list(c("Test", "Reference")),
-#                                   map_signif_level = FALSE,
-#                                   step_increase = 0.11, test = "wilcox.test") +
-#
-#             ggplot2::theme_minimal() +
-#
-#
-#             ggplot2::theme(axis.title = ggplot2::element_text(face = "bold", size = 17.5),
-#                            axis.title.x = ggplot2::element_blank(),
-#                            axis.text.x = ggplot2::element_text(size = 15, angle = 0, vjust = 0.7),
-#                            axis.text.y = ggplot2::element_text(size = 12),
-#                            legend.text = ggplot2::element_text(size = 12),
-#                            legend.title = ggplot2::element_text(size = 14, face = "bold"),
-#                            panel.spacing = ggplot2::unit(2, "lines"),
-#                            legend.position = "none")
-#
-# }
+.bvPlot <- function(sppRef, sppTest){
+
+      plotlist <- list(Test = sppTest$marks$intensity,
+                       Reference = sppRef$marks$intensity)
+
+      r <- range(unlist(plotlist), na.rm = TRUE)
+      plotmx <- r[2] + 4*(diff(r)/10)
+      txtmx <- r[2] + 3*(diff(r)/10)
+      segmenentmx <- r[2] + 2*(diff(r)/10)
+      tickmx <- r[2] + 1*(diff(r)/10)
+      mn <- r[1]
+
+      par(bty = "n",  cex.axis = 1.5, cex.lab = 1.5, mar = c(5.1, 5.1, 4.1, 2.1))
+      vioplot::vioplot(x = plotlist, ylab ="Intensities", main = "Cross-tissue Intensities",
+                       col=c(to.transparent("#FF8C69", 0.5), to.transparent("#00FFFF", 0.5)),
+                       plotCentre = "point", rectCol = "white", colMed = "black",
+                       areaEqual = F, wex = 1, ylim = c(mn,plotmx))
+      # line segments
+      segments(x0 = 1, y0 = segmenentmx, x1 = 2, y1 = segmenentmx, col = "black")
+      segments(x0 = 1, y0 = segmenentmx, x1 = 1, y1 = tickmx, col = "black")
+      segments(x0 = 2, y0 = segmenentmx, x1 = 2, y1 = tickmx, col = "black")
 
 
-# .ecdfPlot <- function(sppRef, sppTest){
-#
-#       plotlist <- list(Test = sppTest$marks$intensity,
-#                        Reference = sppRef$marks$intensity)
-#
-#       plotdf          = reshape2::melt(plotlist, value.name = "Intensities")
-#
-#       plotdf$L1 <- factor(plotdf$L1, levels = c("Test", "Reference"))
-#
-#       ggplot2::ggplot(plotdf, ggplot2::aes(x = .data$Intensities, group = .data$L1, color = .data$L1))+
-#             ggplot2::stat_ecdf(size=1) +
-#             ggplot2::theme(legend.position ="top") +
-#             ggplot2::ylab("eCDF") +
-#             ggplot2::theme_minimal() +
-#             ggplot2::theme(axis.title = ggplot2::element_text(face = "bold", size = 17.5),
-#                            axis.text.x = ggplot2::element_text(size = 15, angle = 0, vjust = 0.7),
-#                            axis.text.y = ggplot2::element_text(size = 12),
-#                            legend.text = ggplot2::element_text(size = 12),
-#                            legend.title = ggplot2::element_blank(),
-#                            panel.spacing = ggplot2::unit(2, "lines"),
-#                            legend.position = c(0.83, 0.12))
-#
-# }
+      #text(x=1.5,y=max(unlist(plotlist))+0.1,"***",pos=3,cex=1.5)
+
+      wt <- wilcox.test(x = plotlist$Test, y = plotlist$Reference)
+
+      text(x=1.5,y=txtmx,"Mann-Whitney U Test", pos=3, cex=1)
+
+      if(wt$p.value < 0.001){
+            text(x=1.5,y=segmenentmx,"p-value < 0.001", pos=3, cex=1)
+      } else {
+            text(x=1.5,y=segmenentmx,paste0("p-value = ",wt$p.value), pos=3, cex=1)
+      }
+
+}
+
+
+.ecdfPlot <- function(sppRef, sppTest){
+
+      plotlist <- list(Test = sppTest$marks$intensity,
+                       Reference = sppRef$marks$intensity)
+
+      ecdfTest <- ecdf(plotlist$Test)
+      ecdfRef <- ecdf(plotlist$Reference)
+      par(bty = "n",  cex.axis = 1.5, cex.lab = 1.5, mar = c(5.1, 5.1, 2.1, 2.1))
+      plot(ecdfTest, xlim = range(unlist(plotlist), na.rm = TRUE),
+           ylab = "eCDF", xlab = "Intensity Quantiles", main = "Cross-tissue eCDFs",
+           bty = "n", col = "#FF8C69", lwd = "2")
+      lines(ecdfRef, col = "#00FFFF", lwd = "2", lty = "dashed")
+      legend("topleft", legend = c("Test", "Reference"), col = c("#FF8C69", "#00FFFF"),
+             lty = c("solid", "dashed"), bty ="n")
+
+
+}
 
 #' Calculate Gaussian bandwidth based on spatial autocorrelation - `spAutoCor`
 #'
