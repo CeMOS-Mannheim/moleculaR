@@ -1,11 +1,9 @@
-#' Batch Analyte detection in an MSI dataset
+#' Batch lipid detection in an MSI dataset
 #'
 #' This applies `moleculaR::searchAnalyte` on a given MSI dataset against the entire SwissLipids database
 #' taking into account the different ionization statuses (i.e. adducts).
 #'
-#' @param spData an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data. This can also be a
-#' named list `list(positive=..., negative=...)` to allow for lipid search in positive and negative ionisation
-#' mode datasets simultaneously.
+#' @param spData an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data.
 #' @param fwhmObj an S3 object of type `fwhm` with the estimated fwhm data.
 #' @param spwin optional, an object of type `owin`. If not given the function tries to generate the
 #' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).
@@ -98,10 +96,6 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                  #count <- count + 1
                                            }
 
-                                           #cat("\r", i)
-
-                                           #sppCotainer <- list(emptyspp = ppp(x = integer(0), y = integer(0)))
-                                           #sppCotainer <- setNames(object = vector("list", length(adduct)), nm = adduct)
 
                                            # initialize empty spp objects for each adduct
                                            sppCotainer <- .initializeEmptySppList(adduct, spwin)
@@ -113,7 +107,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                  lipTmp    <- sldb$`Exact m/z of [M-H]-`[i]
 
                                                  massNotNA <- !(is.na(lipTmp)) # for example there is no protonated version of this lipid species
-                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
                                                  if(massNotNA & massInRange) {
 
@@ -153,7 +147,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                  lipTmp        = sldb$`Exact m/z of [M+H]+`[i]
 
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
                                                  if(massNotNA & massInRange) {
 
@@ -195,7 +189,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  lipTmp               = sldb$`Exact m/z of [M+Na]+`[i]
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
                                                  if(massNotNA & massInRange) {
 
@@ -238,7 +232,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  lipTmp        = sldb$`Exact m/z of [M+K]+`[i]
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
 
                                                  if(massNotNA & massInRange) { # for example there is no Na-adduct version
 
