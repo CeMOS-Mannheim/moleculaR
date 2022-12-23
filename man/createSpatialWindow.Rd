@@ -4,12 +4,15 @@
 \alias{createSpatialWindow}
 \title{Create Spatial Window of MSI Data}
 \usage{
-createSpatialWindow(pixelCoords, clean = FALSE, plot = TRUE)
+createSpatialWindow(pixelCoords, isPolygon = FALSE, clean = FALSE, plot = TRUE)
 }
 \arguments{
 \item{pixelCoords:}{a data frame with x and y columns containing the coordinates
 of all pixels within a given MSI data. A `matrix` will be coerced into a
 data frame.}
+
+\item{isPolygon:}{a logical, whether `pixelCoords` represents the coordinates
+of a polygon or not.}
 
 \item{clean:}{logical, whether to fill holes created by missing pixels.}
 
