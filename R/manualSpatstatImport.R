@@ -31,7 +31,7 @@ spatstatFuncs <- c("ppp", "as.ppp", "is.ppp", "plot.ppp",
                    "im", "plot.im", "pixellate", "eval.im", "as.data.frame.im", "as.im.data.frame",
                    "subset.ppp", "superimpose", "superimpose.ppp",
                    "is.empty.ppp", "intersect.owin", "rpoispp", "disc", "as.im",
-                   "erosion", "Window", "Smooth.im", "Area.xypolygon")
+                   "erosion", "Window", "Smooth.im", "Area.xypolygon", "check.in.range")
 
 correspondPckgs <- setNames(vector("character", length(spatstatFuncs)), spatstatFuncs)
 

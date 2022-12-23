@@ -64,6 +64,11 @@ probMap                     <- function(sppMoi,
             stop("sppMoi must be of 'analytePointPattern' and 'ppp' class. \n")
       }
 
+      if(sppMoi$n < 100){
+            warning("The supplied sppMoi has too few points (detected peaks). ",
+                    "Be advised that this might negatively affect the subsequent spatial analysis/results. \n")
+      }
+
       if(is.null(reference)){
 
             is.crossTissueCase <- FALSE
@@ -82,6 +87,15 @@ probMap                     <- function(sppMoi,
 
             if(is.null(reference$marks$intensity)){
                   stop("The supplied reference does not contain intensity info in its marks.\n")
+            }
+
+            if(reference$n == 0){
+                  stop("The supplied reference is empty (n = 0).\n")
+            }
+
+            if(reference$n < 100){
+                  warning("The supplied reference has too few points (detected peaks). ",
+                          "Be advised that this might negatively affect the subsequent eCDF analysis/results. \n")
             }
 
       }
@@ -363,7 +377,6 @@ probMap                     <- function(sppMoi,
       pvals <- dfTest
 
 
-
       # null hypothesis - reference (control) tissue
       ecdfRef <- ecdf(dfRef$value)
 
@@ -430,7 +443,7 @@ probMap                     <- function(sppMoi,
       if(wt$p.value < 0.001){
             text(x=1.5,y=segmenentmx,"p-value < 0.001", pos=3, cex=1)
       } else {
-            text(x=1.5,y=segmenentmx,paste0("p-value = ",wt$p.value), pos=3, cex=1)
+            text(x=1.5,y=segmenentmx,paste0("p-value = ", round(wt$p.value, 2)), pos=3, cex=1)
       }
 
 }
