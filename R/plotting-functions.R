@@ -323,7 +323,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 
 
             plot.im(x = obj,
-                    col = colourmap(viridis::viridis_pal(option = colourPal)(100),
+                    col = colourmap(to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
                                     range = irange),
                     ylim = yrange,
                     box = FALSE,
