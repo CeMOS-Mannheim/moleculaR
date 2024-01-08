@@ -4,3 +4,4 @@
 # add polygons2win
 # add window transformations (to optical coordinates)
 # add function for creating spatial windows based on MSI data and functions to clean them. 
+# plotting of boxplots and significance testing for CT-MPM

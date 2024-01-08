@@ -10,9 +10,6 @@ filterDuplicates(spp)
 \item{spp:}{a spatial point pattern of type 'ppp' with its `marks` being a dataframe with
 two columns `idx`and `intensity`.}
 }
-\value{
-
-}
 \description{
 Filters out duplicated analytes based on their m/z value. Normally used for the case
 of CPPMs i.e. `spp` objects carrying more than one analyte.

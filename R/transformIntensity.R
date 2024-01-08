@@ -61,7 +61,7 @@ transformIntensity <- function(spp, method = "z-score", irange = c(0, 1), forceR
 
          numAnalytes <- length(spp$metaData$mzVals)
 
-         for(ii in 1 : length(numAnalytes)){
+         for(ii in 1 : numAnalytes){
 
                   # which idx
                   idx <- which(spp$marks$idx == spp$metaData$idx[ii])
@@ -88,7 +88,7 @@ transformIntensity <- function(spp, method = "z-score", irange = c(0, 1), forceR
 
          numAnalytes <- length(spp$metaData$mzVals)
 
-         for(ii in 1 : length(numAnalytes)){
+         for(ii in 1 : numAnalytes){
 
                   # which idx
                   idx <- which(spp$marks$idx == spp$metaData$idx[ii])

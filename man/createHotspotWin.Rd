@@ -6,12 +6,6 @@
 \usage{
 createHotspotWin(shape = "centralCircle", radius = 25, backgroundLength = 100)
 }
-\value{
-
-}
 \description{
 Create a Hotspot Window for Simulation
-}
-\details{
-
 }

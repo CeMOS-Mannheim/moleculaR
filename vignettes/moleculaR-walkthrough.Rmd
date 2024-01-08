@@ -3,7 +3,7 @@ title: "moleculaR: Walkthrough"
 author: 
 - "Denis Abu Sammour" 
 - "James-Lucas Cairns"
-date: "2022-08-01"
+date: "2023-10-30"
 output:  
   rmarkdown::html_vignette:
     toc: true
@@ -154,9 +154,6 @@ Since _moleculaR_ relies internally on spatial data, a spatial window can be cre
 spwin     <- createSpatialWindow(pixelCoords = MALDIquant::coordinates(msData), 
                                  clean = TRUE,
                                  plot = TRUE)
-#> Registered S3 method overwritten by 'spatstat.geom':
-#>   method     from
-#>   print.boxx cli
 ```
 
 ![plot of chunk spWindow](figure/spWindow-1.png)
@@ -289,13 +286,20 @@ The results is an S3 object of type `spatstat::ppp` and `moleculaR::analytePoint
 ```r
 # show metaData 
 head(lipidHits$metaData)
-#>             idx   mzVals mzConfirmed     mode adduct       lipidID sumformula    abbrev numDoubleBonds lipidClass chainLength
-#> M+H  1659378808 327.1567        TRUE positive    M+H SLM:000055220  C13H25O7P LPA(10:0)              0   LPA(x:x)          10
-#> M+H1 1659179733 299.1254        TRUE positive    M+H SLM:000055283  C11H21O7P  LPA(8:0)              0   LPA(x:x)           8
-#> M+H2 1659302815 496.3398        TRUE positive    M+H SLM:000055318 C24H50NO7P LPC(16:0)              0   LPC(x:x)          16
-#> M+Na 1659222965 518.3217        TRUE positive   M+Na SLM:000055318 C24H50NO7P LPC(16:0)              0   LPC(x:x)          16
-#> M+H3 1659375015 494.3241        TRUE positive    M+H SLM:000055319 C24H48NO7P LPC(16:1)              1   LPC(x:x)          16
-#> M+H4 1659320885 524.3711        TRUE positive    M+H SLM:000055322 C26H54NO7P LPC(18:0)              0   LPC(x:x)          18
+#>             idx   mzVals mzConfirmed     mode adduct       lipidID sumformula    abbrev
+#> M+H  1698643086 327.1567        TRUE positive    M+H SLM:000055220  C13H25O7P LPA(10:0)
+#> M+H1 1698565198 299.1254        TRUE positive    M+H SLM:000055283  C11H21O7P  LPA(8:0)
+#> M+H2 1698652090 496.3398        TRUE positive    M+H SLM:000055318 C24H50NO7P LPC(16:0)
+#> M+Na 1698637970 518.3217        TRUE positive   M+Na SLM:000055318 C24H50NO7P LPC(16:0)
+#> M+H3 1698393130 494.3241        TRUE positive    M+H SLM:000055319 C24H48NO7P LPC(16:1)
+#> M+H4 1698161795 524.3711        TRUE positive    M+H SLM:000055322 C26H54NO7P LPC(18:0)
+#>      numDoubleBonds lipidClass chainLength
+#> M+H               0   LPA(x:x)          10
+#> M+H1              0   LPA(x:x)           8
+#> M+H2              0   LPC(x:x)          16
+#> M+Na              0   LPC(x:x)          16
+#> M+H3              1   LPC(x:x)          16
+#> M+H4              0   LPC(x:x)          18
 ```
 
 
@@ -305,10 +309,12 @@ To list all lipid classes which were detected (and confirmed by METASPACE; if `c
 ```r
 # whow all detected lipid classes
 unique(lipidHits$metaData$lipidClass)
-#>  [1] "LPA(x:x)"        "LPC(x:x)"        "LPC(O-x:x)"      "LPE(x:x)"        "LPS(x:x)"        "PA(x:x)"         "PA(O-x:x)"      
-#>  [8] "PC(x:x)"         "PC(O-x:x)"       "PE(x:x)"         "PE(O-x:x)"       "PG(x:x)"         "PS(x:x)"         "PS(O-x:x)"      
-#> [15] "TG(x:x)"         "HexCer(tx:x)"    "HexCer(dx:x)"    "Hex2Cer(dx:x)"   "SM(dx:x)"        "PE-Cer(dx:x)"    "PGP(x:x)"       
-#> [22] "BMP(x:x) | LBPA" "SE(x:x)"         "PG(O-x:x)"       "Cer(tx:x)"       "TG(O-x:x)"       "LPG(O-x:x)"
+#>  [1] "LPA(x:x)"        "LPC(x:x)"        "LPC(O-x:x)"      "LPE(x:x)"        "LPS(x:x)"       
+#>  [6] "PA(x:x)"         "PA(O-x:x)"       "PC(x:x)"         "PC(O-x:x)"       "PE(x:x)"        
+#> [11] "PE(O-x:x)"       "PG(x:x)"         "PS(x:x)"         "PS(O-x:x)"       "TG(x:x)"        
+#> [16] "HexCer(tx:x)"    "HexCer(dx:x)"    "Hex2Cer(dx:x)"   "SM(dx:x)"        "PE-Cer(dx:x)"   
+#> [21] "PGP(x:x)"        "BMP(x:x) | LBPA" "SE(x:x)"         "PG(O-x:x)"       "Cer(tx:x)"      
+#> [26] "TG(O-x:x)"       "LPG(O-x:x)"
 ```
 
 To generate class-specific lipid maps, `subsetAnalytes` could be used to filter `lipidHits` according to lipid classes. Note that `subsetAnalytes` subsetting is always based on the column names of `lipidHits$metaData`. Afterwards one could directly apply `probMap` method and produce a CPPM for all hit instances for a given lipid class. Note that for CPPMs it is highly recommended to apply z-score transformation to account for differences in inonization effeciency of the MOIs constituting the CPPM: 
@@ -361,7 +367,8 @@ lysoGPLs
 cat("detected lipid classes: \n")
 #> detected lipid classes:
 unique(lysoGPLs$metaData$lipidClass)
-#> [1] "LPA(x:x)" "LPC(x:x)" "LPE(x:x)" "LPS(x:x)" "PA(x:x)"  "PC(x:x)"  "PE(x:x)"  "PG(x:x)"  "PS(x:x)"
+#> [1] "LPA(x:x)" "LPC(x:x)" "LPE(x:x)" "LPS(x:x)" "PA(x:x)"  "PC(x:x)"  "PE(x:x)"  "PG(x:x)" 
+#> [9] "PS(x:x)"
 ```
 
 
@@ -371,8 +378,9 @@ Then one could further use `subsetAnalytes` to subset `lysoGPLs` according to an
 ```r
 # meta data table columns
 colnames(lysoGPLs$metaData)
-#>  [1] "idx"            "mzVals"         "mzConfirmed"    "mode"           "adduct"         "lipidID"        "sumformula"     "abbrev"        
-#>  [9] "numDoubleBonds" "lipidClass"     "chainLength"
+#>  [1] "idx"            "mzVals"         "mzConfirmed"    "mode"           "adduct"        
+#>  [6] "lipidID"        "sumformula"     "abbrev"         "numDoubleBonds" "lipidClass"    
+#> [11] "chainLength"
 ```
 To this end, one could visualize for example all [M+K]+ adducts of detected (lyso)GPLs: 
 
@@ -452,12 +460,13 @@ plot(probImg, what = "detailed")
 sessionInfo()
 #> R version 4.0.2 (2020-06-22)
 #> Platform: x86_64-w64-mingw32/x64 (64-bit)
-#> Running under: Windows 10 x64 (build 19044)
+#> Running under: Windows 10 x64 (build 22621)
 #> 
 #> Matrix products: default
 #> 
 #> locale:
-#> [1] LC_COLLATE=English_Germany.65001  LC_CTYPE=English_Germany.1252     LC_MONETARY=English_Germany.65001 LC_NUMERIC=C                     
+#> [1] LC_COLLATE=English_Germany.65001  LC_CTYPE=English_Germany.1252    
+#> [3] LC_MONETARY=English_Germany.65001 LC_NUMERIC=C                     
 #> [5] LC_TIME=English_Germany.65001    
 #> system code page: 65001
 #> 
@@ -465,20 +474,42 @@ sessionInfo()
 #> [1] stats     graphics  grDevices datasets  utils     methods   base     
 #> 
 #> other attached packages:
-#> [1] moleculaR_0.9.0
+#> [1] moleculaR_0.9.0 rmarkdown_2.11  devtools_2.4.2  usethis_2.1.3  
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] terra_1.4-11          xfun_0.28             splines_4.0.2         lattice_0.20-45       colorspace_2.0-2      spatstat.utils_2.2-0 
-#>  [7] vctrs_0.3.8           testthat_3.1.0        htmltools_0.5.2       viridisLite_0.4.0     mgcv_1.8-38           utf8_1.2.2           
-#> [13] rlang_0.4.12          spatstat.data_2.1-0   pillar_1.6.4          glue_1.5.0            withr_2.4.2           sp_1.4-5             
-#> [19] lifecycle_1.0.1       stringr_1.4.0         spatstat.core_2.3-0   munsell_0.5.0         gtable_0.3.0          raster_3.5-2         
-#> [25] codetools_0.2-16      evaluate_0.14         knitr_1.36            fastmap_1.1.0         import_1.2.0          parallel_4.0.2       
-#> [31] fansi_0.5.0           highr_0.9             Rcpp_1.0.7            tensor_1.5            renv_0.13.0           scales_1.1.1         
-#> [37] desc_1.4.0            pkgload_1.2.3         abind_1.4-5           deldir_1.0-6          gridExtra_2.3         ggplot2_3.3.5        
-#> [43] digest_0.6.28         stringi_1.7.5         spatstat.sparse_2.0-0 polyclip_1.10-0       grid_4.0.2            rprojroot_2.0.2      
-#> [49] cli_3.1.0             tools_4.0.2           magrittr_2.0.1        goftest_1.2-3         tibble_3.1.6          crayon_1.4.2         
-#> [55] pkgconfig_2.0.3       ellipsis_0.3.2        Matrix_1.3-4          viridis_0.6.2         rpart_4.1-15          R6_2.5.1             
-#> [61] MALDIquant_1.20       spatstat.geom_2.3-0   nlme_3.1-153          compiler_4.0.2
+#>  [1] nlme_3.1-153             fs_1.5.0                 spatstat.sparse_2.0-0   
+#>  [4] rprojroot_2.0.2          bslib_0.3.1              tools_4.0.2             
+#>  [7] utf8_1.2.2               R6_2.5.1                 rpart_4.1-15            
+#> [10] sm_2.2-5.7.1             mgcv_1.8-38              colorspace_2.0-2        
+#> [13] raster_3.5-2             withr_2.4.2              sp_1.4-5                
+#> [16] gridExtra_2.3            prettyunits_1.1.1        processx_3.5.2          
+#> [19] compiler_4.0.2           cli_3.1.0                readBrukerFlexData_1.8.5
+#> [22] desc_1.4.0               sass_0.4.0               scales_1.1.1            
+#> [25] spatstat.data_2.1-0      callr_3.7.0              stringr_1.4.0           
+#> [28] spatstat_2.3-0           goftest_1.2-3            digest_0.6.28           
+#> [31] spatstat.utils_2.2-0     vioplot_0.4.0            base64enc_0.1-3         
+#> [34] pkgconfig_2.0.3          htmltools_0.5.2          MALDIquantForeign_0.12  
+#> [37] sessioninfo_1.2.1        highr_0.9                fastmap_1.1.0           
+#> [40] import_1.2.0             rlang_0.4.12             rstudioapi_0.13         
+#> [43] shiny_1.7.1              jquerylib_0.1.4          jsonlite_1.7.2          
+#> [46] zoo_1.8-11               magrittr_2.0.1           spatstat.linnet_2.3-0   
+#> [49] MALDIquant_1.20          Matrix_1.3-4             Rcpp_1.0.7              
+#> [52] munsell_0.5.0            fansi_0.5.0              abind_1.4-5             
+#> [55] viridis_0.6.2            lifecycle_1.0.1          terra_1.4-11            
+#> [58] stringi_1.7.5            yaml_2.2.1               pkgbuild_1.2.0          
+#> [61] readMzXmlData_2.8.1      grid_4.0.2               parallel_4.0.2          
+#> [64] promises_1.2.0.1         crayon_1.4.2             deldir_1.0-6            
+#> [67] lattice_0.20-45          splines_4.0.2            tensor_1.5              
+#> [70] knitr_1.36               ps_1.6.0                 pillar_1.6.4            
+#> [73] spatstat.geom_2.3-0      codetools_0.2-16         pkgload_1.2.3           
+#> [76] XML_3.99-0.8             glue_1.5.0               evaluate_0.14           
+#> [79] remotes_2.4.1            renv_0.13.0              vctrs_0.3.8             
+#> [82] httpuv_1.6.3             testthat_3.1.0           gtable_0.3.0            
+#> [85] spatstat.core_2.3-0      purrr_0.3.4              polyclip_1.10-0         
+#> [88] cachem_1.0.6             ggplot2_3.3.5            xfun_0.28               
+#> [91] mime_0.12                xtable_1.8-4             later_1.3.0             
+#> [94] viridisLite_0.4.0        tibble_3.1.6             shinythemes_1.2.0       
+#> [97] memoise_2.0.0            shinyWidgets_0.6.2       ellipsis_0.3.2
 ```
 # _moleculaR_ Shiny Apps 
 

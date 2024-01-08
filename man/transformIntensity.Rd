@@ -26,9 +26,6 @@ the scalled intensities.}
 \item{forceRange:}{logical, whether to force-map the intensities in to the range
 given by `irange` regardless of the `method` used.}
 }
-\value{
-
-}
 \description{
 Intensity transformation for SPPs
 }

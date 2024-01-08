@@ -18,12 +18,6 @@ simulatespp(
   sppPlot = TRUE
 )
 }
-\value{
-
-}
 \description{
 -- under development --
-}
-\details{
-
 }
