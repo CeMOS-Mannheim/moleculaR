@@ -8,9 +8,10 @@
 #' to make it possible to work with tha package without attaching it
 #' via "library()". Note that this adds the requirement of listing
 #' all spatstat functions needed for normal functioning of moleculaR in the
-#' function below.
+#' function below, but will (hopefully) ensure moleculaR's compatibility with
+#' all spatstat versions.
 #'
-#' This is a temporary solution.
+#' This is a temporary solution until spatstat reaches a steady state.
 #'
 #' @name manualSpatstatImport
 #'
@@ -32,7 +33,8 @@ spatstatFuncs <- c("ppp", "as.ppp", "is.ppp", "plot.ppp",
                    "subset.ppp", "superimpose", "superimpose.ppp",
                    "is.empty.ppp", "intersect.owin", "rpoispp", "disc", "as.im",
                    "erosion", "Window", "Smooth.im", "Area.xypolygon", "check.in.range",
-                   "blur", "resolve.1.default", "safeDevCapabilities")
+                   "blur", "resolve.1.default", "safeDevCapabilities",
+                   "owinInternalRect")
 
 correspondPckgs <- setNames(vector("character", length(spatstatFuncs)), spatstatFuncs)
 
@@ -45,6 +47,9 @@ for(ifunc in spatstatFuncs){
             }
       }
 }
+
+# for older spatstat versions some internal functions above might not be available
+correspondPckgs <- correspondPckgs[correspondPckgs != ""]
 
 for(ifunc in 1:length(correspondPckgs)){
       # assign(names(correspondPckgs)[ifunc],

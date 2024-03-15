@@ -20,9 +20,10 @@ the below loader script is called when the package is loaded
 to make it possible to work with tha package without attaching it
 via "library()". Note that this adds the requirement of listing
 all spatstat functions needed for normal functioning of moleculaR in the
-function below.
+function below, but will (hopefully) ensure moleculaR's compatibility with
+all spatstat versions.
 }
 \details{
-This is a temporary solution.
+This is a temporary solution until spatstat reaches a steady state.
 }
 \keyword{datasets}
