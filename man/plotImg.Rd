@@ -10,7 +10,7 @@ plotImg(
   uniformCol = NULL,
   rescale = TRUE,
   smooth = FALSE,
-  transpFactor = 0.7,
+  transpFactor = 1,
   irange = NULL,
   ribargs = list(las = 2, cex.axis = 1.25),
   ribsep = 0.05,

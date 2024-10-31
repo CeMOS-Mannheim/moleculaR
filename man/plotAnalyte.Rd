@@ -8,7 +8,7 @@ plotAnalyte(
   obj,
   colourPal = "inferno",
   uniformCol = NULL,
-  transpFactor = 0.7,
+  transpFactor = 1,
   rescale = TRUE,
   pch = 19,
   size = 0.4,

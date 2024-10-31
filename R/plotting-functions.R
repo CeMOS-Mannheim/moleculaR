@@ -168,7 +168,7 @@ focusPlot <- function(x, m, fwhm, sigmalim = 6, col = NULL){
 #'
 #' @export
 #'
-plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFactor = 1,
                         rescale = TRUE, pch = 19, size = 0.4, main = NULL,
                         leg.side = "right", leg.args = list(cex = 3, cex.axis = 1.25), ...){
 
@@ -286,7 +286,7 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 #'
 #'
 plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
-                    rescale = TRUE, smooth = FALSE, transpFactor = 0.7,
+                    rescale = TRUE, smooth = FALSE, transpFactor = 1,
                     irange = NULL, ribargs = list(las = 2, cex.axis =1.25),
                     ribsep = 0.05, ...){
 
@@ -421,7 +421,7 @@ plot.molProbMap <- function(obj,
                     }
 
                     # workout the plotting arguments
-                    # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+                    # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 1,
                     #                        pch = 19, size = 0.4, main = NULL)
                     # sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 
@@ -437,7 +437,7 @@ plot.molProbMap <- function(obj,
                     }
 
                     # workout the plotting arguments
-                    # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 0.7,
+                    # sppDefaults    <- list(colourPal = "inferno", uniformCol = NULL, transpFactor = 1,
                     #                        pch = 19, size = 0.4, main = NULL)
                     # sppArgs        <- .mergeArgs(sppArgs, sppDefaults)
 

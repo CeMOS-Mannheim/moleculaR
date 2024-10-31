@@ -166,7 +166,8 @@ spp2im <- function(obj, weighted = TRUE, rescale = FALSE, zero.rm = FALSE, ...){
 
       im <- pixellate(obj,
                       weights = w,
-                      W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
+                      #W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
+                      W = as.mask(win,dimyx=c(diff(win$yrange), diff(win$xrange))),
                       ...)
 
       im <- as.im(im) # fix coordinates inconsistancies
