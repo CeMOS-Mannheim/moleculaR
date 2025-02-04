@@ -1,7 +1,9 @@
 #' Read imzML data
 #'
 #' A wrapper for \code{MALDIquantForeign::importImzMl} for reading centroided (i.e. processed)
-#' and continuous imzML data.
+#' and continuous imzML data. Note that to use this function, \code{MALDIquantForeign} has 
+#' to be installed separately, i.e. \code{MALDIquantForeign} is not installed automatically with 
+#' \code{moleculaR}. 
 #'
 #' @param path: 	character string, path to the imzML file which should be read in.
 #' @param verbose:      logical, verbose output?
@@ -28,7 +30,17 @@ readCentrData     = function(path, verbose = FALSE, ...){
 
          cat("Input dataset is of type 'processed'.\n")
 
-         MALDIquantForeign::importImzMl(path = path, centroided = TRUE, verbose = verbose, ...)
+         if (requireNamespace("MALDIquantForeign", quietly = TRUE)) {
+
+            MALDIquantForeign::importImzMl(path = path, centroided = TRUE, verbose = verbose, ...)
+
+            } else {
+
+            stop("Please install 'MALDIquantForeign' to use this function: install.packages('MALDIquantForeign').")
+
+            }
+
+         
 
       }
 

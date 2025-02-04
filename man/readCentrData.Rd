@@ -18,5 +18,7 @@ A list of \code{MALDIquant::MassPeaks} objects if the input file is of 'processe
 }
 \description{
 A wrapper for \code{MALDIquantForeign::importImzMl} for reading centroided (i.e. processed)
-and continuous imzML data.
+and continuous imzML data. Note that to use this function, \code{MALDIquantForeign} has 
+to be installed separately, i.e. \code{MALDIquantForeign} is not installed automatically with 
+\code{moleculaR}.
 }
