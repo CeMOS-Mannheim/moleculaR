@@ -76,7 +76,9 @@ batchAnalyteSearch <- function(spData, fwhmObj, spwin = NA, m,
                                            mQuery    <- m[i]
 
                                            massNotNA <- !(is.na(mQuery))
-                                           massInRange <- check.in.range(mQuery, range(spData$mzAxis), FALSE)
+                                           massInRange <- ifelse(massNotNA,
+                                                                 check.in.range(mQuery, range(spData$mzAxis), FALSE),
+                                                                 FALSE)
 
                                            if(massNotNA & massInRange) {
 

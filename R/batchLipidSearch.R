@@ -107,7 +107,12 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                  lipTmp    <- sldb$`Exact m/z of [M-H]-`[i]
 
                                                  massNotNA <- !(is.na(lipTmp)) # for example there is no protonated version of this lipid species
-                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- ifelse(massNotNA,
+                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       FALSE)
+
+
+
 
                                                  if(massNotNA & massInRange) {
 
@@ -147,7 +152,9 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                                  lipTmp        = sldb$`Exact m/z of [M+H]+`[i]
 
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- ifelse(massNotNA,
+                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       FALSE)
 
                                                  if(massNotNA & massInRange) {
 
@@ -188,8 +195,11 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                            if("M+Na" %in% adduct){
 
                                                  lipTmp               = sldb$`Exact m/z of [M+Na]+`[i]
+
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- ifelse(massNotNA,
+                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       FALSE)
 
                                                  if(massNotNA & massInRange) {
 
@@ -231,8 +241,11 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
                                            if("M+K" %in% adduct | "M+k" %in% adduct){
 
                                                  lipTmp        = sldb$`Exact m/z of [M+K]+`[i]
+
                                                  massNotNA <- !(is.na(lipTmp))
-                                                 massInRange <- check.in.range(lipTmp, range(spData$mzAxis), FALSE)
+                                                 massInRange <- ifelse(massNotNA,
+                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       FALSE)
 
                                                  if(massNotNA & massInRange) { # for example there is no Na-adduct version
 
