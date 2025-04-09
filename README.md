@@ -28,6 +28,38 @@ devtools::install_github("CeMOS-Mannheim/moleculaR", build_vignettes=TRUE)
 ```
 Note that _moleculaR_ was created with `renv`to help manage R package dependencies and computational reproducibility. for more info, check [the renv guide page](https://rstudio.github.io/renv/articles/renv.html). 
 
+### Troubleshooting
+#### _XML_ Installation Issues on Windows
+
+The package _MALDIquantForeign_ is a suggested dependency of _moleculaR_, which in turn 
+depends on the _XML_ package. On Windows systems, _XML_ may fail to compile from source. 
+To avoid this issue, it is recommended to install _XML_ as a binary package:
+
+```r
+install.packages("XML", type = "binary")
+```
+
+Alternatively, when using _renv_, use the following:
+
+```r
+renv::install("XML", type = "binary")
+```
+
+Due to this compilation issue, _MALDIquantForeign_ has been moved from the `Imports` to the 
+`Suggests` section of the package dependencies.
+
+#### _GDAL_ Dependency on Linux
+
+On Linux-based systems, the R package _terra_ (a dependency of _moleculaR_) requires _GDAL_-related system libraries. 
+These may not be pre-installed and could cause installation issues. On Debian-based systems (e.g., Ubuntu), 
+you can install the required libraries via:
+
+```r
+sudo apt install gdal-bin libgdal-dev
+```
+
+Make sure these system dependencies are in place before attempting to install _moleculaR_.
+
 ### Data availability
 
 Example MSI data could be downloaded in [imzML](https://ms-imaging.org/imzml/) fomat via [this link](https://metaspace2020.eu/project/abusammour-2021) (not yet public). 
