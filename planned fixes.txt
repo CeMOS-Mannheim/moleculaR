@@ -5,3 +5,5 @@
 # add window transformations (to optical coordinates)
 # add function for creating spatial windows based on MSI data and functions to clean them. 
 # plotting of boxplots and significance testing for CT-MPM
+# Dependency package XML does not compile under windows and can only be installed as binary -> suggest to MALDUquantForeign maintainer to used xml2? 
+# Dependency package raster has tess as a dependency which also does not compile under windows -> find an alternative to raster.  

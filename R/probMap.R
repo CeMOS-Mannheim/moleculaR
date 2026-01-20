@@ -308,8 +308,8 @@ probMap                     <- function(sppMoi,
 
       # create a spaital window
       win <- as.mask(spp$window,
-                     dimyx=c(diff(spp$window$yrange) + 1,
-                             diff(spp$window$xrange) + 1))
+                     dimyx=c(diff(spp$window$yrange),
+                             diff(spp$window$xrange)))
 
       # create a density map for spp
       sppRho  <- density.ppp(x = spp, sigma = sigma,
@@ -489,8 +489,8 @@ probMap                     <- function(sppMoi,
 
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
-      win         <- as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange) + 1,
-                                                    diff(sppMoi$window$xrange) + 1))
+      win         <- as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),
+                                                    diff(sppMoi$window$xrange)))
 
 
       if(is.null(sppMoi$marks$intensity)){
