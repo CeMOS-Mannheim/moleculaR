@@ -1,62 +1,110 @@
-#' Use pre-computed default FWHM models
+#' Use default FWHM models
 #'
-#' -- this is still under development --
-#' -- currently only `constant` fwhm values could be provided --
+#' Approximate FWHM as a function of m/z when measured peak widths are unavailable.
 #'
-#' This creates a linear interpolator function that approximats fwhm as a function
-#' of m/z for the given MSI modality.
-#'
-#'
-#' @param userMassRes: a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
-#' at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modality`.
-#' @param modality: a character specifying the type of the MSI measurement device. Curretly only
-#' `c("FTICR", "TOF-reflector", "TIMS-TOF")` are supported.
-#' @param constant:  a logical, when set to `TRUE`, the fwhm value computed from `userMassRes` is used for the entire
-#' mass range.
+#' @param userMassRes A numeric vector of the form `c(massRes = , mass = )`,
+#'   specifying resolving power and its reference m/z, respectively. Positional
+#'   vectors are also accepted. If omitted, the defaults at m/z 249 are 123000
+#'   for FTICR, 40000 for TIMS-TOF, and 10000 for TOF-reflector.
+#' @param modality Instrument type: `"FTICR"`, `"TOF-reflector"`, or
+#'   `"TIMS-TOF"`. The aliases `"TOF"` and `"timsTOF"` are also accepted.
+#' @param constant A logical. If `TRUE`, use the width computed from
+#'   `userMassRes` across the entire mass range, including for FTICR.
 #'
 #' @details
-#' The defaults are pre-computed and might not represent the true FWHM(m/z) curve for a given dataset.
-#' The user has the option to adjust the hight of the curve if the mass resolution value at a given m/z is provided.
-#' Alternatively, the user could simply provide a single FWHM value which will be used for the entire
-#' mass range. Note that this is not advised but provided (with a warning) for the user's convenience
-#' and for testing.
+#' The FTICR model uses the nonlinear interpolated curve in the bundled
+#' `processed-example-Data` dataset. The example instrument's resolving power
+#' was 123000 at m/z 249. The curve is multiplied by a positive scale factor
+#' so that its width at the reference mass equals `mass / massRes`.
+#' This preserves its nonlinear shape without introducing negative widths,
+#' which could result from an additive vertical shift. The returned
+#' `fwhmVals` contain model predictions rather than the original measured widths.
 #'
-#' @return
-#' Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
-#' m/z values of the peaks and their corresponding fwhm values.
+#' TOF-reflector (e.g. Rapiflex) and TIMS-TOF assume approximately constant
+#' resolving power, so FWHM increases linearly with m/z: `FWHM(mz) = mz / massRes`.
+#' Their defaults are 10000 and 40000, respectively. The supplied reference
+#' mass does not affect this model unless `constant = TRUE`, which explicitly
+#' overrides the instrument model with a constant width of `mass / massRes`.
+#'
+#' These are approximate models. Measured widths from [estimateFwhm()] are
+#' preferable when available. The FTICR interpolator retains the bundled
+#' curve's endpoint behavior outside its measured mass range.
+#'
+#' @return An S3 `fwhm` object containing `fwhmInterpolator`, reference
+#'   `peaks`, and corresponding model-predicted `fwhmVals` in Da.
+#'
+#' @examples
+#' fticr <- useDefaultFwhm()
+#' getFwhm(fticr, 249) # 249 / 123000
+#' custom <- useDefaultFwhm(c(massRes = 150000, mass = 400))
+#' getFwhm(custom, 400) # 400 / 150000
+#' tof <- useDefaultFwhm(modality = "TOF")
+#' timstof <- useDefaultFwhm(modality = "timsTOF")
+#' getFwhm(timstof, c(249, 800)) # c(249, 800) / 40000
 #'
 #' @export
 #' @include manualSpatstatImport.R
-#'
-useDefaultFwhm    <- function(userMassRes, modality = "FTICR", constant = FALSE) {
-
-
-      # sanity check
-      if(length(userMassRes) != 2){
-            stop("userMassRes must be a vector of 2 elements; mass resolution and the m/z at which mass resolution was measured.\n")
+useDefaultFwhm <- function(userMassRes = NULL, modality = "FTICR", constant = FALSE) {
+      if(!is.character(modality) || length(modality) != 1L || is.na(modality)){
+            stop("modality must specify a single instrument type.")
       }
+      modality <- switch(modality,
+                         "TOF" = "TOF-reflector",
+                         "timsTOF" = "TIMS-TOF",
+                         modality)
+      modality <- match.arg(modality, c("FTICR", "TOF-reflector", "TIMS-TOF"))
 
-      # fwhm value at the specified m/z
-      fwhmval     <- userMassRes[2] / userMassRes[1]
-
-
+      if(!is.logical(constant) || length(constant) != 1L || is.na(constant)){
+            stop("constant must be TRUE or FALSE.")
+      }
+      if(is.null(userMassRes)){
+            massRes <- switch(modality, "FTICR" = 123000,
+                              "TIMS-TOF" = 40000, "TOF-reflector" = 10000)
+            userMassRes <- c(massRes = massRes, mass = 249)
+      }
+      if(!is.numeric(userMassRes) || length(userMassRes) != 2L ||
+         any(!is.finite(userMassRes)) || any(userMassRes <= 0)){
+            stop("userMassRes must contain two positive finite numbers: resolving power and reference m/z.")
+      }
+      if(!is.null(names(userMassRes))){
+            if(!setequal(names(userMassRes), c("massRes", "mass"))){
+                  stop("Named userMassRes must have names 'massRes' and 'mass'.")
+            }
+            userMassRes <- userMassRes[c("massRes", "mass")]
+      }
+      referenceMass <- unname(userMassRes[2])
+      width <- unname(referenceMass / userMassRes[1])
+      if(!is.finite(width) || width <= 0){
+            stop("userMassRes produces a non-positive or non-finite FWHM.")
+      }
       if(constant){
-
-            warning("A constant fwhm value is set for the entire mass range, ",
-                    "which does not reflect the true fwhm behavious as a function ",
-                    "of mass axis. Use this at your own risk. \n")
-
-            return(fwhm(fwhmInterpolator = approxfun(x = userMassRes[2], y = fwhmval, method = "constant", rule = 2),
-                        peaks = userMassRes[2],
-                        fwhmVals = fwhmval))
-
-
-      } else {
-            stop("This function is still under development. For now only the 'constant=TRUE' is available. \n")
+            return(fwhm(fwhmInterpolator = approxfun(
+                              x = referenceMass, y = width, method = "constant", rule = 2),
+                        peaks = referenceMass, fwhmVals = width))
+      }
+      if(modality != "FTICR"){
+            resolvingPower <- unname(userMassRes[1])
+            return(fwhm(fwhmInterpolator = function(mzVals) mzVals / resolvingPower,
+                        peaks = referenceMass, fwhmVals = width))
       }
 
-
+      # Load into a private environment to avoid changing the user's workspace.
+      exampleData <- new.env(parent = baseenv())
+      utils::data(list = "processed-example-Data", package = "moleculaR",
+                  envir = exampleData)
+      reference <- exampleData$fwhmObj
+      rm(exampleData)
+      referenceWidth <- getFwhm(reference, referenceMass)
+      if(length(referenceWidth) != 1L || !is.finite(referenceWidth) || referenceWidth <= 0){
+            stop("The bundled FTICR model has no positive finite width at the reference m/z.")
+      }
+      scaleFactor <- width / referenceWidth
+      if(!is.finite(scaleFactor) || scaleFactor <= 0){
+            stop("userMassRes produces an invalid FTICR scale factor.")
+      }
+      interpolator <- reference$fwhmInterpolator
+      scaledInterpolator <- function(mzVals) interpolator(mzVals) * scaleFactor
+      peaks <- sort(unique(c(reference$peaks, referenceMass)))
+      fwhm(fwhmInterpolator = scaledInterpolator,
+           peaks = peaks, fwhmVals = scaledInterpolator(peaks))
 }
-
-
-

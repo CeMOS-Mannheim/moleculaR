@@ -2,36 +2,54 @@
 % Please edit documentation in R/useDefaultFwhm.R
 \name{useDefaultFwhm}
 \alias{useDefaultFwhm}
-\title{Use pre-computed default FWHM models}
+\title{Use default FWHM models}
 \usage{
-useDefaultFwhm(userMassRes, modality = "FTICR", constant = FALSE)
+useDefaultFwhm(userMassRes = NULL, modality = "FTICR", constant = FALSE)
 }
 \arguments{
-\item{userMassRes:}{a named vector of the form `c(massRes= , mass= )` that specify user-provided mass resolution
-at a given m/z. This will used to adjust the height of the FWHM curve depending on the chosen `modality`.}
+\item{userMassRes}{A numeric vector of the form \code{c(massRes = , mass = )},
+specifying resolving power and its reference m/z, respectively. Positional
+vectors are also accepted. If omitted, the defaults at m/z 249 are 123000
+for FTICR, 40000 for TIMS-TOF, and 10000 for TOF-reflector.}
 
-\item{modality:}{a character specifying the type of the MSI measurement device. Curretly only
-`c("FTICR", "TOF-reflector", "TIMS-TOF")` are supported.}
+\item{modality}{Instrument type: \code{"FTICR"}, \code{"TOF-reflector"}, or
+\code{"TIMS-TOF"}. The aliases \code{"TOF"} and \code{"timsTOF"} are also accepted.}
 
-\item{constant:}{a logical, when set to `TRUE`, the fwhm value computed from `userMassRes` is used for the entire
-mass range.}
+\item{constant}{A logical. If \code{TRUE}, use the width computed from
+\code{userMassRes} across the entire mass range, including for FTICR.}
 }
 \value{
-Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
-m/z values of the peaks and their corresponding fwhm values.
+An S3 \code{fwhm} object containing \code{fwhmInterpolator}, reference
+\code{peaks}, and corresponding model-predicted \code{fwhmVals} in Da.
 }
 \description{
--- this is still under development --
--- currently only `constant` fwhm values could be provided --
+Approximate FWHM as a function of m/z when measured peak widths are unavailable.
 }
 \details{
-This creates a linear interpolator function that approximats fwhm as a function
-of m/z for the given MSI modality.
+The FTICR model uses the nonlinear interpolated curve in the bundled
+\code{processed-example-Data} dataset. The example instrument's resolving power
+was 123000 at m/z 249. The curve is multiplied by a positive scale factor
+so that its width at the reference mass equals \code{mass / massRes}.
+This preserves its nonlinear shape without introducing negative widths,
+which could result from an additive vertical shift. The returned
+\code{fwhmVals} contain model predictions rather than the original measured widths.
 
+TOF-reflector (e.g. Rapiflex) and TIMS-TOF assume approximately constant
+resolving power, so FWHM increases linearly with m/z: \code{FWHM(mz) = mz / massRes}.
+Their defaults are 10000 and 40000, respectively. The supplied reference
+mass does not affect this model unless \code{constant = TRUE}, which explicitly
+overrides the instrument model with a constant width of \code{mass / massRes}.
 
-The defaults are pre-computed and might not represent the true FWHM(m/z) curve for a given dataset.
-The user has the option to adjust the hight of the curve if the mass resolution value at a given m/z is provided.
-Alternatively, the user could simply provide a single FWHM value which will be used for the entire
-mass range. Note that this is not advised but provided (with a warning) for the user's convenience
-and for testing.
+These are approximate models. Measured widths from \code{\link[=estimateFwhm]{estimateFwhm()}} are
+preferable when available. The FTICR interpolator retains the bundled
+curve's endpoint behavior outside its measured mass range.
+}
+\examples{
+fticr <- useDefaultFwhm()
+getFwhm(fticr, 249) # 249 / 123000
+custom <- useDefaultFwhm(c(massRes = 150000, mass = 400))
+getFwhm(custom, 400) # 400 / 150000
+tof <- useDefaultFwhm(modality = "TOF")
+timstof <- useDefaultFwhm(modality = "timsTOF")
+getFwhm(timstof, c(249, 800)) # c(249, 800) / 40000
 }
