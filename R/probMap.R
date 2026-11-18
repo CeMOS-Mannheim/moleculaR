@@ -2,7 +2,8 @@
 #'
 #' This function creates molecular probability maps from a given spatial point pattern representation.
 #'
-#' @param sppMoi 	   The spatial point pattern.
+#' @param sppMoi The analyte spatial point pattern. For an existing ion image
+#' matrix or array, first convert it with \code{\link{ionImage2spp}}.
 #' @param bw        The Gaussian bandwidth used for Kernel density estimation. If a single numeric value is supplied
 #' then it will be used for the computation of KDE. If a vector is supplied (in increasing order), then these values
 #' will be passed to internal method `spAutoCor` for computing the bandwidth based on cross validation,

@@ -4,9 +4,20 @@
 \alias{createSpatialWindow}
 \title{Create Spatial Window of MSI Data}
 \usage{
-createSpatialWindow(pixelCoords, isPolygon = FALSE, clean = FALSE, plot = TRUE)
+createSpatialWindow(
+  pixelCoords,
+  isPolygon = FALSE,
+  clean = FALSE,
+  plot = TRUE,
+  pixelSize = NULL
+)
 }
 \arguments{
+\item{pixelSize}{Optional positive pixel width (one number for square pixels,
+or x and y widths). For pixel coordinates, fixes the grid spacing instead of
+inferring it from observed positions. Supports single rows or columns and
+gaps between observed pixels. Ignored when \code{isPolygon = TRUE}.}
+
 \item{pixelCoords:}{a data frame with x and y columns containing the coordinates
 of all pixels within a given MSI data. A `matrix` will be coerced into a
 data frame.}

@@ -41,10 +41,24 @@ fwhmObj <- estimateFwhm(userMassRes = c(massRes = 150000, mass = 400))
 ```
 
 Measured widths are preferable when available: pass a profile spectrum or a
-supported list of spectra as `estimateFwhm(s = spectra)`. Only omitted or `NULL`
-spectra select defaults; invalid spectra and failed estimation still raise errors.
-In the Shiny `package-app`, choose **Use instrument defaults** or
-**Estimate from spectrum**; the spectrum upload is required only for the latter.
+supported list of spectra as `estimateFwhm(s = spectra)`. 
+
+### MPMs from existing ion images
+
+Use `ionImage2spp()` to convert a plain numeric intensity matrix from any
+image provider into a point pattern, then pass it to `probMap()`:
+
+```r
+# myMatrix has rows = y and columns = x; no m/z metadata is required
+spp <- ionImage2spp(myMatrix, orientation = "yx")
+mpm <- probMap(spp, seed = 1)
+plot(mpm, what = "MPM")
+
+# Optionally supply mzVal = currentmz or a descriptive label.
+# Arrays are also supported: MALDIquant::msiSlices uses [x, y, mass].
+# spp <- ionImage2spp(ionArray, slice = 2)
+```
+
 
 ### Troubleshooting
 

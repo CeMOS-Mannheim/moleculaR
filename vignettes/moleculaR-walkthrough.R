@@ -137,6 +137,27 @@ plot(probImg, what = "detailed", analyte = txt, ionImage = ionImage)
 
 
 
+## ----ion-image-matrix, eval=FALSE-------------------------------------------
+#  myMatrix <- matrix(NA_real_, nrow = 20, ncol = 15)
+#  myMatrix[3:18, 3:13] <- 1
+#  myMatrix[7:13, 6:10] <- 10
+#  sppFromMatrix <- ionImage2spp(myMatrix, orientation = "yx")
+#  mpmFromMatrix <- probMap(sppFromMatrix, bw = 1, seed = 1)
+#  plot(mpmFromMatrix, what = "MPM")
+#  # Optional mass metadata:
+#  sppFromMatrix <- ionImage2spp(myMatrix, orientation = "yx", mzVal = 788.5447)
+
+## ----ion-image-mpm, eval=FALSE----------------------------------------------
+#  # MALDIquant is an additional input format, using [x, y, mass].
+#  ionArray <- MALDIquant::msiSlices(msData, center = queryMass,
+#                                    tolerance = 0.05)
+#  sppFromImage <- ionImage2spp(ionArray)
+#  mpmFromImage <- probMap(sppFromImage, seed = 1)
+#  plot(mpmFromImage, what = "MPM")
+#  ionArrays <- MALDIquant::msiSlices(msData, center = c(queryMass, 810.6),
+#                                     tolerance = 0.05)
+#  sppSecond <- ionImage2spp(ionArrays, slice = 2)
+
 ## ----CPPMs, results='hide'----------------------------------------------------
 cat("Batch lipid search is ongoing - this will take several minutes - \n")
 

@@ -283,6 +283,55 @@ plot(probImg, what = "detailed",  ionImage = ionImage)
 
 ![plot of chunk MPM](figure/MPM-1.png)
 
+## MPMs from existing ion images
+
+`ionImage2spp()` is a general converter for plain numeric intensity matrices from any image provider. It creates an `analytePointPattern` that can be passed to `probMap()`. No spectrum, FWHM model, or m/z metadata is required. Three-dimensional arrays are also supported, including output from `MALDIquant::msiSlices()`.
+
+### Plain matrices
+
+For a conventional matrix with rows representing y and columns representing x, specify `orientation = "yx"`. The example below is self-contained and does not require the bundled spectra:
+
+```r
+# A plain matrix: NA outside the tissue, non-negative intensities inside
+myMatrix <- matrix(NA_real_, nrow = 20, ncol = 15)
+myMatrix[3:18, 3:13] <- 1
+myMatrix[7:13, 6:10] <- 10
+
+sppFromMatrix <- ionImage2spp(myMatrix, orientation = "yx")
+mpmFromMatrix <- probMap(sppFromMatrix, bw = 1, seed = 1)
+plot(mpmFromMatrix, what = "MPM")
+
+# Optional: attach an m/z value or a descriptive label
+sppFromMatrix <- ionImage2spp(myMatrix, orientation = "yx", mzVal = 788.5447)
+```
+
+`mzVal` defaults to the label `"image"` when no `center` attribute is present. Leave `slice` at its default `NULL` for a plain matrix. The default orientation is `"xy"` (rows=x, columns=y); choose the convention used by your matrix. Coordinates are one-based indices with unit pixel spacing; dimension names are not interpreted as coordinates, and no vertical flip is applied.
+
+### Arrays and MALDIquant images
+
+For a three-dimensional array, `slice` selects a layer along dimension 3. Multiple layers require explicit selection; a singleton third dimension is selected automatically. Layers are converted individually, without summing or averaging. If the array has a `center` attribute, the selected entry supplies m/z metadata unless overridden by `mzVal`.
+
+As an additional input format, `MALDIquant::msiSlices()` returns an array indexed as `[x, y, mass]`, even for a single mass. Use the default `orientation = "xy"` for these arrays. The following example uses the spectra loaded earlier in the walkthrough:
+
+```r
+ionArray <- MALDIquant::msiSlices(msData, center = queryMass,
+                                  tolerance = 0.05)
+sppFromImage <- ionImage2spp(ionArray)
+mpmFromImage <- probMap(sppFromImage, seed = 1)
+plot(mpmFromImage, what = "MPM")
+
+# For several mass layers, explicitly select one
+ionArrays <- MALDIquant::msiSlices(msData, center = c(queryMass, 810.6),
+                                   tolerance = 0.05)
+sppSecond <- ionImage2spp(ionArrays, slice = 2)
+```
+
+For both matrices and arrays, the conversion preserves the supplied intensities and any existing mass-window aggregation. It does not apply the FWHM-dependent Gaussian mass weighting used by `searchAnalyte()`.
+
+Non-tissue pixels must be `NA` (or `NaN`). The converter calls `createSpatialWindow(..., pixelSize = 1, clean = FALSE, plot = FALSE)` using all non-missing pixels. This preserves holes and disconnected regions, even when observed pixels are separated by missing rows or columns. Zero-intensity pixels remain part of the tissue window but are omitted from the point pattern by default, matching `searchAnalyte()`; use `zero.rm = FALSE` to retain them as points. Negative or infinite intensities, entirely missing images, and entirely zero images raise errors.
+
+If the tissue boundary is known separately, or several images need a common analysis domain, pass an existing window with `win = spwin`. The window must contain every non-missing pixel centre and use the same index coordinates. This is particularly useful when missing pixels inside the tissue represent missing measurements. Importantly, for existing `spatstat.geom::im` objects, use `im2spp()` instead.
+
 # Collective Projections Probability Maps (CPPMs)
 
 Another concept introduced by _moleculaR_ is the collective projections probability maps (CPPMs) which, as the name implies, provides a framework for visualization of a set of analytes collectively in a single image space. This could be of interest when, for example, a user is interested in visualization a set of analaytes with a certain similarity (structure, functionality, etc.). For more information on how this is achieved, please refer to the associated preprint. 

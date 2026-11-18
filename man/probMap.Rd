@@ -20,7 +20,8 @@ probMap(
 )
 }
 \arguments{
-\item{sppMoi}{The spatial point pattern.}
+\item{sppMoi}{The analyte spatial point pattern. For an existing ion image
+matrix or array, first convert it with \code{\link{ionImage2spp}}.}
 
 \item{reference}{An sppMoi object that is designated as the "control" or "null" alternative of \code{sppMoi}. If supplied the
 csrMoi model will be generated from the intensities of this object.}

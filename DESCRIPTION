@@ -49,6 +49,7 @@ Collate:
     'gaussWeight.R'
     'helping-functions.R'
     'icon.R'
+    'ionImage2spp.R'
     'legacy-initLipidSearch.R'
     'legacy-searchLipid.R'
     'loadSwissDB.R'
