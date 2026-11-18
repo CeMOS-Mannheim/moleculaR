@@ -13,8 +13,8 @@ helpTxt2 <- paste0("This companion shiny-app lets the user upload her own centro
                   mapping through Molecular probabilistic Maps (MPMs) and Collective Projection probabilistic Maps (CPPMs). 
                   The first step would be to upload you own data. To do this click on `imzML & ibd` File and navigate to the 
                   directory containing the files you want to upload. Then select both imzML- and ibd-Files and upload them. 
-                  Via `Spectrum .tsv File` uPload a continuous spectrum in `tsv` format which would represent either a single 
-                  random pixel or a mean spectrum of your imaging dataset. Once this is done, please start the FWHM estimation
+                  Choose instrument defaults for approximate widths, or estimate measured widths by uploading a continuous
+                  spectrum via `Spectrum .tsv File`. This can represent a random pixel or mean spectrum. Start initialization
                   by presseing on 'Initialize'. For a given m/z value of interest, you can generate the corresponding MPM by 
                   providing that m/z value in the corresponding text box. To generate a collective projection probabilstic map (CPPM)
                   of a custom list of m/z values, please paste these values into the corresponding text box, comma separated.")                 
@@ -58,11 +58,24 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
                                                                                multiple = TRUE, 
                                                                                buttonLabel = "imzML & ibd Files",
                                                                                accept = c(".imzML",".ibd")),
+                                                              radioButtons("fwhmSource", "FWHM model",
+                                                                           choices = c("Use instrument defaults" = "default",
+                                                                                       "Estimate from spectrum" = "spectrum"),
+                                                                           selected = "default"),
+                                                              conditionalPanel("input.fwhmSource == 'spectrum'",
                                                               fileInput("spectrFile", 
                                                                                NULL, 
                                                                                multiple = FALSE, 
                                                                                buttonLabel = "Spectrum .tsv File",
-                                                                               accept = c(".tsv")),
+                                                                               accept = c(".tsv"))),
+                                                              conditionalPanel("input.fwhmSource == 'default'",
+                                                                selectInput("fwhmModality", "Instrument",
+                                                                            choices = c("FTICR", "TOF-reflector", "TIMS-TOF")),
+                                                                helpText("Approximate widths; measured widths are preferable when available."),
+                                                                checkboxInput("customMassRes", "Specify resolving power", FALSE),
+                                                                conditionalPanel("input.customMassRes",
+                                                                  numericInput("fwhmMassRes", "Resolving power", value = 123000, min = 1),
+                                                                  numericInput("fwhmMass", "Reference m/z", value = 249, min = 0.001))),
                                                               actionButton(inputId = "loadData", 
                                                                                   label = "Load and Initialize",
                                                                                   style='padding:6px; font-size:80%')
@@ -246,6 +259,8 @@ ui <- navbarPage(p("moleculaR: Spatial Probabilistic Mapping of Metabolites in M
 ####Backend ####
 
 server <- function(input, output, session) {
+  # Keep uploaded data and the chosen model private to this session.
+  fwhmObj <- msData <- spData <- spwin <- NULL
   
   # increase maximum file uploade size to 48 GB
   options(shiny.maxRequestSize=48000*1024^2)
@@ -255,59 +270,33 @@ server <- function(input, output, session) {
   observeEvent(input$loadData,{
 
 
-    # checks
-    output$message <- renderText({
-      validate(
-        need(length(input$spectrFile$datapath) != 0, "A spectrum has not been uploaded.")
-      )
-    })
-    
-    validate(
-      need(length(input$spectrFile$datapath) != 0, "A spectrum has not been uploaded.")
-    )
-    
-    output$message <- renderText({
-      validate(
-        need(grepl(".tsv", input$spectrFile$datapath), "The .tsv file (spectrum) has not been uploaded.")
-      )
-    })
-    validate(
-      need(grepl(".tsv", input$spectrFile$datapath), "The .tsv file (spectrum) has not been uploaded.")
-    )
-    
-
-    output$message <- renderText({
-      validate(
-        need(any(grepl(".imzML", input$imzmlFile$datapath)), "The .imzMl file has not been uploaded.")
-      )
-    })
-    validate(
-      need(any(grepl(".imzML", input$imzmlFile$datapath)), "The .imzMl file has not been uploaded.")
-    )
-
-    output$message <- renderText({
-      validate(
-        need(any(grepl(".ibd", input$imzmlFile$datapath)), "The .ibd file has not been uploaded.")
-      )
-    })
-    validate(
-      need(any(grepl(".ibd", input$imzmlFile$datapath)), "The .ibd file has not been uploaded.")
-    )
-
-    # unify ibd and imzml names
-    idx <- grep(".imzML", input$imzmlFile$datapath)
-    oldName <- input$imzmlFile$datapath[idx]
-    newName <- file.path(dirname(input$imzmlFile$datapath[idx]),"msiData.imzML")
-    file.rename(from = oldName, to = newName)
-    #input$imzmlFile$datapath[idx] <- newName
-    
-    idx <- grep(".ibd", input$imzmlFile$datapath)
-    oldName <- input$imzmlFile$datapath[idx]
-    newName <- file.path(dirname(input$imzmlFile$datapath[idx]),"msiData.ibd")
-    file.rename(from = oldName, to = newName)
-    #input$imzmlFile$datapath[idx] <- newName
-  
-    
+    requireInput <- function(ok, text){
+      if(!isTRUE(ok)){
+        output$message <- renderText(text)
+        validate(need(FALSE, text))
+      }
+    }
+    # Validate original filenames; Shiny temporary paths need not retain extensions.
+    if(input$fwhmSource == "spectrum"){
+      requireInput(!is.null(input$spectrFile), "Please upload a spectrum .tsv file.")
+      requireInput(tolower(tools::file_ext(input$spectrFile$name)) == "tsv",
+                    "The spectrum must be a .tsv file.")
+    }
+    extensions <- tolower(tools::file_ext(input$imzmlFile$name))
+    requireInput(sum(extensions == "imzml") == 1L && sum(extensions == "ibd") == 1L,
+                  "Please upload one imzML file and its matching ibd file.")
+    if(input$fwhmSource == "default" && isTRUE(input$customMassRes)){
+      settings <- c(input$fwhmMassRes, input$fwhmMass)
+      requireInput(length(settings) == 2L && all(is.finite(settings)) && all(settings > 0),
+                    "Resolving power and reference m/z must be positive finite numbers.")
+    }
+    uploadDir <- tempfile("moleculaR-upload-")
+    dir.create(uploadDir)
+    session$onSessionEnded(function() unlink(uploadDir, recursive = TRUE))
+    imzmlPath <- file.path(uploadDir, "msiData.imzML")
+    copied <- file.copy(input$imzmlFile$datapath[match(c("imzml", "ibd"), extensions)],
+                        c(imzmlPath, file.path(uploadDir, "msiData.ibd")))
+    requireInput(all(copied), "Could not prepare uploaded imzML and ibd files.")
     # start loading
     withProgress(
                 message="please wait",
@@ -316,21 +305,26 @@ server <- function(input, output, session) {
                   
                   n <- 6
                   
-                  # read the single spectrum
-                  incProgress(1/n, detail = paste("Reading single spectrum .. "))
-                  s          <<- moleculaR::readSingleSpect(input$spectrFile$datapath) 
-                  
-                  
-                  # creat fwhm object
-                  incProgress(1/n, detail = paste("Estimating FWHM .. "))
-                  fwhmObj           <<- moleculaR::estimateFwhm(s = s) 
-                  
-                  # read the imzml data
-                  incProgress(1/n, detail = paste("Reading imzML data .. "))
-                  #imzmlPath <- input$imzmlFile$datapath[grep(".imzML", input$imzmlFile$datapath)]
-                  
-                  f <- list.files(path = dirname(input$imzmlFile$datapath), full.names = TRUE)
-                  imzmlPath <- grep(pattern = ".imzML", x = f, value = TRUE)[1]
+                  # Build the selected model without reusing a previous spectrum.
+                  incProgress(1/n, detail = "Preparing FWHM model .. ")
+                  if(input$fwhmSource == "spectrum"){
+                    spectrum <- moleculaR::readSingleSpect(input$spectrFile$datapath)
+                    fwhmObj <<- moleculaR::estimateFwhm(s = spectrum)
+                    modelDescription <- "FWHM estimated from the uploaded spectrum."
+                  } else {
+                    resolution <- if(isTRUE(input$customMassRes)) {
+                      c(massRes = input$fwhmMassRes, mass = input$fwhmMass)
+                    } else NULL
+                    fwhmObj <<- moleculaR::estimateFwhm(modality = input$fwhmModality,
+                                                       userMassRes = resolution)
+                    referenceMass <- if(is.null(resolution)) 249 else resolution[["mass"]]
+                    modelDescription <- paste0("Using approximate ", input$fwhmModality,
+                      " FWHM model: resolving power ",
+                      signif(referenceMass / moleculaR::getFwhm(fwhmObj, referenceMass), 7),
+                      " at m/z ", referenceMass, ". Measured widths are preferable when available.")
+                  }
+                  output$message <- renderText(modelDescription)
+                  incProgress(1/n, detail = "Reading imzML data .. ")
                   msData            <<- moleculaR::readCentrData(path = imzmlPath)
                   
 
@@ -367,7 +361,7 @@ server <- function(input, output, session) {
     
     
     # checks
-    if(!exists("fwhmObj")){
+    if(!!is.null(fwhmObj)){
       
       output$message <- renderText({
         "No FWHM data is available. Please upload and load data first."
@@ -378,12 +372,12 @@ server <- function(input, output, session) {
       })
       
       validate(
-        need(exists("fwhmObj"), "No FWHM data is available. Please upload and load data first.")
+        need(!is.null(fwhmObj), "No FWHM data is available. Please upload and load data first.")
       )
       
     }
     
-    if(!exists("msData")){
+    if(!!is.null(msData)){
       
       output$message <- renderText({
         "MSI data is not loaded. Please upload and load data first."
@@ -394,14 +388,14 @@ server <- function(input, output, session) {
       })
       
       validate(
-        need(exists("msData"), "MSI data is not loaded. Please upload and load data first.")
+        need(!is.null(msData), "MSI data is not loaded. Please upload and load data first.")
       )
       
     }
     
     
     
-    if(!exists("spData")){
+    if(!!is.null(spData)){
       output$message <- renderText({
         "sparse data represention is not available. Please upload and load data first."
       })
@@ -409,11 +403,11 @@ server <- function(input, output, session) {
         plot.new()
       })
       validate(
-        need(exists("spData"), "sparse data represention is not available. Please upload and load data first.")
+        need(!is.null(spData), "sparse data represention is not available. Please upload and load data first.")
       )
     }
     
-    if(!exists("spwin")){
+    if(!!is.null(spwin)){
       output$message <- renderText({
         "spatial window is not available. Please upload and load data first."
       })
@@ -421,7 +415,7 @@ server <- function(input, output, session) {
         plot.new()
       })
       validate(
-        need(exists("spwin"), "spatial window is not available. Please upload and load data first.")
+        need(!is.null(spwin), "spatial window is not available. Please upload and load data first.")
       )
     }
     
@@ -545,7 +539,7 @@ server <- function(input, output, session) {
     
     # checks
     
-    if(!exists("fwhmObj")){
+    if(!!is.null(fwhmObj)){
       
       output$message <- renderText({
         "No FWHM data is available. Please upload and load data first."
@@ -556,12 +550,12 @@ server <- function(input, output, session) {
       })
       
       validate(
-        need(exists("fwhmObj"), "No FWHM data is available. Please upload and load data first.")
+        need(!is.null(fwhmObj), "No FWHM data is available. Please upload and load data first.")
       )
       
       }
  
-    if(!exists("msData")){
+    if(!!is.null(msData)){
       
       output$message <- renderText({
         "MSI data is not loaded. Please upload and load data first."
@@ -572,14 +566,14 @@ server <- function(input, output, session) {
       })
       
       validate(
-        need(exists("msData"), "MSI data is not loaded. Please upload and load data first.")
+        need(!is.null(msData), "MSI data is not loaded. Please upload and load data first.")
       )
       
     }
     
    
     
-    if(!exists("spData")){
+    if(!!is.null(spData)){
       output$message <- renderText({
         "sparse data represention is not available. Please upload and load data first."
       })
@@ -587,11 +581,11 @@ server <- function(input, output, session) {
         plot.new()
       })
       validate(
-        need(exists("spData"), "sparse data represention is not available. Please upload and load data first.")
+        need(!is.null(spData), "sparse data represention is not available. Please upload and load data first.")
       )
     }
     
-    if(!exists("spwin")){
+    if(!!is.null(spwin)){
       output$message <- renderText({
         "spatial window is not available. Please upload and load data first."
       })
@@ -599,7 +593,7 @@ server <- function(input, output, session) {
         plot.new()
       })
       validate(
-        need(exists("spwin"), "spatial window is not available. Please upload and load data first.")
+        need(!is.null(spwin), "spatial window is not available. Please upload and load data first.")
       )
     }
     
@@ -739,7 +733,10 @@ server <- function(input, output, session) {
         n <- 6
         
         incProgress(1/n, detail = paste("Load example data .. "))
-        data("processed-example-Data", package = "moleculaR")
+        exampleData <- new.env()
+        data("processed-example-Data", package = "moleculaR", envir = exampleData)
+        msData <<- exampleData$msData
+        fwhmObj <<- exampleData$fwhmObj
         
         
         # create sparse matrix representation

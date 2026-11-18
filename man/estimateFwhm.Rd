@@ -5,58 +5,88 @@
 \title{Estimation of fwhm as a function of m/z axis}
 \usage{
 estimateFwhm(
-  s,
+  s = NULL,
   spectraSampling = 10,
   peakSampling = 1000,
   numCores = 1,
   smoothingMethod = "loess",
   SNR = 5,
   plot = FALSE,
-  savePlot = NULL
+  savePlot = NULL,
+  modality = "FTICR",
+  userMassRes = NULL,
+  constant = FALSE
 )
 }
 \arguments{
-\item{s:}{a single profile (continuous) spectrum of type `MALDIquant::MassSpectrum` of a list thereof. This
-could also be a list of `MALDIquant::MassPeaks` object but with conditions, see Details.}
+\item{s}{A single profile (continuous) \code{MALDIquant::MassSpectrum}, a list
+of these, or a list of \code{MALDIquant::MassPeaks} with precomputed widths
+(see Details). Omit or supply \code{NULL} to use \code{\link[=useDefaultFwhm]{useDefaultFwhm()}}.}
 
-\item{spectraSampling:}{an integer specifying how many spectra should be used for fwhm estimation
-(the lower the faster) when `s` is a list of `MALDIquant::MassSpectrum` objects. Defaults to 99.}
+\item{spectraSampling}{an integer specifying how many spectra should be used for fwhm estimation
+(the lower the faster) when \code{s} is a list of \code{MALDIquant::MassSpectrum} objects. Defaults to 10.}
 
-\item{peakSampling:}{an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
-the lower the faster. Defaults to 99.}
+\item{peakSampling}{an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
+the lower the faster. Defaults to 1000.}
 
-\item{numCores:}{an integer specifying the number of cores used for the FWHM computations when s is a
-`MassSpectrum` or a list thereof. This is ignored on windows.}
+\item{numCores}{an integer specifying the number of cores used for the FWHM computations when s is a
+\code{MassSpectrum} or a list thereof. This is ignored on windows.}
 
-\item{smoothingMethod:}{a character, one of `c('loess','superSmoother')`, the method that is used for fitting a smoothing curve to
-represent fwhm as a function of m/z. Defaults to `loess` which produced better fits but takes
+\item{smoothingMethod}{a character, one of \code{c('loess','superSmoother')}, the method that is used for fitting a smoothing curve to
+represent fwhm as a function of m/z. Defaults to \code{loess} which produced better fits but takes
 longer to compute.}
 
-\item{SNR:}{an optional numeric, the minimum SNR level of the peaks that are used for fwhm estimation.}
+\item{SNR}{an optional numeric, the minimum SNR level of the peaks that are used for fwhm estimation.}
 
-\item{plot:}{whether to plot the result.}
+\item{plot}{whether to plot the result.}
 
-\item{savePlot:}{either \code{NULL} or file path to save a plot as svg.}
+\item{savePlot}{either \code{NULL} or file path to save a plot as svg.}
+
+\item{modality}{Instrument type used only when \code{s} is \code{NULL}: \code{"FTICR"}
+(default), \code{"TOF-reflector"}, or \code{"TIMS-TOF"}. Aliases \code{"TOF"} and
+\code{"timsTOF"} are accepted.}
+
+\item{userMassRes}{Optional resolving power and reference m/z, supplied as
+\code{c(massRes = 150000, mass = 400)}. Used only when \code{s} is \code{NULL}.}
+
+\item{constant}{Logical; use a constant width instead of the instrument
+model when \code{s} is \code{NULL}. Passed to \code{\link[=useDefaultFwhm]{useDefaultFwhm()}}.}
 }
 \value{
-Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
-m/z values of the peaks and their corresponding fwhm values.
+An S3 \code{fwhm} object containing \code{fwhmInterpolator}, \code{peaks}, and \code{fwhmVals}.
+For default models, widths are model predictions rather than measurements.
 }
 \description{
-This creates a linear interpolator function that approximats fwhm as a function
-of m/z for the given single spectrum or a list of mass spectra.
+Estimate FWHM as a function of m/z from spectra, or use an approximate
+instrument model when spectra are unavailable.
 }
 \details{
-The input `s` could be a single profile (continuous) `MassSpectrum` object. This could be supplied externally
-or via `readSingleSpect` function (see `?readSingleSpect`). This is normally the case when dealing with MRMS (FTICR)
+When \code{s} is omitted or \code{NULL}, \code{\link[=useDefaultFwhm]{useDefaultFwhm()}} supplies an approximate
+model and a message reports the instrument and resolving power assumed.
+Defaults are 123000 (FTICR), 10000 (TOF-reflector), and 40000 (TIMS-TOF),
+all at m/z 249. FTICR scales the bundled nonlinear curve; TOF models use
+constant resolving power. Measured widths are preferable when available.
+Invalid spectra or failed estimation raise errors rather than using a default.
+Sampling, smoothing and SNR settings apply only to supplied spectra.
+
+The input \code{s} could be a single profile (continuous) \code{MassSpectrum} object. This could be supplied externally
+or via \code{readSingleSpect} function (see \code{?readSingleSpect}). This is normally the case when dealing with MRMS (FTICR)
 centroided data which does not contain any information about peaks FWHM values (for example when read from a centroided
 imzML file).
 
-`s` could also be a list of `MassSpectrum` objects. This could be the case when dealing with continuous TOF data.
+\code{s} could also be a list of \code{MassSpectrum} objects. This could be the case when dealing with continuous TOF data.
 In this case, the list of spectra is sampled and FWHM values are computed based on these.
 
-If `s` is a list of centroided `MassPeaks` objects, the function assumes that FWHM values have been
-(externally) pre-computed and attached to each centroided spectrum (`MassPeaks` object) via the
-`metaData` slot (see `?MALDIquant::MassPeaks`) such that for every centroided spectrum `s[[i]]` the
-FWHM values corresponding to all detected peaks `s[[i]]@mass` are stored in `s[[i]]@metaData$fwhm`.
+If \code{s} is a list of centroided \code{MassPeaks} objects, the function assumes that FWHM values have been
+(externally) pre-computed and attached to each centroided spectrum (\code{MassPeaks} object) via the
+\code{metaData} slot (see \code{?MALDIquant::MassPeaks}) such that for every centroided spectrum \code{s[[i]]} the
+FWHM values corresponding to all detected peaks \code{s[[i]]@mass} are stored in \code{s[[i]]@metaData$fwhm}.
+}
+\examples{
+fticr <- estimateFwhm()
+timstof <- estimateFwhm(modality = "TIMS-TOF")
+custom <- estimateFwhm(userMassRes = c(massRes = 150000, mass = 400))
+getFwhm(custom, 400)
+# With measured data: estimateFwhm(s = spectra)
+
 }

@@ -28,7 +28,26 @@ devtools::install_github("CeMOS-Mannheim/moleculaR", build_vignettes=TRUE)
 ```
 Note that _moleculaR_ was created with `renv`to help manage R package dependencies and computational reproducibility. for more info, check [the renv guide page](https://rstudio.github.io/renv/articles/renv.html). 
 
+### FWHM models
+
+When a profile spectrum is unavailable, `estimateFwhm()` uses an approximate
+instrument model and reports the assumed instrument and resolving power:
+
+```r
+fwhmObj <- estimateFwhm() # FTICR: resolving power 123000 at m/z 249
+fwhmObj <- estimateFwhm(modality = "TIMS-TOF") # 40000 at m/z 249
+fwhmObj <- estimateFwhm(modality = "TOF-reflector") # 10000 at m/z 249
+fwhmObj <- estimateFwhm(userMassRes = c(massRes = 150000, mass = 400))
+```
+
+Measured widths are preferable when available: pass a profile spectrum or a
+supported list of spectra as `estimateFwhm(s = spectra)`. Only omitted or `NULL`
+spectra select defaults; invalid spectra and failed estimation still raise errors.
+In the Shiny `package-app`, choose **Use instrument defaults** or
+**Estimate from spectrum**; the spectrum upload is required only for the latter.
+
 ### Troubleshooting
+
 #### _XML_ Installation Issues on Windows
 
 The package _MALDIquantForeign_ is a suggested dependency of _moleculaR_, which in turn 

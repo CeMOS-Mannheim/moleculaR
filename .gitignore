@@ -5,3 +5,6 @@
 data-external
 rnotebooks
 inst/doc
+renv.lock.backup
+renv.lock.old
+renv_old

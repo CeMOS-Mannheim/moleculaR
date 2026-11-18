@@ -59,7 +59,7 @@ library(moleculaR)
 
 # Importing & Processing MSI Data
 
-Under the hood _moleculaR_ is mainly based on `MALDIquant`, `spatstat` and `Matrix` packages and provides some additional tools to help ipmport and process any given MSI dataset. Please note that currently only *centroided* MSI data is supported. _moleculaR_ expects two mandatory data inputs; a (processed) _imzML_ file and an additional _tsv_ file which contains a full continuous spectrum (with m/z and intensity columns) which either represents a random pixel within the imaging dataset or an average spectrum. 
+Under the hood _moleculaR_ mainly uses `MALDIquant`, `spatstat` and `Matrix`. Currently only centroided MSI data is supported. Import a processed _imzML_ file together with its matching _ibd_ file. A profile spectrum in a two-column _tsv_ file (m/z and intensity) is optional: use it to estimate measured peak widths, or choose an approximate instrument model when no spectrum is available.
 
 
 
@@ -70,7 +70,7 @@ Under the hood _moleculaR_ is mainly based on `MALDIquant`, `spatstat` and `Matr
 imzmlFile         <- "pathToFile.imzML" 
 msData            <- readCentrData(path = imzmlFile) 
 
-# single spectrum  
+# optional profile spectrum for measured FWHM
 spectrFile        <- "pathToFile.tsv"                  
 msSpectr          <- readSingleSpect(spectrFile) 
 
@@ -111,6 +111,32 @@ For subsequent analysis, an S3 `fwhm` object must be created which will hold inf
 fwhmObj           <- estimateFwhm(s = msSpectr) 
                                                             
 ```
+
+## Choosing an FWHM model
+
+`estimateFwhm()` supports three routes: a single profile spectrum, a list of profile spectra, or an approximate instrument model when spectra are unavailable. A list of centroided `MassPeaks` is also accepted if each spectrum contains precomputed widths in `metaData$fwhm`; ordinary centroided data alone cannot provide measured widths.
+
+Omitting `s`, or explicitly passing `s = NULL`, calls `useDefaultFwhm()`. The default instrument is FTICR; select the modality that matches your acquisition. A message reports the assumed instrument, resolving power, and reference m/z. Measured widths are preferable when available. Invalid supplied spectra or failed estimation raise errors; they do not trigger a default model.
+
+```r
+# No profile spectrum required: FTICR, resolving power 123000 at m/z 249
+fwhmObj <- estimateFwhm()
+
+# TOF-reflector: resolving power 10000; TIMS-TOF: 40000
+fwhmObj <- estimateFwhm(modality = "TOF-reflector")
+fwhmObj <- estimateFwhm(modality = "TIMS-TOF")
+
+# Override resolving power and reference m/z for your instrument
+fwhmObj <- estimateFwhm(modality = "FTICR",
+                        userMassRes = c(massRes = 150000, mass = 400))
+getFwhm(fwhmObj, 400) # 400 / 150000
+
+# When measured spectra are available, use them instead
+# fwhmObj <- estimateFwhm(s = msSpectr)
+# fwhmObj <- estimateFwhm(s = profileSpectra)
+```
+
+FTICR defaults scale the bundled nonlinear FWHM curve to the specified resolving power at the reference m/z. TOF-reflector and TIMS-TOF assume constant resolving power, so `FWHM(mz) = mz / massRes`. With `constant = TRUE`, any modality instead uses a fixed width of `mass / massRes`. The aliases `"TOF"` and `"timsTOF"` are also accepted. Sampling, smoothing, and SNR settings apply only when spectra are supplied. `plot = TRUE` and `savePlot = "fwhm.svg"` work with either route.
 
 Before applying any preprocessing methods, it is highly recommended to perform peak-binning and peak filtering on `msData`, subsequently the user may apply any preprocessing methods provided by `MALDIquant` (keeping in mind that this is a centroided dataset). 
 
@@ -517,7 +543,7 @@ _moleculaR_ provides two R Shiny web apps with intuitive web-based GUIs; a `exam
 
 ## Loading Data
 
-This step only applies to `package-app`. The first step using the shiny `package-app`, would be to upload you own data. To do this click on `imzML & ibd` File and navigate to the directory containing the files you want to upload. Then select both imzML- and ibd-Files and upload them. Via `Spectrum .tsv File` uPload a continuous spectrum in `tsv` format which would represent either a single random pixel or a mean spectrum of your imaging dataset. Finally, upload the METASPACE annotation results (optional) via `Metaspace.csv File` which should be in a `csv` format. 
+In `package-app`, upload a matching imzML and ibd pair, then choose the FWHM model. **Use instrument defaults** is selected initially: choose FTICR, TOF-reflector, or TIMS-TOF, and optionally specify resolving power and reference m/z. The app reports the approximate model used. To use measured widths, choose **Estimate from spectrum** and upload a two-column profile spectrum via `Spectrum .tsv File`. Click **Load and Initialize** to process the data. The bundled example continues to use its precomputed measured FWHM model.
 
 ![Loading the Data](shiny-imgs/package_app_load.PNG)
 
@@ -525,7 +551,7 @@ After successfully loading the data the message "Upload complete" should appear.
 
 ![Data Loaded](shiny-imgs/package_app_loaded.PNG)
 
-When all files are fully loaded you can proceed and use the Peaks FWHM Estimation. To do this press `Initialize` as shown in the figure below.
+Initialization uses the selected FWHM route. A spectrum upload is required only for **Estimate from spectrum**. The illustrations below show the measured-spectrum workflow in an earlier interface.
 
 ![Peaks FWHM Estimation](shiny-imgs/fwhm_esti.PNG)
 
@@ -533,7 +559,7 @@ A progress bar will appear at the bottom right of the app.
 
 ![Progress Bar](shiny-imgs/progressbar.PNG)
 
-When the data has been processed and FWHM has been estimated, a plot will appear showing the approximation.
+When processing completes, a plot shows the measured estimate or the selected approximate instrument model.
 
 ![FWHM Estimation Completed](shiny-imgs/fwhm_loaded.PNG){width=70%}
 

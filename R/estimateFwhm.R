@@ -1,24 +1,40 @@
 #' Estimation of fwhm as a function of m/z axis
 #'
-#' This creates a linear interpolator function that approximats fwhm as a function
-#' of m/z for the given single spectrum or a list of mass spectra.
+#' Estimate FWHM as a function of m/z from spectra, or use an approximate
+#' instrument model when spectra are unavailable.
 #'
-#' @param s: a single profile (continuous) spectrum of type `MALDIquant::MassSpectrum` of a list thereof. This
-#' could also be a list of `MALDIquant::MassPeaks` object but with conditions, see Details.
-#' @param spectraSampling:  an integer specifying how many spectra should be used for fwhm estimation
-#' (the lower the faster) when `s` is a list of `MALDIquant::MassSpectrum` objects. Defaults to 99.
-#' @param peakSampling:  an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
-#' the lower the faster. Defaults to 99.
-#' @param numCores: an integer specifying the number of cores used for the FWHM computations when s is a
+#' @param s A single profile (continuous) `MALDIquant::MassSpectrum`, a list
+#' of these, or a list of `MALDIquant::MassPeaks` with precomputed widths
+#' (see Details). Omit or supply `NULL` to use [useDefaultFwhm()].
+#' @param spectraSampling  an integer specifying how many spectra should be used for fwhm estimation
+#' (the lower the faster) when `s` is a list of `MALDIquant::MassSpectrum` objects. Defaults to 10.
+#' @param peakSampling  an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
+#' the lower the faster. Defaults to 1000.
+#' @param numCores an integer specifying the number of cores used for the FWHM computations when s is a
 #' `MassSpectrum` or a list thereof. This is ignored on windows.
-#' @param smoothingMethod: a character, one of `c('loess','superSmoother')`, the method that is used for fitting a smoothing curve to
+#' @param smoothingMethod a character, one of `c('loess','superSmoother')`, the method that is used for fitting a smoothing curve to
 #' represent fwhm as a function of m/z. Defaults to `loess` which produced better fits but takes
 #' longer to compute.
-#' @param SNR: an optional numeric, the minimum SNR level of the peaks that are used for fwhm estimation.
-#' @param plot:      whether to plot the result.
-#' @param savePlot:  either \code{NULL} or file path to save a plot as svg.
+#' @param SNR an optional numeric, the minimum SNR level of the peaks that are used for fwhm estimation.
+#' @param plot      whether to plot the result.
+#' @param savePlot  either \code{NULL} or file path to save a plot as svg.
+#' @param modality Instrument type used only when `s` is `NULL`: `"FTICR"`
+#' (default), `"TOF-reflector"`, or `"TIMS-TOF"`. Aliases `"TOF"` and
+#' `"timsTOF"` are accepted.
+#' @param userMassRes Optional resolving power and reference m/z, supplied as
+#' `c(massRes = 150000, mass = 400)`. Used only when `s` is `NULL`.
+#' @param constant Logical; use a constant width instead of the instrument
+#' model when `s` is `NULL`. Passed to [useDefaultFwhm()].
 #'
 #' @details
+#' When `s` is omitted or `NULL`, [useDefaultFwhm()] supplies an approximate
+#' model and a message reports the instrument and resolving power assumed.
+#' Defaults are 123000 (FTICR), 10000 (TOF-reflector), and 40000 (TIMS-TOF),
+#' all at m/z 249. FTICR scales the bundled nonlinear curve; TOF models use
+#' constant resolving power. Measured widths are preferable when available.
+#' Invalid spectra or failed estimation raise errors rather than using a default.
+#' Sampling, smoothing and SNR settings apply only to supplied spectra.
+#'
 #' The input `s` could be a single profile (continuous) `MassSpectrum` object. This could be supplied externally
 #' or via `readSingleSpect` function (see `?readSingleSpect`). This is normally the case when dealing with MRMS (FTICR)
 #' centroided data which does not contain any information about peaks FWHM values (for example when read from a centroided
@@ -33,16 +49,43 @@
 #' FWHM values corresponding to all detected peaks `s[[i]]@mass` are stored in `s[[i]]@metaData$fwhm`.
 #'
 #' @return
-#' Returns an S3 object 'fwhm' containing a linear interplotor function 'fwhmInterpolator' in addition to
-#' m/z values of the peaks and their corresponding fwhm values.
+#' An S3 `fwhm` object containing `fwhmInterpolator`, `peaks`, and `fwhmVals`.
+#' For default models, widths are model predictions rather than measurements.
+#'
+#' @examples
+#' fticr <- estimateFwhm()
+#' timstof <- estimateFwhm(modality = "TIMS-TOF")
+#' custom <- estimateFwhm(userMassRes = c(massRes = 150000, mass = 400))
+#' getFwhm(custom, 400)
+#' # With measured data: estimateFwhm(s = spectra)
 #'
 #' @export
+#' @md
 #' @include manualSpatstatImport.R
 #'
-estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000,
+estimateFwhm            <- function(s = NULL, spectraSampling = 10, peakSampling = 1000,
                                     numCores = 1, smoothingMethod = "loess",
-                                    SNR = 5, plot = FALSE, savePlot = NULL) {
+                                    SNR = 5, plot = FALSE, savePlot = NULL,
+                                    modality = "FTICR", userMassRes = NULL,
+                                    constant = FALSE) {
 
+      if(is.null(s)){
+            model <- useDefaultFwhm(userMassRes = userMassRes,
+                                    modality = modality, constant = constant)
+            instrument <- switch(modality, "TOF" = "TOF-reflector",
+                                  "timsTOF" = "TIMS-TOF", modality)
+            instrument <- match.arg(instrument, c("FTICR", "TOF-reflector", "TIMS-TOF"))
+            referenceMass <- if(is.null(userMassRes)) 249 else {
+                  if(is.null(names(userMassRes))) userMassRes[2] else userMassRes[["mass"]]
+            }
+            resolution <- referenceMass / getFwhm(model, referenceMass)
+            message("No spectra supplied; using approximate ", instrument,
+                    if(constant) " constant-width" else "",
+                    " FWHM model (resolving power ", signif(resolution, 7),
+                    " at m/z ", referenceMass, "). Measured widths are preferable when available.")
+            .plotFwhmResult(model, plot, savePlot)
+            return(model)
+      }
 
       if(is.list(s)){
 
@@ -144,37 +187,22 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
                         "loess" = .loess(data = fwhmdf),
                         stop("smoothingMethod not recognized, accepted values = c('loess','superSmoother').\n"))
 
-      if(plot)
-      {
-            r <- range(fwhmdf$peaks)
-            qp <- seq(r[1], r[2])
-            plot(x = fwhmdf$peaks, y = fwhmdf$fwhmValues,
-                 main = "Estimated fwhm(m/z)", xlab = "m/z (Da)", ylab = "fwhm")
-            lines(x = qp, y = fwhmFun(qp), col = "green", lwd = 2)
+      model <- fwhm(fwhmInterpolator = fwhmFun,
+                     peaks = fwhmdf$peaks, fwhmVals = fwhmdf$fwhmValues)
+      .plotFwhmResult(model, plot, savePlot)
+      return(model)
 
+}
+
+# Shared by measured estimates and default models.
+.plotFwhmResult <- function(model, plot, savePlot){
+      if(plot) graphics::plot(model)
+      if(!is.null(savePlot)){
+            grDevices::svg(filename = savePlot, width = 12, height = 8)
+            on.exit(grDevices::dev.off(), add = TRUE)
+            graphics::plot(model)
       }
-
-      if(!is.null(savePlot))
-      {
-            # plot the the detecetd martix-pixels ontop of the optical image
-            Cairo::Cairo(file = savePlot,
-                         width = 3000, height = 2000, type = "svg",# units = "px",
-                         dpi = 100)
-
-            r <- range(fwhmFun$p)
-            qp <- seq(r[1], r[2])
-            plot(x = fwhmFun$p, y = fwhmFun$fwhmValues,
-                 main = "Estimated fwhm(m/z)", xlab = "m/z (Da)", ylab = "fwhm")
-            lines(x = qp, y = fwhmFun(qp), col = "green", lwd = 2)
-
-            dev.off()
-      }
-
-
-      return(fwhm(fwhmInterpolator = fwhmFun,
-                  peaks = fwhmdf$peaks,
-                  fwhmVals = fwhmdf$fwhmValues))
-
+      invisible(NULL)
 }
 
 #// internal function to sample detected peaks - for speed
@@ -261,8 +289,8 @@ estimateFwhm            <- function(s, spectraSampling = 10, peakSampling = 1000
 #'
 #' A method to compute the fwhm for the peaks of a given spectrum.
 #'
-#' @param spectrum:    a spectrum of \code{MALDIquant::MassSpectrum} type.
-#' @param peaks:  a centroided spectrum of \code{MALDIquant::MassPeaks} type.
+#' @param spectrum    a spectrum of \code{MALDIquant::MassSpectrum} type.
+#' @param peaks  a centroided spectrum of \code{MALDIquant::MassPeaks} type.
 #' @return Returns a named vector of fwhm values with the same length as the number of peaks within the spectrum.
 #'
 #'

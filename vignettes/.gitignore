@@ -3,3 +3,6 @@ moleculaR-walkthrough-test.R
 test.Rmd.ignore
 old versions/moleculaR-walkthrough.Rmd.orig
 
+
+/.quarto/
+**/*.quarto_ipynb

@@ -49,6 +49,15 @@ knitr::opts_chunk$set(
 #  fwhmObj           <- estimateFwhm(s = msSpectr)
 #  
 
+## ----fwhm-defaults, eval=FALSE----------------------------------------------
+#  # Approximate instrument models when no profile spectrum is available
+#  fwhmObj <- estimateFwhm() # FTICR: resolving power 123000 at m/z 249
+#  fwhmObj <- estimateFwhm(modality = "TOF-reflector")
+#  fwhmObj <- estimateFwhm(modality = "TIMS-TOF")
+#  fwhmObj <- estimateFwhm(userMassRes = c(massRes = 150000, mass = 400))
+#  getFwhm(fwhmObj, 400) # 400 / 150000
+#  # Measured widths remain preferable: estimateFwhm(s = msSpectr)
+
 ## ----preproc, eval=FALSE, include=TRUE----------------------------------------
 #  #-- not run --#
 #  
