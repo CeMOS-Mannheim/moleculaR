@@ -9,7 +9,6 @@
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` containing all supplied analytes.
 #'
 #' @export
-#' @include manualSpatstatImport.R
 #'
 
 superimposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
@@ -38,7 +37,7 @@ superimposeAnalytes <- function(pppObjs, spWin = NULL, check = TRUE){
       mtd <- do.call("rbind", mtd)
 
       # superimpose
-      unifiedppp <- do.call(superimpose.ppp,
+      unifiedppp <- do.call(spatstat.geom::superimpose.ppp,
                             args = c(unname(pppObjs), list(W = spWin, check = check)))
 
       # attach metadata

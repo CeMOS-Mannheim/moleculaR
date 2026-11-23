@@ -23,7 +23,6 @@
 #' the applied expression 'expr'.
 #'
 #' @export
-#' @include manualSpatstatImport.R
 
 evalSpatialExpr <- function(exprn, dataList, win, normMethod = "imageMean"){
 
@@ -60,7 +59,7 @@ evalSpatialExpr <- function(exprn, dataList, win, normMethod = "imageMean"){
       #res <- eval.im(exprn, envir = dataList)
 
       # sanity checks
-      imdf <- as.data.frame.im(x = res)
+      imdf <- spatstat.geom::as.data.frame.im(x = res)
 
       if(any(is.infinite(imdf$value))){
             imdf <- imdf[which(is.finite(imdf$value)), ]

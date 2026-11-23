@@ -17,7 +17,6 @@
 #'
 #'
 #' @export
-#' @include manualSpatstatImport.R
 #'
 
 transformIntensity <- function(spp, method = "z-score", irange = c(0, 1), forceRange = TRUE){

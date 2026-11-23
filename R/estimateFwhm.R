@@ -61,7 +61,6 @@
 #'
 #' @export
 #' @md
-#' @include manualSpatstatImport.R
 #'
 estimateFwhm            <- function(s = NULL, spectraSampling = 10, peakSampling = 1000,
                                     numCores = 1, smoothingMethod = "loess",

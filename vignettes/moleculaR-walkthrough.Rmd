@@ -355,7 +355,7 @@ lipidHits <- batchLipidSearch(spData = spData, fwhmObj = fwhmObj, sldb = sldb,
 lipidHits
 ```
 
-The results is an S3 object of type `spatstat::ppp` and `moleculaR::analytePointPattern` which contains all lipid identifications (against SwissLipids database) according to the provided `mtspc` annotation file. The metaData of the detected analytes are found in the `metaData` slot:
+The results is an S3 object of type `spatstat.geom::ppp` and `moleculaR::analytePointPattern` which contains all lipid identifications (against SwissLipids database) according to the provided `mtspc` annotation file. The metaData of the detected analytes are found in the `metaData` slot:
 
 
 ```r

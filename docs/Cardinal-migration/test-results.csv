@@ -3,7 +3,7 @@
 "test-cardinal-extraction.R","inclusive boundaries, duplicate and unsorted peaks are explicit",8,0,FALSE,FALSE,0,8
 "test-cardinal-extraction.R","invalid targets and retrieved spectral values fail clearly",31,0,FALSE,FALSE,0,31
 "test-cardinal-extraction.R","Cardinal metadata, coordinates, run selection and processing stay valid",34,0,FALSE,FALSE,0,34
-"test-cardinal-extraction.R","annotation matching uses absolute tolerance with deterministic ties",19,0,FALSE,FALSE,0,19
+"test-cardinal-extraction.R","annotation matching uses absolute tolerance with deterministic ties",24,0,FALSE,FALSE,0,24
 "test-cardinal-import.R","processed and continuous imzML pairs support both memory modes",34,0,FALSE,FALSE,0,34
 "test-cardinal-import.R","processed profile input is imported without assuming centroid status",2,0,FALSE,FALSE,0,2
 "test-cardinal-import.R","multi-run import supports exact run selection without mixing coordinates",4,0,FALSE,FALSE,0,4
@@ -13,3 +13,7 @@
 "test-cardinal-legacy-spatial.R","unaligned observed-peak means differ by the documented denominator",3,0,FALSE,FALSE,0,3
 "test-cardinal-legacy-spatial.R","strict mass windows quantify the nearest-index boundary difference",3,0,FALSE,FALSE,0,3
 "test-cardinal-legacy-spatial.R","unchanged probMap reproduces seeded legacy densities and classifications",26,0,FALSE,FALSE,0,26
+"test-spatstat-namespaces.R","the package namespace contains no dynamic spatstat copies",9,0,FALSE,FALSE,0,9
+"test-spatstat-namespaces.R","spatial combination, image conversion, and expression evaluation work",11,0,FALSE,FALSE,0,11
+"test-spatstat-namespaces.R","all simulation shapes resolve their geometry explicitly",7,0,FALSE,FALSE,0,7
+"test-spatstat-namespaces.R","plotting and smoothing do not rely on attached spatial packages",3,0,FALSE,FALSE,0,3

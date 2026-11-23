@@ -7,7 +7,6 @@
 #' @return
 #'
 #'
-#' @include manualSpatstatImport.R
 #'
 
 simulatespp <- function(lambdaHotspot, lambdaBackground, 
@@ -24,7 +23,7 @@ simulatespp <- function(lambdaHotspot, lambdaBackground,
   set.seed(seed)
   
   ## create owin objects - background
-  bgWin <- owin(c(0, backgroundLength), c(0, backgroundLength))
+  bgWin <- spatstat.geom::owin(c(0, backgroundLength), c(0, backgroundLength))
   
   ## create owin objects - hotspot
   if(shape == "centralCircle"){
@@ -68,8 +67,8 @@ simulatespp <- function(lambdaHotspot, lambdaBackground,
   
 
   # populate both windows with points different point intensities
-  bgspp <- rpoispp(lambdaBackground, win = bgWin)
-  hotspotspp <- rpoispp(lambdaHotspot, win = hotspotwin)
+  bgspp <- spatstat.random::rpoispp(lambdaBackground, win = bgWin)
+  hotspotspp <- spatstat.random::rpoispp(lambdaHotspot, win = hotspotwin)
   
   # attach marks - background
   bgIntensities <- intensityData[intensityData <= quantile(intensityData, backgroundUpperThr)]
@@ -88,10 +87,10 @@ simulatespp <- function(lambdaHotspot, lambdaBackground,
                                           intensity = hotspotspp$marks, mzVals = "foreground")
   
   if(gtPlot){
-    plot.owin(bgWin, 
+    spatstat.geom::plot.owin(bgWin,
               ylim = rev(bgWin$yrange),
               main = paste0("Simulated Groundtruth"),)
-    plot.owin(hotspotwin,
+    spatstat.geom::plot.owin(hotspotwin,
               col = rgb(0,1,0,1),
               add = TRUE)  
   }
@@ -120,7 +119,6 @@ simulatespp <- function(lambdaHotspot, lambdaBackground,
 #' @return
 #'
 #' @export
-#' @include manualSpatstatImport.R
 #'
 createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLength = 100){
 
@@ -129,7 +127,7 @@ createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLen
                                        if(length(radius) > 1)
                                                 stop("for shape 'centralCircle' the radius must have 1 value. \n")
 
-                                       disc(radius = radius, centre = c(backgroundLength/2, backgroundLength/2))
+                                       spatstat.geom::disc(radius = radius, centre = c(backgroundLength/2, backgroundLength/2))
                               },
                               "multiCircle" = {
 
@@ -151,10 +149,10 @@ createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLen
                                                                    backgroundLength/4*3))
 
                                        winlist <- lapply(seq(1, length(radius)), FUN = function(i){
-                                                disc(radius = radius[i], centre = centers[i, ])
+                                                spatstat.geom::disc(radius = radius[i], centre = centers[i, ])
                                        })
 
-                                       do.call("union.owin", winlist)
+                                       do.call(spatstat.geom::union.owin, winlist)
 
                               },
 
@@ -169,12 +167,12 @@ createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLen
                                        radius <- sort(radius, decreasing = TRUE)
 
                                        winlist <- lapply(radius, FUN = function(i){
-                                                disc(radius = i, centre = c(backgroundLength/2, backgroundLength/2))
+                                                spatstat.geom::disc(radius = i, centre = c(backgroundLength/2, backgroundLength/2))
                                        })
 
                                        names(winlist) <- c("A", "B")
 
-                                       do.call("setminus.owin", winlist)
+                                       do.call(spatstat.geom::setminus.owin, winlist)
 
                               },
                               stop("shape must be one of c('centralCircle', 'multiCircle', 'donut'). \n"))

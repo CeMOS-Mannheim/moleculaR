@@ -38,3 +38,18 @@ fixtures; they still require the phase 6 cleanup audit. Local `.package.referenc
 contains supplied documentation, not package runtime code. Raw external imzML/ibd
 pairs are available in ignored `data-external/`; synthetic fixtures and generated
 small imzML pairs provide redistributable first-milestone coverage.
+
+## Intermediary update after the first milestone
+
+Removed `R/manualSpatstatImport.R`, its documentation topic, and its Collate /
+roxygen include references. Runtime `import::here()` and the `spatstat`
+meta-package dependency are replaced by explicit child-package calls and direct
+Imports for spatstat.geom, spatstat.explore, spatstat.random, and spatstat.utils.
+The qualification pass updated 94 parser-identified references without changing
+their normalized parsed expressions. Two additional string-based simulation
+lookups now pass `spatstat.geom::union.owin` and `spatstat.geom::setminus.owin`
+directly to `do.call()`. Existing explicitly namespaced calls are preserved.
+
+The legacy source fixture remains unchanged. Its private replay environment
+provides only ppp, owin, and as.polygonal; production namespaces no longer contain
+copied spatstat functions or installed-package enumeration objects.

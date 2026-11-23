@@ -1,18 +1,25 @@
+# Generate small paired files at test time; no private acquisition data or
+# network download is needed. Compare metadata with Cardinal reading the same
+# file because the upstream writer may change run labels during serialization.
+
 test_that("processed and continuous imzML pairs support both memory modes", {
     for (arrays in c(TRUE, FALSE)) {
-        x <- if (arrays) make_msi_arrays() else make_msi_experiment()
+        x <- if (arrays)
+            make_msi_arrays() else make_msi_experiment()
         path <- write_msi_pair(x, tempfile(fileext = ".imzML"))
         for (memory in c(FALSE, TRUE)) {
             actual <- readMsi(path, memory = memory, verbose = FALSE)
             expect_s4_class(actual, "MSImagingArrays")
             expect_equal(.msiCoordinates(actual), .msiCoordinates(x))
-            direct <- Cardinal::readMSIData(path, memory = memory, as = "MSImagingArrays", verbose = FALSE)
+            direct <- Cardinal::readMSIData(path, memory = memory, as = "MSImagingArrays",
+                verbose = FALSE)
             expect_equal(.msiRun(actual), .msiRun(direct))
             expect_equal(Cardinal::pixelData(actual), Cardinal::pixelData(direct))
             expect_equal(Cardinal::experimentData(actual), Cardinal::experimentData(direct))
             expect_true(ProtGenerics::centroided(actual))
             expect_equal(.msiExtractIon(actual, 100, 0.1, "sum"), c(16, 3, 0))
-            if (!memory) expect_true(methods::is(Cardinal::intensity(actual), "matter"))
+            if (!memory)
+                expect_true(methods::is(Cardinal::intensity(actual), "matter"))
         }
         if (!arrays) {
             shared <- readMsi(path, as = "MSImagingExperiment", verbose = FALSE)
@@ -33,8 +40,8 @@ test_that("processed profile input is imported without assuming centroid status"
 })
 
 test_that("multi-run import supports exact run selection without mixing coordinates", {
-    x <- make_msi_arrays(coordinates = data.frame(x = c(1, 1, 2), y = c(1, 1, 1)),
-                         runs = c("a", "b", "a"))
+    x <- make_msi_arrays(coordinates = data.frame(x = c(1, 1, 2), y = c(1, 1, 1)), runs = c("a",
+        "b", "a"))
     path <- write_msi_pair(x, tempfile(fileext = ".imzML"))
     all <- readMsi(path, verbose = FALSE)
     expect_equal(.msiRun(all), c("a", "b", "a"))

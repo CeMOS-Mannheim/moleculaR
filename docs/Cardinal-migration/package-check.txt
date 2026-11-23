@@ -6,7 +6,7 @@
     GNU Fortran (GCC) 14.3.0
 * running under: Windows 11 x64 (build 26200)
 * using session charset: ASCII
-* current time: 2026-11-23 09:04:43 UTC
+* current time: 2026-11-23 09:43:26 UTC
 * using options '--no-manual --no-build-vignettes'
 * checking for file 'moleculaR/DESCRIPTION' ... OK
 * checking extension type ... Package
@@ -34,7 +34,7 @@ These are not fully portable file names.
 See section 'Package structure' in the 'Writing R Extensions' manual.
 * checking whether package 'moleculaR' can be installed ... OK
 * checking installed package size ... INFO
-  installed size is 48.4Mb
+  installed size is 48.2Mb
   sub-directories of 1Mb or more:
     data     13.0Mb
     extdata  34.5Mb
@@ -60,21 +60,25 @@ characters in files.
 * checking whether the namespace can be unloaded cleanly ... OK
 * checking loading without being on the library search path ... OK
 * checking dependencies in R code ... WARNING
-'::' or ':::' imports not declared from:
-  'Cairo' 'polyclip' 'spatstat.utils'
+'::' or ':::' import not declared from: 'Cairo'
 Namespaces in Imports field not imported from:
-  'import' 'shinyWidgets' 'shinythemes' 'spatstat'
+  'shinyWidgets' 'shinythemes'
   All declared Imports should be used.
 * checking S3 generic/method consistency ... WARNING
+print:
+  function(x, ...)
+print.molProbMap:
+  function(obj)
+
 print:
   function(x, ...)
 print.fwhm:
   function(obj)
 
-print:
+plot:
   function(x, ...)
-print.molProbMap:
-  function(obj)
+plot.fwhm:
+  function(obj, ...)
 
 plot:
   function(x, ...)
@@ -82,11 +86,6 @@ plot.molProbMap:
   function(obj, what, densityAsBase, sppArgs, imageArgs, fArgs,
            rescale, smooth, zero.rm, signifArea, ionImage, figLegend,
            lwd.signifArea, col.hotspot, col.coldspot)
-
-plot:
-  function(x, ...)
-plot.fwhm:
-  function(obj, ...)
 See section 'Generic functions and methods' in the 'Writing R
 Extensions' manual.
 * checking replacement functions ... OK
@@ -414,7 +413,6 @@ Package vignette without corresponding single PDF/HTML:
 * checking re-building of vignette outputs ... SKIPPED
 * DONE
 Status: 10 WARNINGs, 2 NOTEs
-
 Warning: unable to access index for repository https://cloud.r-project.org/src/contrib:
   cannot open URL 'https://cloud.r-project.org/src/contrib/PACKAGES'
 

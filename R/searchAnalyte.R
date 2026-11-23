@@ -43,7 +43,6 @@
 #'
 #' @export
 #' @md
-#' @include manualSpatstatImport.R
 #'
 searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              verifiedMasses = NA, confirmedOnly = FALSE,
@@ -118,7 +117,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
 
        # window object
        if(identical(spwin, NA)){
-             spwin <- as.polygonal(owin(mask = spData$coordinates))
+             spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
        }
 
        if(confirmedOnly){ # if only confirmed detections are needed
@@ -204,7 +203,7 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
       # creates an empty spp compatible with the internal representation
       # of moleculaR
 
-      return(ppp(x = integer(0),
+      return(spatstat.geom::ppp(x = integer(0),
                                 y = integer(0),
                                 marks = data.frame(idx = integer(0), intensity = numeric(0)),
                                 window = spwin,

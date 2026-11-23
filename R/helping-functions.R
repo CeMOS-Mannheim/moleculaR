@@ -1,5 +1,4 @@
 
-#' @include manualSpatstatImport.R
 NULL
 
 
@@ -87,7 +86,7 @@ dsc <- function(win0, win1, winBackground = NULL, plot = FALSE){
 
       stopifnot(class(win0) == "owin", class(win1) == "owin")
 
-      s   <- intersect.owin(win0, win1)
+      s   <- spatstat.geom::intersect.owin(win0, win1)
 
       if(is.null(s)) {
 
@@ -97,23 +96,23 @@ dsc <- function(win0, win1, winBackground = NULL, plot = FALSE){
 
       }
 
-      dscVal   = (2 * area.owin(s))/(area.owin(win0) + area.owin(win1))
+      dscVal   = (2 * spatstat.geom::area.owin(s))/(spatstat.geom::area.owin(win0) + spatstat.geom::area.owin(win1))
 
       if(plot){
             if(!is.null(winBackground)){
-                  plot.owin(winBackground,
+                  spatstat.geom::plot.owin(winBackground,
                             ylim = rev(winBackground$yrange),
                             main = paste0("Dice Similarity Coefficient = ", round(dscVal, 3)))
-                  plot.owin(win0, col = rgb(0,1,0,1), add = TRUE)
-                  plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
-                  plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
+                  spatstat.geom::plot.owin(win0, col = rgb(0,1,0,1), add = TRUE)
+                  spatstat.geom::plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
+                  spatstat.geom::plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
             } else {
-                  plot.owin(win0,
+                  spatstat.geom::plot.owin(win0,
                             ylim = rev(win0$yrange),
                             col = rgb(0,1,0,1),
                             main = paste0("Dice Similarity Coefficient = ", round(dscVal, 3)))
-                  plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
-                  plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
+                  spatstat.geom::plot.owin(win1, col = rgb(1,0,0,1), add = TRUE)
+                  spatstat.geom::plot.owin(s, col = rgb(1,1,0,1), add = TRUE)
             }
 
             legend("topleft", bty = "n", horiz = FALSE,
@@ -164,13 +163,13 @@ spp2im <- function(obj, weighted = TRUE, rescale = FALSE, zero.rm = FALSE, ...){
             w <- NULL
       }
 
-      im <- pixellate(obj,
+      im <- spatstat.geom::pixellate(obj,
                       weights = w,
                       #W = as.mask(win,dimyx=c(diff(win$yrange) + 1, diff(win$xrange) + 1)),
-                      W = as.mask(win,dimyx=c(diff(win$yrange), diff(win$xrange))),
+                      W = spatstat.geom::as.mask(win,dimyx=c(diff(win$yrange), diff(win$xrange))),
                       ...)
 
-      im <- as.im(im) # fix coordinates inconsistancies
+      im <- spatstat.geom::as.im(im) # fix coordinates inconsistancies
 
       if(zero.rm){
             im[im == 0] <- NA
@@ -215,7 +214,7 @@ im2spp <- function(obj, win , rescale = FALSE, zero.rm = TRUE, mzVal = "mz"){
             obj[obj == 0] <- NA
       }
 
-      obj <- as.im(obj) # fix coordinates inconsistancies
+      obj <- spatstat.geom::as.im(obj) # fix coordinates inconsistancies
 
 
 
@@ -225,7 +224,7 @@ im2spp <- function(obj, win , rescale = FALSE, zero.rm = TRUE, mzVal = "mz"){
       }
 
       # convert back to dataframe
-      imdf <- as.data.frame.im(x = obj)
+      imdf <- spatstat.geom::as.data.frame.im(x = obj)
 
       if(any(is.infinite(imdf$value))){
             imdf <- imdf[which(is.finite(imdf$value)), ]

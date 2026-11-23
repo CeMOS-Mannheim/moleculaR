@@ -1,5 +1,4 @@
 
-#' @include manualSpatstatImport.R
 NULL
 
 
@@ -106,8 +105,8 @@ focusPlot <- function(x, m, fwhm, sigmalim = 6, col = NULL){
 
                   polygon(x = c(gxx[1], gxx, gxx[length(gxx)], gxx[1]),
                           y = c(0, gyy, 0, 0),
-                          col =  to.transparent(col[ii], 0.25),
-                          border = to.transparent(col[ii], 0.25))
+                          col =  spatstat.geom::to.transparent(col[ii], 0.25),
+                          border = spatstat.geom::to.transparent(col[ii], 0.25))
 
                   abline(v = m[ii], lty="dashed", lwd = 0.75, col = col[ii])
 
@@ -204,7 +203,7 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
 
       if(obj$n == 0){
 
-            plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+            spatstat.geom::plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                      ylim = yrange,
                      main = main)
 
@@ -218,13 +217,13 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
                   }
 
 
-                  colfun <- colourmap(col = to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
+                  colfun <- spatstat.geom::colourmap(col = spatstat.geom::to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
                                       range = range(obj$marks$intensity))
 
-                  plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+                  spatstat.geom::plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                            ylim = yrange,
                            main = main,
-                           symap = symbolmap(pch = pch,
+                           symap = spatstat.geom::symbolmap(pch = pch,
                                              cols = colfun,
                                              size = size,
                                              range = range(obj$marks$intensity)),
@@ -239,12 +238,12 @@ plotAnalyte <- function(obj, colourPal = "inferno", uniformCol = NULL, transpFac
                         obj <- .rescale(obj)
                   }
 
-                  col <- to.transparent(uniformCol, transpFactor)
+                  col <- spatstat.geom::to.transparent(uniformCol, transpFactor)
 
-                  plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
+                  spatstat.geom::plot.ppp(obj, use.marks = TRUE, which.marks = "intensity",
                            ylim = yrange,
                            main = main,
-                           symap = symbolmap(pch = pch,
+                           symap = spatstat.geom::symbolmap(pch = pch,
                                              cols = col,
                                              size = size),
                            leg.side = leg.side,
@@ -307,7 +306,7 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
       if(is.null(uniformCol)){
 
             if(smooth){
-                  obj <- Smooth.im(obj, sigma = 0.5,
+                  obj <- spatstat.explore::Smooth.im(obj, sigma = 0.5,
                                    bleed = FALSE, normalise = TRUE)
             }
 
@@ -322,8 +321,8 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 
 
 
-            plot.im(x = obj,
-                    col = colourmap(to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
+            spatstat.geom::plot.im(x = obj,
+                    col = spatstat.geom::colourmap(spatstat.geom::to.transparent((viridis::viridis_pal(option = colourPal)(100)), transpFactor),
                                     range = irange),
                     ylim = yrange,
                     box = FALSE,
@@ -336,10 +335,10 @@ plotImg <- function(obj, colourPal = "inferno", uniformCol = NULL,
 
 
 
-            col <- to.transparent(uniformCol, transpFactor)
+            col <- spatstat.geom::to.transparent(uniformCol, transpFactor)
 
 
-            plot.im(x = obj,
+            spatstat.geom::plot.im(x = obj,
                     col = col,
                     ylim = yrange,
                     box = FALSE,
@@ -528,21 +527,21 @@ plot.molProbMap <- function(obj,
                     lines(fmoi, col =  "forestgreen", lwd = fArgs$lwd)
 
                     polygon(x = c(upperCutoff, xmax, xmax, upperCutoff),
-                            y = c(ymin, ymin, ymax, ymax), col = to.transparent("coral2", 0.5),
+                            y = c(ymin, ymin, ymax, ymax), col = spatstat.geom::to.transparent("coral2", 0.5),
                             border = NA)
 
                     polygon(x = c(xmin, lowerCutoff, lowerCutoff, xmin),
-                            y = c(ymin, ymin, ymax, ymax), col = to.transparent("cornflowerblue", 0.5),
+                            y = c(ymin, ymin, ymax, ymax), col = spatstat.geom::to.transparent("cornflowerblue", 0.5),
                             border = NA)
 
                     polygon(x = c(fcsr$x[fcsr$x >= upperCutoff],  upperCutoff),
                             y = c(fcsr$y[fcsr$x >= upperCutoff],  0),
-                            col = to.transparent("red", 0.5),
+                            col = spatstat.geom::to.transparent("red", 0.5),
                             border = NA)
 
                     polygon(x = c(fcsr$x[fcsr$x <= lowerCutoff], lowerCutoff),
                             y = c(fcsr$y[fcsr$x <= lowerCutoff],  0),
-                            col = to.transparent("blue", 0.5),
+                            col = spatstat.geom::to.transparent("blue", 0.5),
                             border = NA)
 
                     if(figLegend){
@@ -567,7 +566,7 @@ plot.molProbMap <- function(obj,
 
                           if(smooth){
                                 imgMpm <- spp2im(obj$sppMoi, zero.rm = zero.rm)
-                                imgMpm <- Smooth.im(imgMpm, sigma = 0.5,
+                                imgMpm <- spatstat.explore::Smooth.im(imgMpm, sigma = 0.5,
                                                     bleed = FALSE, normalise = TRUE)
                           }else{
                                 imgMpm <- spp2im(obj$sppMoi, zero.rm = zero.rm)
@@ -603,13 +602,13 @@ plot.molProbMap <- function(obj,
 
 
                     if(signifArea == "both" | signifArea == "hotspot"){
-                          plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
-                          plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = col.hotspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
+                          spatstat.geom::plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
+                          spatstat.geom::plot.owin(obj$hotspotpp$window, col = rgb(1,1,1,0.0), border = col.hotspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
                     }
 
                     if(signifArea == "both" | signifArea == "coldspot"){
-                          plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
-                          plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = col.coldspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
+                          spatstat.geom::plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = "white", lwd = lwd.signifArea,  add = TRUE)
+                          spatstat.geom::plot.owin(obj$coldspotpp$window, col = rgb(1,1,1,0.0), border = col.coldspot, lwd = lwd.signifArea/2, lty = "dashed",add = TRUE)
                     }
 
                     if(figLegend){

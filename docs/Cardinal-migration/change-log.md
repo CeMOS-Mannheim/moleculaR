@@ -132,3 +132,56 @@ work from validation still outstanding.
 - First single-analyte milestone is implemented. Full migration acceptance,
   warning cleanup, Linux/macOS testing, batch extraction, preprocessing/FWHM
   changes, Shiny, and proof of large-dataset improvement remain outstanding.
+
+## 2026-11-23 — Step 6: intermediary spatstat and readability cleanup
+
+- User requested removal of the dynamic spatstat importer and more generous
+  documentation, comments, and spacing before starting batch extraction.
+- Starting commit: `321e1bc`; branch remains `Cardinal-dev`. Existing user edits
+  to the migration specification, vignette ignore file, and reference material
+  remain outside this intermediary change.
+- Audited actual exports of the installed spatstat family and recorded D009
+  before editing. Geometry/image functions belong to spatstat.geom, densities
+  and image smoothing to spatstat.explore, simulations to spatstat.random,
+  and input/polygon helpers to spatstat.utils.
+- Implementation and validation results are recorded below as completed.
+- Removed `R/manualSpatstatImport.R` and `man/manualSpatstatImport.Rd`; removed
+  Collate and roxygen include links. Replaced `import` / `spatstat` runtime
+  dependencies with direct geometry, exploration, random, and utility packages.
+- Qualified 94 parser-identified calls/references across spatial constructors,
+  analyte/batch search, image helpers, plotting, probability mapping, simulation,
+  subsetting, and superposition. Normalized parsed-expression comparisons passed.
+  Two additional simulation lookups now use explicit function references in
+  `do.call()` rather than string lookup for union/set difference.
+- Expanded the three new Cardinal source files with helper contracts, stepwise
+  comments, braced validation blocks, and separated argument layouts. Added
+  purpose/invocation/output comments to the development scripts and explanatory
+  notes to the fixtures/tests. Added source/script navigation to the milestone
+  report. Formatting-only passes were checked for identical parsed expressions;
+  preserved the original public API roxygen text.
+- Corrected the active walkthrough's point-pattern class reference to
+  `spatstat.geom::ppp`; archived walkthrough copies remain historical references.
+- Kept the frozen legacy source/data untouched; its replay adapter binds three
+  geometry functions locally now that the package no longer copies them.
+- Added namespace, image conversion, superposition/subset, expression evaluation,
+  Scott bandwidth, all simulation shapes, and headless plotting/smoothing tests.
+  Added malformed-metadata cases for the clearer validation block. All **302
+  assertions across 18 tests pass**, with no test warnings, skips, or failures.
+- Runtime global-function audit found no unresolved spatstat functions in the
+  package namespace. Verified child versions: geom 3.8.3, explore 3.8.3,
+  random 3.5.2, utils 3.2.6. `BiocManager::valid()` returned TRUE; renv.lock
+  drops the two retired direct packages without changing installed versions.
+- Existing saved intensity, default-FWHM, and seeded probability-map references
+  still pass at the original tolerances. No numerical differences were observed;
+  the frozen fixture files are unchanged. Final package-check results follow.
+- This step changes dependency resolution and readability. No new performance
+  claims are made; the first-milestone benchmark remains a historical observation.
+  Batch extraction and the next scientific migration milestone have not started.
+- Final source-archive build and installation pass. R CMD check completed with
+  **zero errors, 10 existing warnings, and 2 notes**. Its installed-package suite
+  reports **FAIL 0 / WARN 0 / SKIP 0 / PASS 302**, and all four older standalone
+  regression scripts pass. Remaining warnings concern legacy documentation,
+  non-ASCII plotting text, undeclared Cairo/polyclip and unused Shiny imports,
+  S3 signatures, filenames, data compression, and vignette packaging. The retired
+  import/spatstat entries and copied-method roxygen warnings are gone. Reports
+  are updated in `package-build.txt`, `package-check.txt`, and `test-results.csv`.

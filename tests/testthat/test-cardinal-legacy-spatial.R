@@ -1,9 +1,13 @@
+# Scientific regression boundary: extraction on equivalent numerical spectra,
+# followed by unchanged spatial calculations with fixed seeds and bandwidth.
+# Incidental metadata identifiers are deliberately excluded from comparisons.
+
 test_that("equivalent spectra reproduce the fixed legacy extraction reference", {
     f <- legacy_fixture()
     for (x in list(fixture_cardinal(TRUE), fixture_cardinal(FALSE))) {
         for (method in names(f$patterns)) {
-            actual <- searchAnalyte(f$target, f$fwhm, x, wMethod = method,
-                                    verifiedMasses = c(100, 200))
+            actual <- searchAnalyte(f$target, f$fwhm, x, wMethod = method, verifiedMasses = c(100,
+                200))
             expected <- f$patterns[[method]]
             expect_s3_class(actual, "analytePointPattern")
             expect_equal(actual$x, expected$x)
@@ -11,7 +15,8 @@ test_that("equivalent spectra reproduce the fixed legacy extraction reference", 
             expect_equal(actual$marks$intensity, expected$intensity, tolerance = 1e-10)
             expect_equal(actual$metaData$mzConfirmed, expected$mzConfirmed)
             expect_equal(spatstat.geom::area.owin(actual$window), nrow(f$coordinates))
-            expect_true(spatstat.geom::inside.owin(tail(f$coordinates$x, 1), tail(f$coordinates$y, 1), actual$window))
+            expect_true(spatstat.geom::inside.owin(tail(f$coordinates$x, 1), tail(f$coordinates$y,
+                1), actual$window))
             expect_false(spatstat.geom::inside.owin(12, 3, actual$window))
         }
     }
@@ -20,8 +25,8 @@ test_that("equivalent spectra reproduce the fixed legacy extraction reference", 
 
 test_that("temporary legacy sparse dispatch preserves existing aggregation", {
     f <- legacy_fixture()
-    sparse <- sparseIntensityMatrix(Matrix::Matrix(t(f$intensity), sparse = TRUE),
-                                    f$mz, f$coordinates)
+    sparse <- sparseIntensityMatrix(Matrix::Matrix(t(f$intensity), sparse = TRUE), f$mz,
+        f$coordinates)
     for (method in names(f$patterns)) {
         actual <- searchAnalyte(100, 0.1, sparse, wMethod = method)
         expect_equal(actual$marks$intensity, f$patterns[[method]]$intensity, tolerance = 1e-10)
@@ -33,23 +38,22 @@ test_that("temporary legacy sparse dispatch preserves existing aggregation", {
 test_that("unaligned observed-peak means differ by the documented denominator", {
     x <- fixture_cardinal(TRUE, dropZeros = TRUE)
     f <- legacy_fixture()
-    expect_equal(.msiExtractIon(x, 100, 0.1, "sum")[1:5],
-                 c(f$patterns$sum$intensity[1:5]))
+    expect_equal(.msiExtractIon(x, 100, 0.1, "sum")[1:5], c(f$patterns$sum$intensity[1:5]))
     actual <- .msiExtractIon(x, 100, 0.1, "mean")
     count <- colSums(f$intensity[2:4, , drop = FALSE] > 0)
     expected <- numeric(ncol(f$intensity))
-    expected[count > 0] <- colSums(f$intensity[2:4, , drop = FALSE])[count > 0] / count[count > 0]
+    expected[count > 0] <- colSums(f$intensity[2:4, , drop = FALSE])[count > 0]/count[count >
+        0]
     expect_equal(actual, expected)
     expect_gt(max(abs(actual[1:168] - f$patterns$mean$intensity)), 0)
 })
 
 test_that("strict mass windows quantify the nearest-index boundary difference", {
-    legacy <- new.env(parent = asNamespace("moleculaR"))
-    sys.source(test_path("..", "fixtures", "legacy", "searchAnalyte.R"), envir = legacy)
+    legacy <- legacy_search_environment()
     mz <- c(99.9, 100, 100.14)
     x <- make_msi_arrays(list(mz), list(c(2, 10, 8)), data.frame(x = 1, y = 1))
     sparse <- sparseIntensityMatrix(Matrix::Matrix(matrix(c(2, 10, 8), 1), sparse = TRUE),
-                                    mz, data.frame(x = 1, y = 1))
+        mz, data.frame(x = 1, y = 1))
     win <- spatstat.geom::as.polygonal(spatstat.geom::owin(c(0.5, 1.5), c(0.5, 1.5)))
     old <- suppressWarnings(legacy$searchAnalyte(100, 0.1, sparse, spwin = win, wMethod = "sum"))
     new <- searchAnalyte(100, 0.1, x, spwin = win, wMethod = "sum")

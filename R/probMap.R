@@ -44,7 +44,6 @@
 #'
 #'
 #' @export
-#' @include manualSpatstatImport.R
 #'
 probMap                     <- function(sppMoi,
                                         reference = NULL,
@@ -78,7 +77,7 @@ probMap                     <- function(sppMoi,
 
             is.crossTissueCase <- TRUE
 
-            if(!(is.ppp(reference))) {
+            if(!(spatstat.geom::is.ppp(reference))) {
                   stop("Supplied reference is not an ppp object. \n")
             }
 
@@ -195,21 +194,21 @@ probMap                     <- function(sppMoi,
 
       ## __ hotspot __ ##
 
-      hotspotIm        <- eval.im(rhoMoi * (pvalsUprSpatial <= pvalThreshold))
+      hotspotIm        <- spatstat.geom::eval.im(rhoMoi * (pvalsUprSpatial <= pvalThreshold))
 
       if(is.crossTissueCase){ # points of sppMoi that are not drawn from the distribution of reference
-            hotspotIm        <- eval.im(hotspotIm * (pvalsUprIntensity <= pvalThreshold))
+            hotspotIm        <- spatstat.geom::eval.im(hotspotIm * (pvalsUprIntensity <= pvalThreshold))
       }
 
       # filter out points lying outside the computed hotspot
       tmpIm            <- hotspotIm
       tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] <- NA # manually set zero pixels to NA to remove them from mask
-      hotspotMask      <- as.owin(tmpIm)
+      hotspotMask      <- spatstat.geom::as.owin(tmpIm)
 
 
-      hotspotpp        <- ppp(x = sppMoi$x,
+      hotspotpp        <- spatstat.geom::ppp(x = sppMoi$x,
                               y = sppMoi$y,
-                              window = as.polygonal(hotspotMask),
+                              window = spatstat.geom::as.polygonal(hotspotMask),
                               marks = sppMoi$marks,
                               checkdup = FALSE)
 
@@ -219,21 +218,21 @@ probMap                     <- function(sppMoi,
 
       ## __ coldspot __ ##
 
-      coldspotIm        <- eval.im(rhoMoi * (pvalsLwrSpatial <= pvalThreshold))
+      coldspotIm        <- spatstat.geom::eval.im(rhoMoi * (pvalsLwrSpatial <= pvalThreshold))
 
       if(is.crossTissueCase){ # points of sppMoi that are not drawn from the distribution of reference
-            coldspotIm        <- eval.im(coldspotIm * (pvalsLwrIntensity <= pvalThreshold))
+            coldspotIm        <- spatstat.geom::eval.im(coldspotIm * (pvalsLwrIntensity <= pvalThreshold))
       }
 
       # filter out points lying outside the computed coldspot
       tmpIm             <- coldspotIm
       tmpIm$v[which(tmpIm$v == 0, arr.ind = TRUE)] <- NA # manually set zero pixels to NA to remove them from mask
-      coldspotMask      <- as.owin(tmpIm)
+      coldspotMask      <- spatstat.geom::as.owin(tmpIm)
 
 
-      coldspotpp        <- ppp(x = sppMoi$x,
+      coldspotpp        <- spatstat.geom::ppp(x = sppMoi$x,
                                y = sppMoi$y,
-                               window = as.polygonal(coldspotMask),
+                               window = spatstat.geom::as.polygonal(coldspotMask),
                                marks = sppMoi$marks,
                                checkdup = FALSE)
 
@@ -266,7 +265,7 @@ probMap                     <- function(sppMoi,
 
       if(is.null(reference)){
 
-            csrMoi         <- rpoint(n = sppMoi$n, win = sppMoi$window)
+            csrMoi         <- spatstat.random::rpoint(n = sppMoi$n, win = sppMoi$window)
 
             csrMoi$marks   <- data.frame(intensity = sample(sppMoi$marks$intensity))
 
@@ -277,7 +276,7 @@ probMap                     <- function(sppMoi,
 
       }else{
 
-            csrMoi              <- rpoint(n = sppMoi$n, win = sppMoi$window)
+            csrMoi              <- spatstat.random::rpoint(n = sppMoi$n, win = sppMoi$window)
 
 
             if(reference$n >= csrMoi$n){
@@ -308,12 +307,12 @@ probMap                     <- function(sppMoi,
       w       <- spp$marks$intensity
 
       # create a spaital window
-      win <- as.mask(spp$window,
+      win <- spatstat.geom::as.mask(spp$window,
                      dimyx=c(diff(spp$window$yrange),
                              diff(spp$window$xrange)))
 
       # create a density map for spp
-      sppRho  <- density.ppp(x = spp, sigma = sigma,
+      sppRho  <- spatstat.explore::density.ppp(x = spp, sigma = sigma,
                              weights = w,
                              W = win, positive = TRUE)
 
@@ -343,7 +342,7 @@ probMap                     <- function(sppMoi,
       sigmacsrMoi         <- sd(rhoCsr, na.rm = TRUE)
 
       # convert to data.frame
-      rhoMoidf <- as.data.frame.im(x = rhoMoi)
+      rhoMoidf <- spatstat.geom::as.data.frame.im(x = rhoMoi)
       pvals <- rhoMoidf
 
       # generate p-values - lower tail or upper tail
@@ -353,7 +352,7 @@ probMap                     <- function(sppMoi,
       pvals$value <- p.adjust(p = pvals$value, method = pvalCorrection)
 
       # convert back to image
-      pvals <- as.im.data.frame(pvals)
+      pvals <- spatstat.geom::as.im.data.frame(pvals)
 
       return(pvals)
 
@@ -373,8 +372,8 @@ probMap                     <- function(sppMoi,
       # returns an image whose intensities are probabilities.
 
       # convert to data.frame
-      dfRef <- as.data.frame.im(spp2im(sppRef, rescale = FALSE, zero.rm = TRUE))
-      dfTest <- as.data.frame.im(spp2im(sppTest, rescale = FALSE, zero.rm = TRUE))
+      dfRef <- spatstat.geom::as.data.frame.im(spp2im(sppRef, rescale = FALSE, zero.rm = TRUE))
+      dfTest <- spatstat.geom::as.data.frame.im(spp2im(sppTest, rescale = FALSE, zero.rm = TRUE))
       pvals <- dfTest
 
 
@@ -403,7 +402,7 @@ probMap                     <- function(sppMoi,
       # pvals$value[zridx] <- 1e-10
 
       # convert to image
-      pvals <- as.im.data.frame(pvals)
+      pvals <- spatstat.geom::as.im.data.frame(pvals)
 
       # set empty pixels to NA
       #pvals$v[which(pvals$v == 0, arr.ind = TRUE)] <- NA
@@ -426,7 +425,7 @@ probMap                     <- function(sppMoi,
 
       par(bty = "n",  cex.axis = 1.5, cex.lab = 1.5, mar = c(5.1, 5.1, 4.1, 2.1))
       vioplot::vioplot(x = plotlist, ylab ="Intensities", main = "Cross-tissue Intensities",
-                       col=c(to.transparent("#FF8C69", 0.5), to.transparent("#00FFFF", 0.5)),
+                       col=c(spatstat.geom::to.transparent("#FF8C69", 0.5), spatstat.geom::to.transparent("#00FFFF", 0.5)),
                        plotCentre = "point", rectCol = "white", colMed = "black",
                        areaEqual = F, wex = 1, ylim = c(mn,plotmx))
       # line segments
@@ -490,7 +489,7 @@ probMap                     <- function(sppMoi,
 
       #// create a dataframe to hold the results
       bwdf        <- data.frame(bw = bw, moransI = numeric(length(bw)))
-      win         <- as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),
+      win         <- spatstat.geom::as.mask(sppMoi$window, dimyx=c(diff(sppMoi$window$yrange),
                                                     diff(sppMoi$window$xrange)))
 
 
@@ -513,7 +512,7 @@ probMap                     <- function(sppMoi,
 
 
             # create a density map for the image
-            rhoMoi      <- density.ppp(x = sppMoi, sigma = bwi,
+            rhoMoi      <- spatstat.explore::density.ppp(x = sppMoi, sigma = bwi,
                                        weights = sppMoi$marks$intensity,
                                        W = win)
 
@@ -790,9 +789,9 @@ kneePoint     <- function(x, y, df = 7,
 #// the following function is already available in recent spatstat versions.
 .bw.scott2 <- function(X, isotropic=FALSE, d = NULL) {
 
-      if(is.null(d)) { d <- spatdim(X) } else check.1.integer(d)
-      nX <- npoints(X)
-      cX <- coords(X, spatial=TRUE, temporal=FALSE, local=FALSE)
+      if(is.null(d)) { d <- spatstat.geom::spatdim(X) } else spatstat.utils::check.1.integer(d)
+      nX <- spatstat.geom::npoints(X)
+      cX <- spatstat.geom::coords(X, spatial=TRUE, temporal=FALSE, local=FALSE)
       sdX <- apply(cX, 2, sd)
       if(isotropic) {
             #' geometric mean
@@ -822,7 +821,7 @@ kneePoint     <- function(x, y, df = 7,
       if (!("analytePointPattern" %in% class(spp))) {
             stop(".erosion: spp must be of 'analytePointPattern' and 'ppp' class. \n")
       }
-      erodedWin <- erosion(w = spp$window, r = 0.5)
+      erodedWin <- spatstat.geom::erosion(w = spp$window, r = 0.5)
       spp <- analytePointPattern(x = spp$x, y = spp$y, intensity = spp$marks$intensity,
                                  win = erodedWin, mzVals = spp$metaData$mzVals, metaData = as.list(spp$metaData))
       return(spp)

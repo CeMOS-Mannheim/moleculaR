@@ -28,33 +28,68 @@
 #' @seealso \code{\link{searchAnalyte}}, \code{Cardinal::readMSIData}
 #' @export
 readMsi <- function(path, memory = FALSE, as = "MSImagingArrays", run = NULL, ...) {
-    if (!is.character(path) || length(path) != 1L || is.na(path) || !nzchar(path))
+    # Validate the pair before calling the reader. The XML and binary file share
+    # a filename stem, and both must stay accessible for file-backed analysis.
+    if (!is.character(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
         stop("path must be a single imzML filename.")
-    if (!file.exists(path) || isTRUE(file.info(path)$isdir))
+    }
+
+    if (!file.exists(path) || isTRUE(file.info(path)$isdir)) {
         stop("The imzML file does not exist: ", path)
-    if (tolower(tools::file_ext(path)) != "imzml")
+    }
+
+    if (tolower(tools::file_ext(path)) != "imzml") {
         stop("readMsi() currently supports imzML files only.")
+    }
+
     ibd <- paste0(tools::file_path_sans_ext(path), ".ibd")
-    if (!file.exists(ibd) || isTRUE(file.info(ibd)$isdir))
+
+    if (!file.exists(ibd) || isTRUE(file.info(ibd)$isdir)) {
         stop("The paired ibd file does not exist: ", ibd)
-    if (!is.logical(memory) || length(memory) != 1L || is.na(memory))
+    }
+
+    if (!is.logical(memory) || length(memory) != 1L || is.na(memory)) {
         stop("memory must be TRUE or FALSE.")
+    }
+
     as <- match.arg(as, c("MSImagingArrays", "MSImagingExperiment", "auto"))
     dots <- list(...)
-    if (isTRUE(dots$parse.only))
+
+    if (isTRUE(dots$parse.only)) {
         stop("readMsi() returns MSI objects; use Cardinal::readMSIData() for parse.only.")
+    }
+
+    # Cardinal normally warns about integrity problems. An explicit check=TRUE
+    # requests strict import: stop on reader warnings rather than returning an
+    # object whose binary data or metadata may not have passed those checks.
     x <- withCallingHandlers(
         Cardinal::readMSIData(file = path, memory = memory, as = as, ...),
         warning = function(w) {
-            if (isTRUE(dots$check)) stop(conditionMessage(w), call. = FALSE)
-        })
+            if (isTRUE(dots$check)) {
+                stop(conditionMessage(w), call. = FALSE)
+            }
+        }
+    )
+
+    # Select spectra and pixel metadata together. Matching labels exactly avoids
+    # accidentally mixing samples with overlapping x/y acquisition coordinates.
     if (!is.null(run)) {
-        if (!is.character(run) || length(run) != 1L || is.na(run) || !nzchar(run))
+        if (!is.character(run) || length(run) != 1L || is.na(run) || !nzchar(run)) {
             stop("run must be a single run name.")
+        }
+
         pixels <- .msiRun(x) == run
-        if (!any(pixels)) stop("Requested run was not found: ", run)
+
+        if (!any(pixels)) {
+            stop("Requested run was not found: ", run)
+        }
+
         x <- .msiSelectPixels(x, pixels)
     }
+
+    # This metadata check deliberately permits profile/unknown centroid status.
+    # The stricter extraction check runs when searchAnalyte() is called.
     .msiValidate(x)
+
     x
 }

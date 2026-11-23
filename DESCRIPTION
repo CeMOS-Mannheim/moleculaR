@@ -17,9 +17,10 @@ Imports:
       BiocParallel,
       ProtGenerics,
       methods,
-      import,
-      spatstat,
       spatstat.geom,
+      spatstat.explore,
+      spatstat.random,
+      spatstat.utils,
       Matrix, 
       MALDIquant, 
       raster,
@@ -41,7 +42,6 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Collate: 
-    'manualSpatstatImport.R'
     'S3classes.R'
     'batchAnalyteSearch.R'
     'batchLipidSearch.R'

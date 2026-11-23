@@ -97,3 +97,24 @@ an extraction discrepancy. Generate controlled regression pairs explicitly
 with `intensity.type = "float64"`; verify imported intensities and retain the
 original 1e-10 scientific comparison tolerance. Production import preserves
 the input file's precision; it does not rewrite or modify the source data.
+
+## 2026-11-23 — D009: explicit spatstat dependencies and readable source
+
+Retire the release-era dynamic importer. Resolve each used spatial function
+against the installed child-package exports and call its owner explicitly:
+`spatstat.geom`, `spatstat.explore`, `spatstat.random`, or `spatstat.utils`.
+Declare those direct dependencies and remove `import` and the `spatstat`
+meta-package from runtime dependencies. Standard generics such as
+`summary(window)` retain ordinary S3 dispatch; a direct method call uses its
+owner, for example `spatstat.geom::summary.owin(window)`.
+
+This intermediary changes name resolution and source readability only. Preserve
+spatial algorithms, parameters, data structures, and saved numerical fixtures.
+Verify the qualification pass by comparing parsed expressions after removing
+the namespace prefixes, then rerun numerical and spatial regressions. Replay
+the immutable legacy source in a test-only environment with its three historical
+geometry bindings; do not reintroduce runtime dynamic imports.
+
+Expand comments, argument layouts, and validation blocks in the new Cardinal
+helpers and development scripts so their purpose, data flow, memory behavior,
+and scientific conventions can be followed without reconstructing the migration.

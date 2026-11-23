@@ -43,7 +43,6 @@
 #' getFwhm(timstof, c(249, 800)) # c(249, 800) / 40000
 #'
 #' @export
-#' @include manualSpatstatImport.R
 useDefaultFwhm <- function(userMassRes = NULL, modality = "FTICR", constant = FALSE) {
       if(!is.character(modality) || length(modality) != 1L || is.na(modality)){
             stop("modality must specify a single instrument type.")

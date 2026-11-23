@@ -9,7 +9,6 @@
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` after subsetting.
 #'
 #' @export
-#' @include manualSpatstatImport.R
 #'
 
 subsetAnalytes <- function(obj, expr){
@@ -24,7 +23,7 @@ subsetAnalytes <- function(obj, expr){
       mtd <- mtd[which(mtd$idx %in% idxToKeep), ]
 
       # call spatstat's subsetting function
-      obj <- subset.ppp(obj, idx %in% idxToKeep)
+      obj <- spatstat.geom::subset.ppp(obj, idx %in% idxToKeep)
 
       # attach metadata
       obj$metaData <- mtd

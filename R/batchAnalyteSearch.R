@@ -22,7 +22,6 @@
 #'
 #' @export
 #'
-#' @include manualSpatstatImport.R
 
 
 batchAnalyteSearch <- function(spData, fwhmObj, spwin = NA, m,
@@ -77,7 +76,7 @@ batchAnalyteSearch <- function(spData, fwhmObj, spwin = NA, m,
 
                                            massNotNA <- !(is.na(mQuery))
                                            massInRange <- ifelse(massNotNA,
-                                                                 check.in.range(mQuery, range(spData$mzAxis), FALSE),
+                                                                 spatstat.utils::check.in.range(mQuery, range(spData$mzAxis), FALSE),
                                                                  FALSE)
 
                                            if(massNotNA & massInRange) {

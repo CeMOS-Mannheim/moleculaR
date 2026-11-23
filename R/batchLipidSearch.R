@@ -23,7 +23,6 @@
 #'
 #' @export
 #'
-#' @include manualSpatstatImport.R
 
 
 batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H", "M+H", "M+Na", "M+K"),
@@ -53,7 +52,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
       #// create sp window
       if(identical(spwin, NA)){
-            spwin <- as.polygonal(owin(mask = spData$coordinates))
+            spwin <- spatstat.geom::as.polygonal(spatstat.geom::owin(mask = spData$coordinates))
       }
 
 
@@ -108,7 +107,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  massNotNA <- !(is.na(lipTmp)) # for example there is no protonated version of this lipid species
                                                  massInRange <- ifelse(massNotNA,
-                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE),
                                                                        FALSE)
 
 
@@ -153,7 +152,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  massNotNA <- !(is.na(lipTmp))
                                                  massInRange <- ifelse(massNotNA,
-                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE),
                                                                        FALSE)
 
                                                  if(massNotNA & massInRange) {
@@ -198,7 +197,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  massNotNA <- !(is.na(lipTmp))
                                                  massInRange <- ifelse(massNotNA,
-                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE),
                                                                        FALSE)
 
                                                  if(massNotNA & massInRange) {
@@ -244,7 +243,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
 
                                                  massNotNA <- !(is.na(lipTmp))
                                                  massInRange <- ifelse(massNotNA,
-                                                                       check.in.range(lipTmp, range(spData$mzAxis), FALSE),
+                                                                       spatstat.utils::check.in.range(lipTmp, range(spData$mzAxis), FALSE),
                                                                        FALSE)
 
                                                  if(massNotNA & massInRange) { # for example there is no Na-adduct version
@@ -332,7 +331,7 @@ batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H"
       # vec is a character vector holding the query adducts
       # spwin is the spatial window of type owin
 
-      emptyspp <- ppp(x = integer(0), y = integer(0),
+      emptyspp <- spatstat.geom::ppp(x = integer(0), y = integer(0),
                       marks = data.frame(idx = integer(0), intensity = numeric(0)),
                       window = spwin, checkdup = FALSE, drop = FALSE)
 

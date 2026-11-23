@@ -130,6 +130,62 @@ rejected for extraction until that status is established explicitly. The
 benchmark uses the original file with an explicit file-level centroid tag.
 Raw local datasets were neither changed nor committed.
 
+## Intermediary cleanup: explicit spatial dependencies and readable source
+
+The release-era dynamic importer has been retired. Spatial calls now identify
+their defining package directly; no scan of installed packages or copied
+spatstat functions is needed when moleculaR loads. The direct dependencies are:
+
+| Package | Responsibility in moleculaR |
+|---|---|
+| `spatstat.geom` | Point patterns, windows, images, geometry, and plotting |
+| `spatstat.explore` | Spatial density estimation and image smoothing |
+| `spatstat.random` | CSR reference sampling and simulated point patterns |
+| `spatstat.utils` | Input checks and polygon utilities |
+
+Ordinary generic calls such as `summary(window)` still use standard S3
+dispatch. Direct method calls use their explicit owner. The scientific spatial
+calculations and the saved legacy numerical fixtures are preserved. Frozen
+legacy source is replayed only in a private reference environment that binds
+its three historical geometry names.
+
+The intermediary suite has **302 passing assertions across 18 tests**, including
+the original numerical comparisons and new spatial/plotting coverage. The
+installed child-package versions and environment validity are recorded in
+`environment.txt`; the retired import and meta-package entries are removed from
+`renv.lock`.
+The source archive also builds and installs successfully. R CMD check passes
+all 302 assertions and the older standalone regression scripts with zero errors;
+the 10 remaining warnings and 2 notes are recorded in `package-check.txt`.
+
+For source navigation, start with these files:
+
+| File | Purpose |
+|---|---|
+| `R/readMsi.R` | Public import: validate the file pair, read Cardinal data, select a run |
+| `R/msi-accessors.R` | Read metadata, select pixels, validate the spatial/processing state |
+| `R/msi-extractIon.R` | Validate targets, aggregate spectra, and construct point patterns |
+| `R/searchAnalyte.R` | Public dispatch between Cardinal and the temporary legacy path |
+| `tests/testthat/helper-cardinal.R` | Small synthetic inputs and frozen-reference adapters |
+| `tests/testthat/test-spatstat-namespaces.R` | Coverage of spatial operations without the importer |
+
+The helpers contain explanatory comments on coordinate order, mean denominators,
+inclusive mass boundaries, annotation matching, processing queues, and memory
+access. Development scripts begin with purpose, invocation, and output notes.
+From the repository root, use `Rscript --vanilla` followed by the script path:
+
+| Script under `docs/Cardinal-migration/` | When to use it |
+|---|---|
+| `setup-environment.R` | Install compatible development dependencies into the local library |
+| `probe-environment.R` | Inspect installed versions and generic signatures without changing them |
+| `inspect-api.R` | Inspect method bodies and exercise two tiny native spectra |
+| `run-tests.R` | Run automatic regressions and update the per-test CSV |
+| `document-package.R` | Regenerate API help, namespace, and source collation |
+| `check-package.R` | Build/check a source archive and save diagnostic reports |
+| `validate-environment.R` | Verify the Bioconductor environment and intentionally update renv.lock |
+| `benchmark-first-milestone.R` | Measure an existing local file-backed dataset |
+| `generate-legacy-fixtures.R` | Deliberately rebuild the historical reference; never a routine test step |
+
 ## Remaining migration
 
 Chunked batch/lipid searches, measured FWHM input migration, normalization,

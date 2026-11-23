@@ -1,14 +1,12 @@
 ## Classes
 ##
-## Under the hood, moleculaR relies on MALDIquant, MALDIquantForeign,
-## Matrix and spatstat packages.It inherits classes from 'Matrix' and
-## 'spatstat' packages. For more info please check the documentation
-## the respective packages.
+## Cardinal manages the new MSI workflow; MALDIquant and Matrix remain for
+## legacy spectral processing during migration. Spatial objects use the
+## explicit spatstat child packages, with ppp and owin supplied by spatstat.geom.
 ##
 ##
 ## to document this -> https://r-pkgs.org/man.html#man-functions
 
-#' @include manualSpatstatImport.R
 NULL
 
 #' fwhm Class Constructor
@@ -216,7 +214,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       if(identical(spp, NA)){
 
 
-         spp <- ppp(x = x, y = y,
+         spp <- spatstat.geom::ppp(x = x, y = y,
                               marks = data.frame(idx = rep(idx, length(intensity)), intensity = intensity),
                               window = win, checkdup = FALSE, drop = FALSE)
 
@@ -240,7 +238,7 @@ analytePointPattern <- function(spp = NA, x = NA, y = NA, win = NA, intensity = 
       }
 
       # remove rejected points
-      spp <- as.ppp(spp)
+      spp <- spatstat.geom::as.ppp(spp)
 
       # metaData object
       #mtdt <- data.frame(idx = idx, mzVals = mzVals, stringsAsFactors = FALSE)
