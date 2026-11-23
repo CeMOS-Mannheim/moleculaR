@@ -1,0 +1,7 @@
+* checking for file 'D:/Projects/moleculaR/DESCRIPTION' ... OK
+* preparing 'moleculaR':
+* checking DESCRIPTION meta-information ... OK
+* checking for LF line-endings in source and make files and shell scripts
+* checking for empty or unneeded directories
+Removed empty directory 'moleculaR/vignettes/.quarto'
+* building 'moleculaR_0.9.7.tar.gz'

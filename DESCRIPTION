@@ -11,10 +11,15 @@ Description: a computational framework  that introduces probabilistic mapping an
     resolved investigation of ion milieus, lipid pathways or user-defined biomolecular ensembles within the 
     same image.
 License: MIT + file LICENSE
-Depends: R (>= 3.5.0) 
+Depends: R (>= 4.6.0)
 Imports: 
+      Cardinal (>= 3.14.0),
+      BiocParallel,
+      ProtGenerics,
+      methods,
       import,
       spatstat,
+      spatstat.geom,
       Matrix, 
       MALDIquant, 
       raster,
@@ -26,12 +31,14 @@ Imports:
       shinythemes
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
 Suggests:
+    CardinalIO,
+    matter,
     MALDIquantForeign,
     rmarkdown,
     knitr,
     testthat (>= 3.2.0)
+Config/testthat/edition: 3
 VignetteBuilder: knitr
 Collate: 
     'manualSpatstatImport.R'
@@ -54,10 +61,13 @@ Collate:
     'legacy-searchLipid.R'
     'loadSwissDB.R'
     'moleculaR.R'
+    'msi-accessors.R'
+    'msi-extractIon.R'
     'normalizeIntensity.R'
     'plotting-functions.R'
     'probMap.R'
     'readCentrData.R'
+    'readMsi.R'
     'readSingleSpect.R'
     'recreateExData.R'
     'runShiny.R'
@@ -68,3 +78,4 @@ Collate:
     'superimposeNoise.R'
     'transformIntensity.R'
     'useDefaultFwhm.R'
+Config/roxygen2/version: 8.1.1

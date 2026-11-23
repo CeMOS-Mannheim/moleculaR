@@ -2,5 +2,8 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.package\.references$
+^docs$
+^CARDINAL_MIGRATION_AGENT\.md$
 data-external
 ^LICENSE\.md$

@@ -117,6 +117,8 @@ The development agent must follow these principles throughout the migration.
 12. Record all scientific and technical decisions.
 13. Do not remove MALDIquant dependencies until the corresponding functionality has been replaced and validated.
 14. Do not declare the migration complete until the acceptance criteria in this document are satisfied.
+15. When suitable alternatives exist, prioritize Bioconductor packages over CRAN packages. Verify compatibility and scientific suitability before selecting a dependency.
+16. Document every development step in `docs/Cardinal-migration/change-log.md`, including files and functions changed, validation results, numerical differences, limitations, and remaining work. Update this log as each step is completed.
 
 ## 2.2 Required development workflow
 

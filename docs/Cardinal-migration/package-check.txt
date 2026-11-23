@@ -1,0 +1,423 @@
+* using log directory 'D:/Projects/moleculaR/renv/local/cardinal-check/moleculaR.Rcheck'
+* using R version 4.6.1 (2026-06-24 ucrt)
+* using platform: x86_64-w64-mingw32
+* R was compiled by
+    gcc.exe (GCC) 14.3.0
+    GNU Fortran (GCC) 14.3.0
+* running under: Windows 11 x64 (build 26200)
+* using session charset: ASCII
+* current time: 2026-11-23 09:04:43 UTC
+* using options '--no-manual --no-build-vignettes'
+* checking for file 'moleculaR/DESCRIPTION' ... OK
+* checking extension type ... Package
+* this is package 'moleculaR' version '0.9.7'
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... INFO
+Package suggested but not available for checking: 'rmarkdown'
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... WARNING
+Found the following files with non-portable file names:
+  planned fixes.txt
+  vignettes/shiny-imgs/closest mz.PNG
+  vignettes/shiny-imgs/cpm ion generate.PNG
+  vignettes/shiny-imgs/cpm ion generated.PNG
+  vignettes/shiny-imgs/cpm lipid classes generate.PNG
+  vignettes/shiny-imgs/cpm lipid classes generated.PNG
+  vignettes/shiny-imgs/cpm lipid sat generate.PNG
+  vignettes/shiny-imgs/cpm lipid sat generated.PNG
+  vignettes/old versions
+These are not fully portable file names.
+See section 'Package structure' in the 'Writing R Extensions' manual.
+* checking whether package 'moleculaR' can be installed ... OK
+* checking installed package size ... INFO
+  installed size is 48.4Mb
+  sub-directories of 1Mb or more:
+    data     13.0Mb
+    extdata  34.5Mb
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... OK
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking code files for non-ASCII characters ... WARNING
+Found the following file with non-ASCII characters:
+  R/plotting-functions.R
+Portable packages must use only ASCII characters in their R code and
+NAMESPACE directives, except perhaps in comments.
+Use \uxxxx escapes for other characters.
+Function 'tools::showNonASCIIfile' can help in finding non-ASCII
+characters in files.
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... WARNING
+'::' or ':::' imports not declared from:
+  'Cairo' 'polyclip' 'spatstat.utils'
+Namespaces in Imports field not imported from:
+  'import' 'shinyWidgets' 'shinythemes' 'spatstat'
+  All declared Imports should be used.
+* checking S3 generic/method consistency ... WARNING
+print:
+  function(x, ...)
+print.fwhm:
+  function(obj)
+
+print:
+  function(x, ...)
+print.molProbMap:
+  function(obj)
+
+plot:
+  function(x, ...)
+plot.molProbMap:
+  function(obj, what, densityAsBase, sppArgs, imageArgs, fArgs,
+           rescale, smooth, zero.rm, signifArea, ionImage, figLegend,
+           lwd.signifArea, col.hotspot, col.coldspot)
+
+plot:
+  function(x, ...)
+plot.fwhm:
+  function(obj, ...)
+See section 'Generic functions and methods' in the 'Writing R
+Extensions' manual.
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+.bvPlot: no visible global function definition for 'par'
+.bvPlot: no visible global function definition for 'segments'
+.bvPlot: no visible global function definition for 'wilcox.test'
+.bvPlot: no visible global function definition for 'text'
+.bw.scott2: no visible binding for global variable 'sd'
+.ecdfPlot: no visible global function definition for 'ecdf'
+.ecdfPlot: no visible global function definition for 'par'
+.ecdfPlot: no visible global function definition for 'lines'
+.ecdfPlot: no visible global function definition for 'legend'
+.foldChangeNorm : <anonymous>: no visible global function definition
+  for 'median'
+.fwhm: no visible global function definition for 'approx'
+.getMaxCurve: no visible global function definition for 'points'
+.getMaxCurve: no visible global function definition for 'lines'
+.intensHTest: no visible global function definition for 'ecdf'
+.intensHTest: no visible global function definition for 'p.adjust'
+.isNorm: no visible global function definition for 'median'
+.linMap: no visible global function definition for 'approxfun'
+.loess: no visible global function definition for 'loess'
+.loess: no visible global function definition for 'loess.control'
+.loess : <anonymous>: no visible global function definition for
+  'predict'
+.medianNorm : <anonymous>: no visible global function definition for
+  'median'
+.spatialHTest: no visible global function definition for 'sd'
+.spatialHTest: no visible global function definition for 'pnorm'
+.spatialHTest: no visible global function definition for 'p.adjust'
+.superSmoother: no visible global function definition for 'supsmu'
+.superSmoother: no visible global function definition for 'approxfun'
+.zscore: no visible global function definition for 'sd'
+downloadExData: no visible global function definition for
+  'download.file'
+dsc: no visible global function definition for 'rgb'
+dsc: no visible global function definition for 'legend'
+filterDuplicates: no visible binding for global variable 'idx'
+focusPlot: no visible global function definition for 'median'
+focusPlot: no visible global function definition for 'par'
+focusPlot: no visible global function definition for 'axis'
+focusPlot: no visible global function definition for 'mtext'
+focusPlot: no visible global function definition for 'rainbow'
+focusPlot: no visible global function definition for 'polygon'
+focusPlot: no visible global function definition for 'abline'
+gaussWeight: no visible global function definition for 'dnorm'
+gaussWeight: no visible global function definition for 'par'
+gaussWeight: no visible global function definition for 'axis'
+gaussWeight: no visible global function definition for 'title'
+gaussWeight: no visible global function definition for 'abline'
+gaussWeight: no visible global function definition for 'dev.off'
+initLipidSearch: no visible global function definition for 'setNames'
+kneePoint: no visible global function definition for 'smooth.spline'
+kneePoint: no visible global function definition for 'predict'
+kneePoint: no visible global function definition for 'par'
+kneePoint: no visible global function definition for 'abline'
+kneePoint: no visible global function definition for 'legend'
+loadSwissDB: no visible global function definition for 'read.csv'
+plot.fwhm: no visible global function definition for 'lines'
+plot.molProbMap: no visible global function definition for 'density'
+plot.molProbMap: no visible global function definition for 'sd'
+plot.molProbMap: no visible global function definition for 'qnorm'
+plot.molProbMap: no visible global function definition for 'lines'
+plot.molProbMap: no visible global function definition for 'polygon'
+plot.molProbMap: no visible global function definition for 'legend'
+plot.molProbMap: no visible global function definition for 'rgb'
+plot.molProbMap: no visible global function definition for 'par'
+readSingleSpect: no visible global function definition for 'read.delim'
+recreateExData: no visible global function definition for 'read.csv'
+searchAnalyte: no visible global function definition for 'as'
+simulatespp: no visible global function definition for 'quantile'
+simulatespp: no visible global function definition for 'rgb'
+subsetAnalytes: no visible binding for global variable 'idx'
+superimposeNoise : <anonymous>: no visible global function definition
+  for 'rnorm'
+superimposeNoise : <anonymous>: no visible global function definition
+  for 'sd'
+superimposeNoise : <anonymous>: no visible global function definition
+  for 'rpois'
+useDefaultFwhm: no visible global function definition for 'approxfun'
+Undefined global functions or variables:
+  abline approx approxfun as axis density dev.off dnorm download.file
+  ecdf idx legend lines loess loess.control median mtext p.adjust par
+  pnorm points polygon predict qnorm quantile rainbow read.csv
+  read.delim rgb rnorm rpois sd segments setNames smooth.spline supsmu
+  text title wilcox.test
+Consider adding
+  importFrom("grDevices", "dev.off", "rainbow", "rgb")
+  importFrom("graphics", "abline", "axis", "legend", "lines", "mtext",
+             "par", "points", "polygon", "segments", "text", "title")
+  importFrom("methods", "as")
+  importFrom("stats", "approx", "approxfun", "density", "dnorm", "ecdf",
+             "loess", "loess.control", "median", "p.adjust", "pnorm",
+             "predict", "qnorm", "quantile", "rnorm", "rpois", "sd",
+             "setNames", "smooth.spline", "supsmu", "wilcox.test")
+  importFrom("utils", "download.file", "read.csv", "read.delim")
+to your NAMESPACE file (and ensure that your DESCRIPTION Imports field
+contains 'methods').
+* checking Rd files ... NOTE
+prepare_Rd: moleculaR.Rd:24-26: Dropping empty section 'Main Classes'
+prepare_Rd: moleculaR.Rd:28-30: Dropping empty section 'Authors'
+prepare_Rd: moleculaR.Rd:32-34: Dropping empty section 'References'
+* checking Rd metadata ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  'fwhmObj' 'msData' 'mtspc' 'sldb'
+Undocumented data sets:
+  'fwhmObj' 'msData' 'mtspc' 'sldb'
+All user-level objects in a package should have documentation entries.
+See chapter 'Writing R documentation files' in the 'Writing R
+Extensions' manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in Rd file 'createHotspotWin.Rd'
+  'shape' 'radius' 'backgroundLength'
+
+Undocumented arguments in Rd file 'createSparseMat.Rd'
+  'x'
+Documented arguments not in \usage in Rd file 'createSparseMat.Rd':
+  'x:'
+
+Undocumented arguments in Rd file 'createSpatialWindow.Rd'
+  'pixelCoords' 'isPolygon' 'clean' 'plot'
+Documented arguments not in \usage in Rd file 'createSpatialWindow.Rd':
+  'pixelCoords:' 'isPolygon:' 'clean:' 'plot:'
+
+Undocumented arguments in Rd file 'dot-bw.scott2.Rd'
+  'X' 'isotropic' 'd'
+Documented arguments not in \usage in Rd file 'dot-bw.scott2.Rd':
+  'X:' 'isotropic:'
+
+Documented arguments not in \usage in Rd file 'dot-bw.spAutoCorr.Rd':
+  'sppMoi:' 'bw:' 'plot:' 'verbose:' '...:'
+
+Undocumented arguments in Rd file 'dot-erosion.Rd'
+  'spp'
+Documented arguments not in \usage in Rd file 'dot-erosion.Rd':
+  'spp:'
+
+Documented arguments not in \usage in Rd file 'dot-foldChangeNorm.Rd':
+  'x:' 'meanMethod:'
+
+Documented arguments not in \usage in Rd file 'dot-getFwhm.Rd':
+  'spectrum:' 'peaks:'
+
+Documented arguments not in \usage in Rd file 'dot-getMaxCurve.Rd':
+  'x:' 'plot:'
+
+Documented arguments not in \usage in Rd file 'dot-isNorm.Rd':
+  'x:' 'mz:' 'tol:'
+
+Undocumented arguments in Rd file 'dot-medianNorm.Rd'
+  'x'
+Documented arguments not in \usage in Rd file 'dot-medianNorm.Rd':
+  'x:'
+
+Undocumented arguments in Rd file 'dot-rmsNorm.Rd'
+  'x'
+Documented arguments not in \usage in Rd file 'dot-rmsNorm.Rd':
+  'x:'
+
+Documented arguments not in \usage in Rd file 'dot-shrinkData.Rd':
+  'x:' 'mzKeep:' 'fwhmObj:'
+
+Documented arguments not in \usage in Rd file 'dot-ticNorm.Rd':
+  'x:'
+
+Documented arguments not in \usage in Rd file 'downloadExData.Rd':
+  'path:'
+
+Documented arguments not in \usage in Rd file 'dsc.Rd':
+  'win0:' 'win1:' 'winBackground:' 'plot:'
+
+Undocumented arguments in Rd file 'evalSpatialExpr.Rd'
+  'exprn' 'dataList' 'win' 'normMethod'
+Documented arguments not in \usage in Rd file 'evalSpatialExpr.Rd':
+  'expr:' 'dataList:' 'win:' 'normMethod:'
+
+Undocumented arguments in Rd file 'filterDuplicates.Rd'
+  'spp'
+Documented arguments not in \usage in Rd file 'filterDuplicates.Rd':
+  'spp:'
+
+Undocumented arguments in Rd file 'filterPeaks.Rd'
+  'x' 'minFreq'
+Documented arguments not in \usage in Rd file 'filterPeaks.Rd':
+  'x:' 'minFreq:'
+
+Undocumented arguments in Rd file 'gaussWeight.Rd'
+  'ionMode'
+
+Undocumented arguments in Rd file 'initLipidSearch.Rd'
+  'swissdb'
+Documented arguments not in \usage in Rd file 'initLipidSearch.Rd':
+  'swissdb:'
+
+Documented arguments not in \usage in Rd file 'kneePoint.Rd':
+  'x:' 'y:' 'df:' 'plot:' 'xQuery:' '...:'
+
+Undocumented arguments in Rd file 'loadSwissDB.Rd'
+  'path'
+Documented arguments not in \usage in Rd file 'loadSwissDB.Rd':
+  'path:'
+
+Documented arguments not in \usage in Rd file 'mse.Rd':
+  'im0:' 'im1:'
+
+Documented arguments not in \usage in Rd file 'ncc.Rd':
+  'im0:' 'im1:'
+
+Undocumented arguments in Rd file 'normalizeIntensity.Rd'
+  'x' 'method' 'meanMethod' 'mz' 'tol'
+Documented arguments not in \usage in Rd file 'normalizeIntensity.Rd':
+  'x:' 'method:' 'meanMethod:' 'mz:' 'tol:'
+
+Undocumented arguments in Rd file 'probMap.Rd'
+  '...'
+Documented arguments not in \usage in Rd file 'probMap.Rd':
+  '...:' 'csrIntensities'
+
+Undocumented arguments in Rd file 'readCentrData.Rd'
+  'path' 'verbose' '...'
+Documented arguments not in \usage in Rd file 'readCentrData.Rd':
+  'path:' 'verbose:' '...:'
+
+Undocumented arguments in Rd file 'readSingleSpect.Rd'
+  'path'
+Documented arguments not in \usage in Rd file 'readSingleSpect.Rd':
+  'path:'
+
+Documented arguments not in \usage in Rd file 'recreateExData.Rd':
+  'pathToImzml:' 'pathToSingleSpctr:' 'pathToSldb:' 'pathToMtspc:'
+  'shrink:' 'saveTo:'
+
+Undocumented arguments in Rd file 'runShiny.Rd'
+  'app'
+Documented arguments not in \usage in Rd file 'runShiny.Rd':
+  'app:'
+
+Undocumented arguments in Rd file 'searchLipid.Rd'
+  'm' 'fwhm' 'massAxis' 'spData' 'coords' 'mtspc' 'confirmedOnly'
+  'adduct' 'mode' 'modeAdduct' 'lipidID'
+Documented arguments not in \usage in Rd file 'searchLipid.Rd':
+  'm:' 'fwhm:' 'massAxis:' 'spData:' 'coords:' 'mtspc:'
+  'confirmedOnly:' 'lipidID:' 'fullName'
+
+Undocumented arguments in Rd file 'simulatespp.Rd'
+  'lambdaHotspot' 'lambdaBackground' 'intensityData' 'radius'
+  'backgroundUpperThr' 'hotspotLowerThr' 'shape' 'backgroundLength'
+  'seed' 'gtPlot' 'sppPlot'
+
+Undocumented arguments in Rd file 'superimposeNoise.Rd'
+  'x' 'spData' 'method' 'mz' 'fwhm' 'noiseFactor' 'searchFactor'
+  'sigmainterference' 'mzTrim' 'numSpikedPeaks' 'returnMat' 'verbose'
+Documented arguments not in \usage in Rd file 'superimposeNoise.Rd':
+  'x:' 'spData:' 'method:' 'mz:' 'fwhm:' 'noiseFactor:' 'searchFactor:'
+  'sigmainterference:' 'mzTrim:' 'numSpikedPeaks:' 'returnMat:'
+  'verbose:'
+
+Undocumented arguments in Rd file 'transformIntensity.Rd'
+  'spp' 'method' 'irange' 'forceRange'
+Documented arguments not in \usage in Rd file 'transformIntensity.Rd':
+  'spp:' 'method:' 'irange:' 'forceRange:'
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter 'Writing R documentation files' in the 'Writing R
+Extensions' manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of 'data' directory ... OK
+* checking data for non-ASCII characters ... OK
+* checking LazyData ... WARNING
+  LazyData DB of 13.0 MB without LazyDataCompression set
+  See <U+00A7>1.1.6 of 'Writing R Extensions'
+* checking data for ASCII and uncompressed saves ... WARNING
+
+  Note: significantly better compression could be obtained
+        by using R CMD build --resave-data
+                               old_size new_size compress
+  processed-example-Data.RData   13.1Mb   10.3Mb       xz
+* checking files in 'vignettes' ... WARNING
+Files in the 'vignettes' directory but no files in 'inst/doc':
+  'figure/CPPM.plot-1.png' 'figure/MPM-1.png'
+  'figure/cppms.unsat.plot-1.png' 'figure/ionImage-1.png'
+  'figure/ions.plot.K-1.png' 'figure/plotFwhm-1.png'
+  'figure/spWindow-1.png' 'figure/sppmoi-1.png' 'figure/sppmoi-2.png'
+  'moleculaR-walkthrough-test.R' 'moleculaR-walkthrough.R'
+  'moleculaR-walkthrough.Rmd' 'moleculaR-walkthrough.Rmd.orig'
+  'moleculaR-walkthrough.html' 'old
+  versions/moleculaR-walkthrough.Rmd.orig' 'precompile.R'
+  'shiny-imgs/closest mz.PNG' 'shiny-imgs/cpm ion generate.PNG'
+  'shiny-imgs/cpm ion generated.PNG' 'shiny-imgs/cpm lipid classes
+  generate.PNG' 'shiny-imgs/cpm lipid classes generated.PNG'
+  'shiny-imgs/cpm lipid sat generate.PNG' 'shiny-imgs/cpm lipid sat
+  generated.PNG' 'shiny-imgs/fwhm_esti.PNG'
+  'shiny-imgs/fwhm_loaded.PNG' 'shiny-imgs/mmp_generate.PNG'
+  'shiny-imgs/mmp_generated.PNG' 'shiny-imgs/package_app_load.PNG'
+  'shiny-imgs/package_app_loaded.PNG' 'shiny-imgs/progressbar.PNG'
+  'test.Rmd.ignore'
+The following directory looks like a leftover from 'knitr':
+  'figure'
+Please remove from your package.
+* checking examples ... OK
+* checking for unstated dependencies in 'tests' ... OK
+* checking tests ...
+  Running 'estimateFwhm.R'
+  Running 'ionImage2spp.R'
+  Running 'shinyFwhm.R'
+  Running 'testthat.R'
+  Running 'useDefaultFwhm.R'
+ OK
+* checking for unstated dependencies in vignettes ... OK
+* checking package vignettes ... WARNING
+Directory 'inst/doc' does not exist.
+Package vignette without corresponding single PDF/HTML:
+  'moleculaR-walkthrough.Rmd'
+* checking running R code from vignettes ...
+  'moleculaR-walkthrough.Rmd' using 'UTF-8'... OK
+ NONE
+* checking re-building of vignette outputs ... SKIPPED
+* DONE
+Status: 10 WARNINGs, 2 NOTEs
+
+Warning: unable to access index for repository https://cloud.r-project.org/src/contrib:
+  cannot open URL 'https://cloud.r-project.org/src/contrib/PACKAGES'
+
+See
+  'D:/Projects/moleculaR/renv/local/cardinal-check/moleculaR.Rcheck/00check.log'
+for details.

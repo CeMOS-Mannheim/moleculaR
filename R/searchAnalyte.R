@@ -1,11 +1,13 @@
 #' Analyte detection in an MSI dataset
 #'
-#' This function check if an analyte (given by m/z) is detectable in the MS data represented
-#' by a 'sparseIntensityMatrix' object.
+#' Detect an analyte directly in a native Cardinal MSI object. The legacy
+#' 'sparseIntensityMatrix' input remains supported during migration.
 #'
 #' @param m the mass to be queried (in Da).
 #' @param fwhm the fwhm at 'm'.
-#' @param spData an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.
+#' @param spData A Cardinal 'MSImagingArrays' or 'MSImagingExperiment' object,
+#'   or a legacy 'sparseIntensityMatrix'. Cardinal input must contain known
+#'   centroided spectra from a single run and no queued preprocessing.
 #' @param wMethod wighting method; c("Gaussian", "sum", "max", "mean").
 #' @param spwin optional, an object of type `owin`. If not given the function tries to generate the
 #' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).
@@ -19,13 +21,41 @@
 #'
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` containing the hits for
 #' `m` in `msData`. If `confirmedOnly = TRUE` then only these hits are returned.
+#'   No detections return an empty `ppp`, matching the legacy convention.
+#'
+#' @details For Cardinal input, select measured peaks inclusively within three
+#'   Gaussian standard deviations of `m`, where sigma = fwhm / (2 * sqrt(2 * log(2))).
+#'   Gaussian weights use [gaussWeight()]. This strict interval can exclude peaks
+#'   included by the legacy nearest-index boundary selection.
+#'
+#'   For unaligned arrays, `mean` averages measured peaks inside each spectrum's
+#'   interval, including stored zeros. For shared-axis experiments, it averages
+#'   all selected features including zero-filled missing peaks. These denominators
+#'   can differ; arrays do not reconstruct the legacy global feature axis.
+#'   Empty intervals return zero for every method. Invalid retrieved spectral
+#'   values raise errors. Duplicate and unsorted measured peaks are supported.
+#'
+#'   All acquired pixels, including zero analyte intensities, define the spatial
+#'   window. Only positive intensities become points. Multiple runs or spatial
+#'   z planes must be subset explicitly with Cardinal. Call `Cardinal::process()`
+#'   before extraction if preprocessing is queued. User metadata names must be
+#'   unique and exclude the reserved fields `idx`, `mzVals`, and `mzConfirmed`.
 #'
 #' @export
+#' @md
 #' @include manualSpatstatImport.R
 #'
 searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                              verifiedMasses = NA, confirmedOnly = FALSE,
                              metaData = list()) {
+
+        if(.msiIsObject(spData)) {
+              return(.searchCardinalAnalyte(m, fwhm, spData, wMethod, spwin,
+                                            verifiedMasses, confirmedOnly, metaData))
+        }
+
+        if(!inherits(spData, "sparseIntensityMatrix"))
+              stop("spData must be a Cardinal MSI object or legacy sparseIntensityMatrix.")
 
 
 

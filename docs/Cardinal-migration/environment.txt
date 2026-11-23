@@ -1,0 +1,128 @@
+R version 4.6.1 (2026-06-24 ucrt)
+Libraries:
+ D:/Projects/moleculaR/renv/library/cardinal-migration
+C:/Users/abusammour/AppData/Local/R/win-library/4.6
+C:/Program Files/R/R-4.6.1/library
+Cardinal 3.14.0
+matter 2.14.0
+BiocParallel 1.46.0
+CardinalIO 1.10.0
+BiocManager 1.30.27
+MALDIquant 1.22.3
+MALDIquantForeign 0.14.1
+moleculaR MISSING
+testthat 3.3.2
+roxygen2 8.1.1
+devtools MISSING
+renv 1.3.1
+
+ readMSIData
+function (file, ...)
+NULL
+
+ MSImagingArrays
+function (spectraData = SimpleList(), pixelData = PositionDataFrame(),
+    experimentData = NULL, centroided = NA, continuous = NA,
+    metadata = list())
+NULL
+
+ MSImagingExperiment
+function (spectraData = SimpleList(), featureData = MassDataFrame(),
+    pixelData = PositionDataFrame(), experimentData = NULL, centroided = NA,
+    metadata = list())
+NULL
+
+ mz
+function (object, ...)
+NULL
+Function: mz (package ProtGenerics)
+object="MSImagingArrays"
+object="MSImagingExperiment"
+object="MassDataFrame"
+object="missing"
+
+
+ intensity
+function (object, ...)
+NULL
+Function: intensity (package ProtGenerics)
+object="MSImagingArrays"
+object="MSImagingExperiment"
+
+
+ coord
+function (object, ...)
+NULL
+Function: coord (package Cardinal)
+object="PositionDataFrame"
+object="SpatialResults"
+object="SpectralImagingData"
+
+
+ run
+function (object, ...)
+NULL
+Function: run (package Cardinal)
+object="PositionDataFrame"
+object="SpatialResults"
+object="SpectralImagingData"
+
+
+ spectrapply
+function (object, ...)
+NULL
+Function: spectrapply (package ProtGenerics)
+object="SpectralImagingArrays"
+object="SpectralImagingExperiment"
+
+
+ process
+function (object, ...)
+NULL
+Function: process (package Cardinal)
+object="MSImagingArrays"
+object="MSImagingExperiment"
+object="SpectralImagingArrays"
+object="SpectralImagingExperiment"
+
+
+ processingData
+Not exported in this release
+
+ centroided
+Not exported in this release
+R version 4.6.1 (2026-06-24 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] C
+system code page: 65001
+
+time zone: Europe/Berlin
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base
+
+loaded via a namespace (and not attached):
+ [1] Matrix_1.7-5             renv_1.3.1               matter_2.14.0
+ [4] compiler_4.6.1           BiocManager_1.30.27      brio_1.1.5
+ [7] MALDIquant_1.22.3        Biobase_2.72.0           xml2_1.6.0
+[10] parallel_4.6.1           CardinalIO_1.10.0        BiocParallel_1.46.0
+[13] lattice_0.22-9           R6_2.6.1                 generics_0.1.4
+[16] ProtGenerics_1.44.0      knitr_1.52               BiocGenerics_0.58.1
+[19] ontologyIndex_2.12       XML_3.99-0.25            Cardinal_3.14.0
+[22] readBrukerFlexData_1.9.3 rlang_1.3.0              testthat_3.3.2
+[25] roxygen2_8.1.1           xfun_0.62                otel_0.3.0
+[28] cli_3.6.6                magrittr_2.0.5           digest_0.6.39
+[31] grid_4.6.1               irlba_2.4.1              base64enc_0.1-6
+[34] lifecycle_1.0.5          nlme_3.1-169             S4Vectors_0.50.3
+[37] readMzXmlData_2.8.4      evaluate_1.0.5           MALDIquantForeign_0.14.1
+[40] codetools_0.2-20         stats4_4.6.1             tools_4.6.1
+
+Bioconductor version: 3.23
+[1] TRUE

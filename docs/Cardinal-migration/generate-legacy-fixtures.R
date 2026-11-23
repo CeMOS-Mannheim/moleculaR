@@ -1,0 +1,49 @@
+# Rebuild compact scientific references using the preserved pre-migration function.
+# Run from the repository root: Rscript --vanilla <this file>
+.libPaths(c(file.path(getwd(), "renv/library/cardinal-migration"), .libPaths()))
+pkgload::load_all(".", quiet = TRUE)
+legacy <- new.env(parent = asNamespace("moleculaR"))
+sys.source("tests/fixtures/legacy/searchAnalyte.R", envir = legacy)
+coords <- expand.grid(x = 1:16, y = 1:11)
+coords <- coords[!(coords$x <= 2 & coords$y >= 9) &
+                 !(coords$x == 12 & coords$y == 3), , drop = FALSE]
+rownames(coords) <- NULL
+n <- nrow(coords)
+mz <- c(99, 99.9, 100, 100.1, 101)
+signal <- ifelse(coords$x >= 6 & coords$x <= 11 & coords$y >= 4 & coords$y <= 8,
+                 20, 1) + (seq_len(n) %% 5) / 10
+intensity <- rbind(rep(2, n), signal * 0.1, signal, signal * 0.2, rep(3, n))
+intensity[2, seq(1, n, 3)] <- 0
+intensity[4, seq(1, n, 4)] <- 0
+intensity[2:4, n] <- 0
+spectra <- lapply(seq_len(n), function(i) {
+    keep <- intensity[, i] > 0
+    MALDIquant::createMassPeaks(mass = mz[keep], intensity = intensity[keep, i],
+        metaData = list(imaging = list(pos = unlist(coords[i, ]))))
+})
+spData <- createSparseMat(spectra)
+spwin <- createSpatialWindow(coords, plot = FALSE)
+patterns <- lapply(c("Gaussian", "sum", "mean", "max"), function(method)
+    legacy$searchAnalyte(100, 0.1, spData, wMethod = method, spwin = spwin,
+                        verifiedMasses = c(100, 200), metaData = list(label = "fixture")))
+names(patterns) <- c("Gaussian", "sum", "mean", "max")
+mpm <- suppressWarnings(probMap(patterns$Gaussian, bw = 1, seed = 1, verbose = FALSE))
+summaryMpm <- function(x) list(bw = x$bw, rhoMoi = x$rhoMoi$v, rhoCsr = x$rhoCsr$v,
+    hotspot = x$hotspotIm$v, coldspot = x$coldspotIm$v,
+    hotspotCoordinates = cbind(x$hotspotpp$x, x$hotspotpp$y),
+    coldspotCoordinates = cbind(x$coldspotpp$x, x$coldspotpp$y))
+reference <- list(startingCommit = "ce10618b608e840f888bb71bb68794c8b44535ab",
+    sourceMd5 = unname(tools::md5sum("tests/fixtures/legacy/searchAnalyte.R")),
+    mz = mz, intensity = intensity, coordinates = coords,
+    target = 100, fwhm = 0.1,
+    patterns = lapply(patterns, function(x) list(x = x$x, y = x$y,
+        intensity = x$marks$intensity, mzConfirmed = x$metaData$mzConfirmed)),
+    mpm = summaryMpm(mpm),
+    defaultFwhm = getFwhm(useDefaultFwhm(), c(249, 400, 788.5447, 1000)),
+    versions = vapply(c("MALDIquant", "spatstat.geom", "spatstat.explore"),
+                      function(x) as.character(packageVersion(x)), character(1)))
+saveRDS(reference, "tests/fixtures/legacy/single-analyte.rds", version = 3)
+cat("Legacy reference saved:", n, "pixels;", patterns$Gaussian$n, "detections\n")
+print(reference$versions)
+cat("ProtGenerics processingData exported:",
+    "processingData" %in% getNamespaceExports("ProtGenerics"), "\n")

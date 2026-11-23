@@ -20,28 +20,50 @@ searchAnalyte(
 
 \item{fwhm}{the fwhm at 'm'.}
 
-\item{spData}{an S3 object of type 'sparseIntensityMatrix' holding the sparse MSI data.}
+\item{spData}{A Cardinal 'MSImagingArrays' or 'MSImagingExperiment' object,
+or a legacy 'sparseIntensityMatrix'. Cardinal input must contain known
+centroided spectra from a single run and no queued preprocessing.}
 
 \item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
 
-\item{spwin}{optional, an object of type `owin`. If not given the function tries to generate the
-spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).}
+\item{spwin}{optional, an object of type \code{owin}. If not given the function tries to generate the
+spatial window out of the coordinates of all points of the dataset stored in \code{spData} (default behavior).}
 
 \item{verifiedMasses}{an optional numeric vector of m/z values that are (externally) verified to
 be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
 annotation result.}
 
-\item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
+\item{confirmedOnly}{if \code{TRUE}, returns detections only if confirmed by \code{verifiedMasses}.}
 
 \item{metaData}{optional named list with additional identifiers for the analyte
-under study, ex. list(lipidID = "..", sumformular = "..", ..). This will be passed to the `metaData`
-slot of the resulting `analytePointPattern` object.}
+under study, ex. list(lipidID = "..", sumformular = "..", ..). This will be passed to the \code{metaData}
+slot of the resulting \code{analytePointPattern} object.}
 }
 \value{
-An analyte point patter of type `ppp` and `analytePointPattern` containing the hits for
-`m` in `msData`. If `confirmedOnly = TRUE` then only these hits are returned.
+An analyte point patter of type \code{ppp} and \code{analytePointPattern} containing the hits for
+\code{m} in \code{msData}. If \code{confirmedOnly = TRUE} then only these hits are returned.
+No detections return an empty \code{ppp}, matching the legacy convention.
 }
 \description{
-This function check if an analyte (given by m/z) is detectable in the MS data represented
-by a 'sparseIntensityMatrix' object.
+Detect an analyte directly in a native Cardinal MSI object. The legacy
+'sparseIntensityMatrix' input remains supported during migration.
+}
+\details{
+For Cardinal input, select measured peaks inclusively within three
+Gaussian standard deviations of \code{m}, where sigma = fwhm / (2 * sqrt(2 * log(2))).
+Gaussian weights use \code{\link[=gaussWeight]{gaussWeight()}}. This strict interval can exclude peaks
+included by the legacy nearest-index boundary selection.
+
+For unaligned arrays, \code{mean} averages measured peaks inside each spectrum's
+interval, including stored zeros. For shared-axis experiments, it averages
+all selected features including zero-filled missing peaks. These denominators
+can differ; arrays do not reconstruct the legacy global feature axis.
+Empty intervals return zero for every method. Invalid retrieved spectral
+values raise errors. Duplicate and unsorted measured peaks are supported.
+
+All acquired pixels, including zero analyte intensities, define the spatial
+window. Only positive intensities become points. Multiple runs or spatial
+z planes must be subset explicitly with Cardinal. Call \code{Cardinal::process()}
+before extraction if preprocessing is queued. User metadata names must be
+unique and exclude the reserved fields \code{idx}, \code{mzVals}, and \code{mzConfirmed}.
 }
