@@ -8,3 +8,4 @@ inst/doc
 renv.lock.backup
 renv.lock.old
 renv_old
+.package.references

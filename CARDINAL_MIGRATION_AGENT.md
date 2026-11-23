@@ -258,6 +258,10 @@ Do not mix assumptions from different Cardinal versions.
 
 Record the selected versions in the package documentation and dependency lockfile.
 
+Cardinal documentation (v3.10.0) has been pre-compiled into md files to be used as a reference and are available at `.package.references\Cardinal`
+
+MALDIquant documentation has been pre-compiled into md files to be used as a reference and are available at `.package.references\MALDIquant`
+
 ---
 
 # 4. Current moleculaR Architecture
