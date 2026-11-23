@@ -3,6 +3,8 @@
 This is the chronological record of every migration step. Scientific decisions
 are recorded separately in `scientific-decisions.md`. Entries distinguish completed
 work from validation still outstanding.
+Confirmed and suspected legacy defects are tracked separately in
+[`legacy-bugs.md`](legacy-bugs.md) for repairs in a separate legacy working copy.
 
 ## 2026-11-23 — Step 1: instructions and starting state
 
@@ -185,3 +187,26 @@ work from validation still outstanding.
   S3 signatures, filenames, data compression, and vignette packaging. The retired
   import/spatstat entries and copied-method roxygen warnings are gone. Reports
   are updated in `package-build.txt`, `package-check.txt`, and `test-results.csv`.
+
+## 2026-11-23 — Step 7: separate legacy bug register
+
+- User requested a dedicated repair backlog for legacy MALDIquant code while
+  `main` remains protected. Added `legacy-bugs.md` with stable IDs, affected
+  revisions/functions, reproductions, scientific impact, fix criteria, and
+  separate legacy/Cardinal repair statuses.
+- Reproduced three defects from local `main` commit
+  `a2d7f3500da5928275eb651f5c86b33beb189d67`, read using `git show` without
+  checking out or modifying that branch: outside-window peak inclusion,
+  missing union/set-difference simulation lookups, and a rectangular-window
+  diagnostic error. Recorded them as LEGACY-001 through LEGACY-003.
+- Confirmed the controlled legacy mass-window sum is 20 versus the strict sum
+  12; both simulation shapes report their missing functions; a valid rectangle
+  reports `argument is of length zero`. The Gaussian boundary weight is
+  approximately 1.11% of an individual peak's intensity, which does not bound
+  its influence on the final analyte signal.
+- Changes are documentation only. No legacy or Cardinal source functions,
+  scientific fixtures, or dependency versions were changed. Full package tests
+  were not rerun for this documentation step; the targeted reproductions passed.
+- Existing user modifications now also include `renv.lock`; preserve it along
+  with the specification, vignette ignore file, and local reference material.
+  Legacy repairs and historical biological-data impact assessment remain open.
