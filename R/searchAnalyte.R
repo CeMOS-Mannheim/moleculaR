@@ -2,6 +2,9 @@
 #'
 #' This function check if an analyte (given by m/z) is detectable in the MS data represented
 #' by a 'sparseIntensityMatrix' object.
+#' Features are selected within the inclusive interval of three sigma around `m`,
+#' where `sigma = fwhm / (2 * sqrt(2 * log(2)))`. The `mean` method averages
+#' over all selected feature columns, including their zero intensities.
 #'
 #' @param m the mass to be queried (in Da).
 #' @param fwhm the fwhm at 'm'.
@@ -98,21 +101,16 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                }
        }
 
-       idx           <- MALDIquant::match.closest(m , spData$mzAxis, threeS, NA)
+       selected      <- which(abs(spData$mzAxis - m) <= threeS)
 
 
-       if(!is.na(idx))
+       if(length(selected) > 0)
        {
-
-              idxlwr        <- MALDIquant::match.closest((m - threeS), spData$mzAxis, threeS, idx)
-              idxupr        <- MALDIquant::match.closest((m + threeS), spData$mzAxis, threeS, idx)
-
-
-              coi           <- as(spData$spmat[ , (idxlwr:idxupr), drop = FALSE], "matrix")  #columns of interest
+              coi           <- as(spData$spmat[ , selected, drop = FALSE], "matrix")  #columns of interest
 
               combinedCols  <- switch(wMethod,
                      "Gaussian" = {
-                            gw <- gaussWeight(x = spData$mzAxis[(idxlwr:idxupr)],
+                            gw <- gaussWeight(x = spData$mzAxis[selected],
                                           m = m,
                                           fwhm = fwhm)
 

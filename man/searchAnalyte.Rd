@@ -44,4 +44,7 @@ An analyte point patter of type `ppp` and `analytePointPattern` containing the h
 \description{
 This function check if an analyte (given by m/z) is detectable in the MS data represented
 by a 'sparseIntensityMatrix' object.
+Features are selected within the inclusive interval of three sigma around `m`,
+where `sigma = fwhm / (2 * sqrt(2 * log(2)))`. The `mean` method averages
+over all selected feature columns, including their zero intensities.
 }
