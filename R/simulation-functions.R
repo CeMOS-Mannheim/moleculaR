@@ -154,7 +154,7 @@ createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLen
                                                 disc(radius = radius[i], centre = centers[i, ])
                                        })
 
-                                       do.call("union.owin", winlist)
+                                       do.call(union.owin, winlist)
 
                               },
 
@@ -174,7 +174,7 @@ createHotspotWin <- function(shape = "centralCircle", radius = 25, backgroundLen
 
                                        names(winlist) <- c("A", "B")
 
-                                       do.call("setminus.owin", winlist)
+                                       do.call(setminus.owin, winlist)
 
                               },
                               stop("shape must be one of c('centralCircle', 'multiCircle', 'donut'). \n"))

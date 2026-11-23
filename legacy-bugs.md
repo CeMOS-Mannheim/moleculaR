@@ -34,7 +34,7 @@ git show Cardinal-dev:docs/Cardinal-migration/legacy-bugs.md
 | ID | Defect | Priority | Legacy status | Cardinal-dev status |
 |---|---|---|---|---|
 | LEGACY-001 | Nearest-index selection admits masses outside the intended search interval | High: scientific correctness | Fixed and validated on main, 2026-11-23; see repair log below | Fixed for Cardinal input in `321e1bc`; temporary sparse path still affected |
-| LEGACY-002 | Simulation window operations depend on unimported functions being attached | Medium: affected simulation shapes fail | Confirmed; open on verified main | Fixed in `e111d98` |
+| LEGACY-002 | Simulation window operations depend on unimported functions being attached | Medium: affected simulation shapes fail | Fixed and validated on main, 2026-11-23; see repair log below | Fixed in `e111d98` |
 | LEGACY-003 | A valid rectangular `spwin` causes an error in searchAnalyte | Medium: supported spatial input fails | Confirmed; open on verified main | Handled by Cardinal input in `321e1bc`; temporary sparse path still affected |
 
 ## LEGACY-001 — Mass selection can extend beyond three sigma
@@ -44,7 +44,7 @@ git show Cardinal-dev:docs/Cardinal-migration/legacy-bugs.md
   `idxlwr:idxupr`, and corresponding Gaussian-weight indexing expressions.
 - **Affected entry points:** single-analyte search and callers such as batch and
   lipid searches that use this function.
-- **Legacy repair commit / validation:** `fix: LEGACY-001 enforce inclusive three-sigma mass selection`; validated 2026-11-23 (details below). This entry is included in the repair commit.
+- **Legacy repair commit / validation:** `006dc71` (`fix: LEGACY-001 enforce inclusive three-sigma mass selection`); validated 2026-11-23 (details below).
 
 ### Cause and expected behavior
 
@@ -191,7 +191,7 @@ results describe this bundled dataset and these mapping parameters.
 - **Discovered:** 2026-11-23, intermediary spatstat namespace audit.
 - **Affected code:** `R/simulation-functions.R`, `createHotspotWin()`;
   `R/manualSpatstatImport.R` omits the two required operations.
-- **Legacy repair commit / validation:** not yet supplied.
+- **Legacy repair commit / validation:** `fix: LEGACY-002 import simulation window operations dynamically`; validated 2026-11-23 (details below). This entry is included in the repair commit.
 
 ### Reproduction and cause
 
@@ -215,8 +215,10 @@ binding supplied by its historical importer and without attaching spatstat.
 
 ### Legacy fix and acceptance criteria
 
-- Pass `spatstat.geom::union.owin` and `spatstat.geom::setminus.owin` as function
-  objects to `do.call()`, with the appropriate direct dependency declared.
+- Add `union.owin` and `setminus.owin` to the existing dynamic spatstat importer
+  and pass those imported function objects to `do.call()`. This follows the
+  legacy branch's cross-version import policy; it supersedes the original
+  migration-specific suggestion to hard-code a spatstat subpackage namespace.
 - Test `centralCircle`, `multiCircle`, and `donut` in a fresh session that does
   not attach spatstat. Verify geometry and ensure simulation callers work.
 - Keep shape definitions, radii, and spatial units unchanged.
@@ -224,6 +226,33 @@ binding supplied by its historical importer and without attaching spatstat.
 **Existing migration evidence:** commit `e111d98` and
 `tests/testthat/test-spatstat-namespaces.R`, test
 `all simulation shapes resolve their geometry explicitly`.
+
+### Legacy repair log (2026-11-23)
+
+Reproduced both missing-function errors with the installed baseline and no
+spatstat packages attached. Added `union.owin` and `setminus.owin` to
+`spatstatFuncs` in `manualSpatstatImport.R`. `createHotspotWin()` passes those
+imported functions directly to `do.call()`. The existing `import` and `spatstat`
+dependencies suffice; no subpackage namespace or new dependency is introduced.
+
+Reinstalled the package into the isolated validation library and ran
+`Rscript --vanilla tests/legacy002-simulation-imports.R`: **passed**, after
+reproducing a missing `union.owin` error before the correction. The test asserts
+that no spatstat package is attached at the beginning or end. It checks:
+
+- Central circle, five-circle union, and donut areas/bounds/units, including the
+  donut hole, reversed donut radii, distinct circle radii, and overlapping circles.
+  At radius 2 and background length 20, areas are approximately 12.56132463,
+  62.80662308, and 9.42099345 (donut radii 1 and 2). Polygon-clipping comparisons
+  allow relative tolerance `1e-7`.
+- `simulatespp()` for all three shapes with seed 1: deterministic coordinates
+  and intensities, foreground/background intensity quantiles, metadata, and
+  unchanged background area of 400.
+- The same simulation callers using measured intensities from the first 100
+  spectra of the bundled MSI dataset; returned intensities come from that data.
+
+The LEGACY-001 regression also passed after the importer change. Shape
+definitions, radii, units, sampling, and intensity assignment are unchanged.
 
 ## LEGACY-003 — Rectangular spatial windows fail in legacy search
 
