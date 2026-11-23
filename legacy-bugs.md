@@ -35,7 +35,7 @@ git show Cardinal-dev:docs/Cardinal-migration/legacy-bugs.md
 |---|---|---|---|---|
 | LEGACY-001 | Nearest-index selection admits masses outside the intended search interval | High: scientific correctness | Fixed and validated on main, 2026-11-23; see repair log below | Fixed for Cardinal input in `321e1bc`; temporary sparse path still affected |
 | LEGACY-002 | Simulation window operations depend on unimported functions being attached | Medium: affected simulation shapes fail | Fixed and validated on main, 2026-11-23; see repair log below | Fixed in `e111d98` |
-| LEGACY-003 | A valid rectangular `spwin` causes an error in searchAnalyte | Medium: supported spatial input fails | Confirmed; open on verified main | Handled by Cardinal input in `321e1bc`; temporary sparse path still affected |
+| LEGACY-003 | A valid rectangular `spwin` causes an error in searchAnalyte | Medium: supported spatial input fails | Fixed and validated on main, 2026-11-23; see repair log below | Handled by Cardinal input in `321e1bc`; temporary sparse path still affected |
 
 ## LEGACY-001 — Mass selection can extend beyond three sigma
 
@@ -191,7 +191,7 @@ results describe this bundled dataset and these mapping parameters.
 - **Discovered:** 2026-11-23, intermediary spatstat namespace audit.
 - **Affected code:** `R/simulation-functions.R`, `createHotspotWin()`;
   `R/manualSpatstatImport.R` omits the two required operations.
-- **Legacy repair commit / validation:** `fix: LEGACY-002 import simulation window operations dynamically`; validated 2026-11-23 (details below). This entry is included in the repair commit.
+- **Legacy repair commit / validation:** `323cf40` (`fix: LEGACY-002 import simulation window operations dynamically`); validated 2026-11-23 (details below).
 
 ### Reproduction and cause
 
@@ -259,7 +259,7 @@ definitions, radii, units, sampling, and intensity assignment are unchanged.
 - **Discovered:** 2026-11-23, first-milestone boundary regression setup.
 - **Affected code:** `R/searchAnalyte.R`, the supplied-window diagnostic beginning
   with `owinInfo <- summary(spwin)`.
-- **Legacy repair commit / validation:** not yet supplied.
+- **Legacy repair commit / validation:** `fix: LEGACY-003 accept rectangular spatial windows`; validated 2026-11-23 (details below). Git revision `:/^fix: LEGACY-003 accept rectangular spatial windows` identifies the repair commit, which includes this log.
 
 ### Reproduction and cause
 
@@ -290,6 +290,55 @@ merely to use an otherwise valid spatial window.
 **Existing migration evidence:** Cardinal input normalizes a valid window with
 `spatstat.geom::as.polygonal()` in `R/msi-extractIon.R`. Migration annotation and
 no-match tests already use rectangular windows successfully.
+
+### Legacy repair log (2026-11-23)
+
+The new regression reproduced `argument is of length zero` before this repair,
+with LEGACY-001 and LEGACY-002 already fixed. `searchAnalyte()` now validates
+explicit windows with `inherits(spwin, "owin")` and limits the existing
+polygon-specific diagnostic to polygonal windows. Rectangles and binary masks
+pass through unchanged. Polygon warnings are preserved, and no geometry
+conversion, spatstat subpackage qualification, or mass-selection change is
+introduced by this repair.
+
+`Rscript --vanilla tests/legacy003-spatial-windows.R`: **passed** against the
+reinstalled package. Coverage includes:
+
+- The original one-pixel rectangle and its equivalent polygon/mask, for all four
+  aggregation methods, with equal signals and the supplied windows preserved.
+- A disconnected polygon with a hole: all 230 acquired points are retained;
+  area is 230 within absolute polygon-clipping tolerance `1e-6`, and the hole
+  remains excluded.
+- No-match and confirmation-excluded searches for all supported window types,
+  retaining the original empty-`ppp` result and marks structure.
+- Invalid windows (NULL, text, numbers, typed missing values, lists, matrices,
+  and data frames) raise a clear `spwin`/`owin` class error, including searches
+  without any mass match.
+- Equivalent rectangular/polygonal domains on a 400-pixel synthetic hotspot,
+  using seed 1 and bandwidth 2: identical extracted signals, matching analyte
+  and CSR densities (tolerance `1e-10`), and identical hot/cold classifications.
+- The bundled MSI analyte at m/z 788.5447: both rectangular and equivalent
+  polygonal windows yield the same **17,643 detections** and intensities.
+
+Final combined validation ran all seven top-level `tests/*.R` scripts in fresh
+R sessions: **all passed**. The source package also built successfully with
+`R CMD build --no-build-vignettes --no-manual .`.
+
+The built archive was checked with `R CMD check --no-manual --ignore-vignettes
+--no-multiarch`: **0 errors, 9 warnings, 3 notes**, with examples and all seven
+test scripts passing. The warnings concern existing nonportable filenames,
+non-ASCII plotting code, undeclared/unused imports in package code and older
+tests, S3 method signatures, missing data/argument documentation, LazyData
+compression, and data-save compression. Notes concern the worktree `.git` file,
+existing global-binding diagnostics, and empty Rd sections. The relevant
+unchanged source files were compared with the verified baseline. Package-check
+housekeeping remains outside these three repairs. `rmarkdown` is unavailable
+in the local library; vignettes and manuals were excluded from this check, and
+remote repository indexes were unreachable. The full local report is
+`data-external/legacy-validation/moleculaR.Rcheck/00check.log`.
+
+The pre-existing `renv.lock` edit has the same SHA-256 before and after all three
+repairs: `D8D2FAB870F2461DAF37CF8527332E0B3C3BD8CED9AADA5E5213B8697006710E`.
 
 ## Maintaining the register
 

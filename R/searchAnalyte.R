@@ -45,7 +45,13 @@ searchAnalyte     = function(m, fwhm, spData, wMethod = "Gaussian", spwin = NA,
                   stop("'m' and 'fwhm' must have numeric value. \n")
          }
 
-        if(!identical(spwin, NA)){
+        if(!identical(spwin, NA) && !inherits(spwin, "owin")){
+              stop("'spwin' must be an object of class 'owin'. \n")
+        }
+
+        # Only polygonal summaries contain npoly and nvertices. Rectangular and
+        # mask windows are valid inputs and retain their original spatial domain.
+        if(!identical(spwin, NA) && identical(spwin$type, "polygonal")){
               owinInfo <- summary(spwin)
 
               if(owinInfo$npoly > 1){
