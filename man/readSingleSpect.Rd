@@ -4,13 +4,18 @@
 \alias{readSingleSpect}
 \title{Read a single spectrum}
 \usage{
-readSingleSpect(path)
+readSingleSpect(path, header = TRUE)
 }
 \arguments{
-\item{path:}{character string, path to the tsv file which should be read in.}
+\item{path}{Character string, path to the two-column TSV file.}
+
+\item{header}{Logical; whether the first row is a header (default TRUE,
+preserving the historical reader). Use FALSE for headerless numeric files.}
 }
 \value{
-A \code{MALDIquant::MassSpectrum} object.
+A numeric \code{moleculaRSpectrum} list with \code{mz} and \code{intensity}
+vectors, accepted directly by \code{estimateFwhm()}. Masses must be positive
+and strictly increasing; intensities must be finite and non-negative.
 }
 \description{
 This reads a single spectrum from a tsv file containing two columnd for m/z and intensity,

@@ -295,3 +295,118 @@ Confirmed and suspected legacy defects are tracked separately in
   legacy dependency removal, other operating systems and larger-scale testing
   remain future stages. Main's repairs are synchronized in the documentation;
   Cardinal-dev's temporary sparse-path defects remain separate from this work.
+
+## 2026-11-25 — Step 11: preprocessing baseline and native API verification
+
+- Confirmed Cardinal-dev at `2308bf4`, with a clean working tree. Inspected
+  measured FWHM, normalization, filtering, spectrum import and default models.
+- Added generate-phase4-fixtures.R and froze the five Phase 3 implementations
+  under tests/fixtures/legacy/phase4 before changing runtime code. Saved small
+  normalization/filtering references, 21 synthetic profile widths, 3,718 real
+  detected peaks/widths, seeded fits and default FTICR predictions.
+- Extracted a 20,564-byte native numeric FTICR calibration artifact from the
+  original bundle, preserving interpolation options and source provenance.
+- Baseline sources, numeric fixtures and calibration are committed separately
+  in `9b5fa44`; frozen sources retain their original EOF formatting.
+- Verified installed Cardinal 3.14.0/matter 2.14.0 processing, scaling and
+  metadata APIs. Cardinal process(outfile=...) streams native output and emits
+  an imzML bundle; process(outpath=...) does not provide that behavior and can
+  return in-memory spectra. Recorded D012-D016 before runtime implementation.
+- Implementation and validation results follow as each component completes.
+
+## 2026-11-25 — Step 12: native calibration, spectra and measured widths
+
+- Replaced default FTICR dataset loading with the extracted native numerical
+  reference. Default/custom-anchor predictions, knots, dense-grid and endpoint
+  behavior agree with the frozen baseline; observed differences are zero.
+- readSingleSpect now returns a validated numeric moleculaRSpectrum and exposes
+  header=FALSE for headerless data. estimateFwhm dispatches native profiles,
+  lists/data frames, precomputed widths and sampled Cardinal profile objects to
+  `msi-fwhm.R`; legacy adapters remain available. Updated source collation/help.
+- Native automatic picking uses Cardinal diff by default, as authorized by the
+  user's clarification. Preserved half-height interpolation and curve fitting;
+  added explicit peak indices, sampling/selection metadata, profile/run/queue
+  checks and native precomputed width support. No centroided imzML is peak-picked.
+- On the synthetic 21-peak profile, raw widths and supplied-index fitted values
+  agree exactly with the baseline; native automatic selection recovers 21 peaks.
+  On the separate real TSV, native/legacy counts are 1,462 / 3,718, with 933 common
+  sample positions and zero width-calculation difference at those positions.
+- Real seeded fit predictions at m/z 150/249/400/788.5447/1,000 change by
+  -2.65%/+10.72%/-14.12%/+0.10%/+12.53%. These are peak-set/sampling differences,
+  not a claim of equivalent automatic models; default instrument models remain
+  unchanged. Exact CSV evidence and provenance are linked from phase-4.md.
+
+## 2026-11-25 — Step 13: native normalization, filtering and robust storage
+
+- Added `msi-preprocessing.R` with exported Cardinal/matter sum/RMS/reference
+  rescaling, explicit scale, reference tolerance and zero-reference behavior,
+  custom median/aligned fold-change, factor/history metadata, bounded feature
+  blocks and inclusive positive-intensity frequency filtering. Arrays are never
+  aligned implicitly. Legacy method bodies and original fixtures are retained.
+- D017 records the user's authorization to use reasonable Cardinal alternatives
+  rather than enforce legacy normalization/picking details. Direct Cardinal
+  equivalence and division-only/custom-reference comparisons pass on controlled
+  data. Native processing reaches seeded maps with legacy algorithms disabled.
+- A 2,000-spectrum output test exposed recursive backed-result combination
+  failure in installed Cardinal process(outfile=...). Replaced that prototype
+  with one-spectrum-at-a-time double-precision matter output in the native object
+  and recorded D018. New intensity files and original m/z sources must persist;
+  no input file is rewritten, and normalization never materializes the dataset.
+- Fixed isolated Snow startup by exposing the parent's library paths only during
+  owned startup and restoring the original R_LIBS. The test runner also seeds
+  worker library visibility. An initial missing-snow worker run was stopped;
+  subsequent serial/Snow and environment-restoration tests pass.
+- Distinguished plain Cardinal record counts from typed byte budgets (D020).
+  Feature workspaces use typed bytes or the documented 16 MiB default; batch
+  pixel sizing conservatively converts byte settings instead of treating bytes
+  as pixels. Explicit chunk controls and ordinary defaults are preserved.
+- Numeric input, metadata, default/direct normalization, zeros and invalid data,
+  aligned fold references, frequencies/thresholds, duplicates/empty outputs,
+  backing-file immutability, cache invalidation and native seeded-map tests pass.
+  Synthetic profile writer fixtures use two pixels to avoid an installed
+  one-pixel positions-dimension writer issue. Final suite/check counts follow.
+
+## 2026-11-25 — Step 14: profile provenance and scoped real-data validation
+
+- Following the user's clarification, recorded D019: real picking and width
+  evaluation use only pos-XIII-82492-singleSpectrum.tsv (MD5
+  73560b65278d3431750fa0884a12b76b). The provided imzML is reduced centroided
+  input and is used only for downstream extraction/maps and storage checks.
+- On that reduced MSI input, fitted widths at m/z 788.5447 yield 17,642 detections
+  in both cases, 17,642 changed Gaussian intensities, max absolute intensity
+  change 6,815.834, max density change about 1.248146e-7 and three changed
+  classifications with identical window, bandwidth 2 and seed 1. This does not
+  quantify complete original spectra or broad biological impact.
+- Streamed native TIC on a 2,000-spectrum subset took 4.24 s and produced a
+  34,882,968-byte intensity backing file plus a 626,920-byte native object.
+  Rprofmem saw no individual allocation >= 1 MiB during normalization. Whole
+  process peak was 1,546,235,904 bytes including profile analysis/import/maps;
+  native allocations and incremental normalization memory were not measured.
+- Added validate-phase4.R, four compact evidence CSVs and phase-4.md. Updated the
+  dependency audit and milestone navigation. No package version or renv.lock
+  changes; probability-map algorithms and original first-milestone fixtures are
+  unchanged. Final archive checks are recorded after completion.
+
+## 2026-11-25 — Step 15: complete scientific regressions and package validation
+
+- Final source suite: **666 passing assertions across 40 tests**, no failures,
+  errors, skips or test warnings. This includes six focused chunk-unit checks
+  added after the core archive check; all original 512 assertions still pass.
+- The core source archive builds/installs, passes all four standalone regression
+  scripts and its **660** assertions, with **zero errors, 10 existing warnings
+  and 2 notes**. The final expanded archive after the typed-byte correction also
+  builds/installs and reports **FAIL 0 / WARN 0 / SKIP 0 / PASS 666**, with all four
+  standalone scripts and examples passing. Final R CMD check: **zero errors,
+  10 existing warnings and 2 notes**. PDF/manual generation and vignette rebuilds
+  remain disabled; rmarkdown was unavailable. Build/check reports are updated.
+- Source-only startup/build-version warnings are distinguished from test
+  warnings. Original single-analyte fixtures, probability-map algorithms,
+  gaussWeight and renv.lock are unchanged. Default instrument models retain
+  their original numerical results while native automatic measured fits have
+  the explicitly documented Cardinal peak-set differences.
+- Phase 4 is complete within the recorded Windows environment and data scope.
+  Real width evidence uses only the separate profile TSV; the provided reduced
+  centroided imzML supports extraction/map and storage checks only. Native TIC
+  benchmarking sums its available reduced features, not an original full-spectrum
+  TIC. Phase 5 Shiny integration, example/vignette cleanup, legacy dependency
+  removal, other platforms and larger-scale validation remain later work.

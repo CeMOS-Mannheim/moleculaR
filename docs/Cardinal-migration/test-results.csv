@@ -23,6 +23,18 @@
 "test-cardinal-legacy-spatial.R","unaligned observed-peak means differ by the documented denominator",3,0,FALSE,FALSE,0,3
 "test-cardinal-legacy-spatial.R","strict mass windows quantify the nearest-index boundary difference",3,0,FALSE,FALSE,0,3
 "test-cardinal-legacy-spatial.R","unchanged probMap reproduces seeded legacy densities and classifications",26,0,FALSE,FALSE,0,26
+"test-cardinal-preprocessing.R","FTICR calibration is numeric and preserves knots, defaults and extrapolation",5,0,FALSE,FALSE,0,5
+"test-cardinal-preprocessing.R","single-spectrum TSV input is numeric, validated and independent of MALDIquant",15,0,FALSE,FALSE,0,15
+"test-cardinal-preprocessing.R","numeric half-height widths reproduce frozen legacy calculations",12,0,FALSE,FALSE,0,12
+"test-cardinal-preprocessing.R","Cardinal profile picking and native precomputed widths support both representations",19,0,FALSE,FALSE,0,19
+"test-cardinal-preprocessing.R","native TIC and RMS use Cardinal scaling and can request division-only results",30,0,FALSE,FALSE,0,30
+"test-cardinal-preprocessing.R","reference normalization follows Cardinal zero-reference policy within explicit tolerance",6,0,FALSE,FALSE,0,6
+"test-cardinal-preprocessing.R","median and aligned fold-change workers preserve documented observed/zero semantics",13,0,FALSE,FALSE,0,13
+"test-cardinal-preprocessing.R","normalization validates queues and output, keeps zero spectra, and preserves source files",15,0,FALSE,FALSE,0,15
+"test-cardinal-preprocessing.R","frequency filtering counts positive pixels inclusively and preserves metadata",22,0,FALSE,FALSE,0,22
+"test-cardinal-preprocessing.R","native preprocessing reaches seeded maps without MALDIquant algorithms",6,0,FALSE,FALSE,0,6
+"test-cardinal-preprocessing.R","native preprocessing workers preserve library environment and backend ownership",5,0,FALSE,FALSE,0,5
+"test-cardinal-preprocessing.R","Cardinal byte budgets remain distinct from record counts",6,0,FALSE,FALSE,0,6
 "test-spatstat-namespaces.R","the package namespace contains no dynamic spatstat copies",9,0,FALSE,FALSE,0,9
 "test-spatstat-namespaces.R","spatial combination, image conversion, and expression evaluation work",11,0,FALSE,FALSE,0,11
 "test-spatstat-namespaces.R","all simulation shapes resolve their geometry explicitly",7,0,FALSE,FALSE,0,7

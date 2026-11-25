@@ -11,6 +11,17 @@
 }
 
 
+# A custom project library may exist only in the parent's .libPaths(). Snow
+# needs its dependencies before it can receive exported functions. Expose those
+# paths during startup only, then restore the caller's environment exactly.
+.msiStartBackend <- function(BPPARAM) {
+    previous <- Sys.getenv("R_LIBS", unset = NA_character_)
+    on.exit(if (is.na(previous)) Sys.unsetenv("R_LIBS") else Sys.setenv(R_LIBS = previous))
+    Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
+    BiocParallel::bpstart(BPPARAM)
+}
+
+
 # Return x/y in acquisition order. Row names are incidental import identifiers,
 # not pixel indices. A changing z coordinate describes a volume, which must be
 # reduced to one plane before using moleculaR's two-dimensional spatial methods.

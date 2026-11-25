@@ -4,43 +4,88 @@
 \alias{normalizeIntensity}
 \title{Normalize Intensity}
 \usage{
-normalizeIntensity(x, method, meanMethod = "mean", mz = NULL, tol = NULL)
+normalizeIntensity(
+  x,
+  method,
+  meanMethod = "mean",
+  mz = NULL,
+  tol = NULL,
+  scale = NA_real_,
+  zeroAsMissing = TRUE,
+  outfile = NULL,
+  featureChunkSize = NULL,
+  BPPARAM = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
-\item{x:}{a list of \code{MassPeaks} objects.}
+\item{x}{A native Cardinal object or a temporary legacy MassPeaks list.}
 
-\item{method:}{the normalization method,  has to be one of
+\item{method}{The normalization method, one of
 c('medianFoldChange', 'RMS', 'TIC', 'median', 'IS').}
 
-\item{meanMethod:}{only used for `medianFoldChange` normalization. See
-\code{?MALDIquant::mergeMassPeaks} for more info.}
+\item{meanMethod}{Reference aggregation for medianFoldChange: mean, median or sum.}
 
-\item{mz:}{a numeric, the m/z value of the internal standard (IS) -
-only relevant for `method='IS'`.}
+\item{mz}{A numeric, the m/z value of the internal standard (IS) -
+only relevant for \code{method='IS'}.}
 
-\item{tol:}{a numeric, the absolute tolerance for m/z (in Da) -
-only relevant for `method='IS'`.}
+\item{tol}{A numeric, the absolute tolerance for m/z (in Da) -
+only relevant for \code{method='IS'}.}
+
+\item{scale}{Native input only: positive output scale, or NA for Cardinal's
+defaults (maximum spectrum length/shared feature count for TIC/RMS, one
+otherwise). Use one for division-only normalization.}
+
+\item{zeroAsMissing}{Native medianFoldChange only: interpret shared zeros as
+absent centroid peaks (TRUE), or explicitly observed zeros (FALSE).}
+
+\item{outfile}{Native input only: new intensity backing file. Defaults to
+temporary session storage. Keep this file and the original m/z source files
+accessible, or provide a persistent destination. Existing paths are refused.}
+
+\item{featureChunkSize}{Optional feature rows per reference block for native
+medianFoldChange. The default targets Cardinal's byte budget, or 16 MiB.}
+
+\item{BPPARAM}{Optional native BiocParallel backend; serial by default.}
+
+\item{verbose}{Logical; show native processing progress.}
 }
 \value{
-Intensity-normalized list of \code{MassPeaks} objects.
+Native input returns the same Cardinal class with completed, file-backed
+intensities in a new backing file. Legacy input returns a normalized list.
 }
 \description{
 This normalizes spectral intensities based on a number of different methods.
 }
 \details{
-The `medianFoldChange` normalization is done such that for every spectrum a median
+Native TIC, RMS and reference scaling use the same exported matter rescaling
+functions as Cardinal. Empty/all-zero spectra remain zero. Non-finite inputs
+and undefined nonzero-spectrum factors raise errors. IS uses the nearest
+reference within tol on a sorted mass axis; absent/zero standards yield zero
+spectra, following Cardinal's zero-reference policy. It does not apply the
+legacy median imputation. Default TIC/RMS scales differ from legacy values.
+Factors are recorded in pixelData and completed processing in Cardinal history.
+Existing queued preprocessing must be processed explicitly before this call.
+
+Native medianFoldChange requires aligned centroided MSImagingExperiment data.
+Reference-zero features are excluded from ratios; zeroAsMissing controls the
+interpretation of other zeros. Arrays are never aligned implicitly.
+
+On the temporary legacy path, \code{medianFoldChange} is done such that for every spectrum a median
 fold-change of peak intensities is calculated with reference to the mean spectrum
 which is then taken as a normalization factor for that particular spectrum (see
-reference [1]). The `RMS`, `TIC` and `median` normalization methods are
+reference 1). The \code{RMS}, \code{TIC} and \code{median} normalization methods are
 equivalent to their counterparts in other packages (ex. MALDIquant), they are
-just adapted to process centroided data of `MassPeak` Objects. Note that for
-`medianFoldChange` normalization, it is important to run peak binning beforehand.
-The `IS` method assumes the presence of an internal standard at `mz` m/z against
+just adapted to process centroided data of \code{MassPeak} Objects. Note that for
+\code{medianFoldChange} normalization, it is important to run peak binning beforehand.
+The \code{IS} method assumes the presence of an internal standard at \code{mz} m/z against
 which all intensities are normalized (pixel-wise).
 }
 \references{
-1. Veselkov, Kirill, et al. "BASIS: High-performance bioinformatics platform for processing of large-scale mass
-   spectrometry imaging data in chemically augmented histology." Scientific reports 8.1 (2018): 1-11.
-2. Deininger, Sören-Oliver, et al. "Normalization in MALDI-TOF imaging datasets of proteins: practical
-   considerations." Analytical and bioanalytical chemistry 401.1 (2011): 167-181.
+\enumerate{
+\item Veselkov, Kirill, et al. "BASIS: High-performance bioinformatics platform for processing of large-scale mass
+spectrometry imaging data in chemically augmented histology." Scientific reports 8.1 (2018): 1-11.
+\item Deininger, Sören-Oliver, et al. "Normalization in MALDI-TOF imaging datasets of proteins: practical
+considerations." Analytical and bioanalytical chemistry 401.1 (2011): 167-181.
+}
 }

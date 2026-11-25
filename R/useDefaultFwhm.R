@@ -12,8 +12,9 @@
 #'   `userMassRes` across the entire mass range, including for FTICR.
 #'
 #' @details
-#' The FTICR model uses the nonlinear interpolated curve in the bundled
-#' `processed-example-Data` dataset. The example instrument's resolving power
+#' The FTICR model uses a native numeric calibration extracted from the original
+#' example dataset; constructing it no longer loads legacy spectral objects.
+#' The example instrument's resolving power
 #' was 123000 at m/z 249. The curve is multiplied by a positive scale factor
 #' so that its width at the reference mass equals `mass / massRes`.
 #' This preserves its nonlinear shape without introducing negative widths,
@@ -87,12 +88,14 @@ useDefaultFwhm <- function(userMassRes = NULL, modality = "FTICR", constant = FA
                         peaks = referenceMass, fwhmVals = width))
       }
 
-      # Load into a private environment to avoid changing the user's workspace.
-      exampleData <- new.env(parent = baseenv())
-      utils::data(list = "processed-example-Data", package = "moleculaR",
-                  envir = exampleData)
-      reference <- exampleData$fwhmObj
-      rm(exampleData)
+      # Only numerical calibration data are needed, not the legacy MSI bundle.
+      calibration <- readRDS(system.file("extdata", "fticr-fwhm-reference.rds",
+                                        package = "moleculaR", mustWork = TRUE))
+      curve <- calibration$interpolation
+      reference <- fwhm(stats::approxfun(curve$x, curve$y,
+                    method = if (curve$method == 1L) "linear" else "constant",
+                    yleft = curve$yleft, yright = curve$yright, f = curve$f, na.rm = curve$na.rm),
+                    peaks = calibration$peaks, fwhmVals = calibration$measuredFwhm)
       referenceWidth <- getFwhm(reference, referenceMass)
       if(length(referenceWidth) != 1L || !is.finite(referenceWidth) || referenceWidth <= 0){
             stop("The bundled FTICR model has no positive finite width at the reference m/z.")

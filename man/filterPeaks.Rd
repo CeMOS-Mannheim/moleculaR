@@ -4,18 +4,30 @@
 \alias{filterPeaks}
 \title{Filter Peaks}
 \usage{
-filterPeaks(x, minFreq = 0.01)
+filterPeaks(x, minFreq = 0.01, featureChunkSize = NULL)
 }
 \arguments{
-\item{x:}{Dataset, a list of \code{MALDIquant::MassPeaks} objects.}
+\item{x}{An aligned Cardinal MSImagingExperiment with known centroided status,
+or a temporary legacy MassPeaks list. Native arrays require explicit alignment.}
 
-\item{minFreq:}{numeric falling in [0,1], peaks occuring in \code{<= minFreq * length(x)} will be omitted.}
+\item{minFreq}{Numeric between zero and one. Keep features with frequency >= minFreq,
+including equality.}
+
+\item{featureChunkSize}{Native input only: optional number of feature rows
+per block. Default targets Cardinal's configured byte budget, or 16 MiB.}
 }
 \value{
-Filtered list of `MassPeaks` objects.
+A filtered native Cardinal object, or the legacy filtered MassPeaks list.
 }
 \description{
 This function filters out peaks which occur in less than 'minFreq' percent of all pixels.
 This is similar to 'MALDIquant::filterPeaks' but is more memory friendly as it relies on
 sparse data representation.
+}
+\details{
+Native frequencies count positive intensities per acquired pixel.
+Stored zeros are absent; duplicate shared rows remain separate features.
+Counts and frequencies are recomputed in featureData. Coordinates, metadata,
+empty feature results and completed processing history are preserved.
+Complete existing processing queues with Cardinal::process() first.
 }

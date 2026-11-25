@@ -189,8 +189,7 @@ From the repository root, use `Rscript --vanilla` followed by the script path:
 ## Remaining migration
 
 The single-analyte milestone and its original validation above are historical.
-The subsequent batch/lipid implementation and validation are described in
-[phase-3.md](phase-3.md). Measured FWHM input migration, normalization, feature
-filtering, Shiny integration, example-data cleanup, removal of legacy
-dependencies, cross-platform testing, and large-scale validation remain later
-phases.
+Subsequent work is described in [phase-3.md](phase-3.md) for batch/lipid
+extraction and [phase-4.md](phase-4.md) for measured FWHM and preprocessing.
+Shiny integration, example-data cleanup, removal of legacy dependencies,
+cross-platform testing, and large-scale validation remain later phases.

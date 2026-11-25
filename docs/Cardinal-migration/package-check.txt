@@ -6,7 +6,7 @@
     GNU Fortran (GCC) 14.3.0
 * running under: Windows 11 x64 (build 26200)
 * using session charset: ASCII
-* current time: 2026-11-25 16:04:45 UTC
+* current time: 2026-11-25 17:25:04 UTC
 * using options '--no-manual --no-build-vignettes'
 * checking for file 'moleculaR/DESCRIPTION' ... OK
 * checking extension type ... Package
@@ -34,7 +34,7 @@ These are not fully portable file names.
 See section 'Package structure' in the 'Writing R Extensions' manual.
 * checking whether package 'moleculaR' can be installed ... OK
 * checking installed package size ... INFO
-  installed size is 48.2Mb
+  installed size is 48.3Mb
   sub-directories of 1Mb or more:
     data     13.0Mb
     extdata  34.5Mb
@@ -116,6 +116,8 @@ Extensions' manual.
 .medianNorm : <anonymous>: no visible global function definition for
   'median'
 .msiExtractIons: no visible global function definition for 'tail'
+.msiRecordProcessing: no visible global function definition for
+  'setNames'
 .spatialHTest: no visible global function definition for 'sd'
 .spatialHTest: no visible global function definition for 'pnorm'
 .spatialHTest: no visible global function definition for 'p.adjust'
@@ -156,7 +158,6 @@ plot.molProbMap: no visible global function definition for 'polygon'
 plot.molProbMap: no visible global function definition for 'legend'
 plot.molProbMap: no visible global function definition for 'rgb'
 plot.molProbMap: no visible global function definition for 'par'
-readSingleSpect: no visible global function definition for 'read.delim'
 recreateExData: no visible global function definition for 'read.csv'
 searchAnalyte: no visible global function definition for 'as'
 simulatespp: no visible global function definition for 'quantile'
@@ -172,9 +173,9 @@ useDefaultFwhm: no visible global function definition for 'approxfun'
 Undefined global functions or variables:
   abline approx approxfun as axis density dev.off dnorm download.file
   ecdf idx legend lines loess loess.control median mtext p.adjust par
-  pnorm points polygon predict qnorm quantile rainbow read.csv
-  read.delim rgb rnorm rpois sd segments setNames smooth.spline supsmu
-  tail text title wilcox.test
+  pnorm points polygon predict qnorm quantile rainbow read.csv rgb
+  rnorm rpois sd segments setNames smooth.spline supsmu tail text title
+  wilcox.test
 Consider adding
   importFrom("grDevices", "dev.off", "rainbow", "rgb")
   importFrom("graphics", "abline", "axis", "legend", "lines", "mtext",
@@ -184,7 +185,7 @@ Consider adding
              "loess", "loess.control", "median", "p.adjust", "pnorm",
              "predict", "qnorm", "quantile", "rnorm", "rpois", "sd",
              "setNames", "smooth.spline", "supsmu", "wilcox.test")
-  importFrom("utils", "download.file", "read.csv", "read.delim", "tail")
+  importFrom("utils", "download.file", "read.csv", "tail")
 to your NAMESPACE file (and ensure that your DESCRIPTION Imports field
 contains 'methods').
 * checking Rd files ... NOTE
@@ -273,11 +274,6 @@ Undocumented arguments in Rd file 'filterDuplicates.Rd'
 Documented arguments not in \usage in Rd file 'filterDuplicates.Rd':
   'spp:'
 
-Undocumented arguments in Rd file 'filterPeaks.Rd'
-  'x' 'minFreq'
-Documented arguments not in \usage in Rd file 'filterPeaks.Rd':
-  'x:' 'minFreq:'
-
 Undocumented arguments in Rd file 'gaussWeight.Rd'
   'ionMode'
 
@@ -300,11 +296,6 @@ Documented arguments not in \usage in Rd file 'mse.Rd':
 Documented arguments not in \usage in Rd file 'ncc.Rd':
   'im0:' 'im1:'
 
-Undocumented arguments in Rd file 'normalizeIntensity.Rd'
-  'x' 'method' 'meanMethod' 'mz' 'tol'
-Documented arguments not in \usage in Rd file 'normalizeIntensity.Rd':
-  'x:' 'method:' 'meanMethod:' 'mz:' 'tol:'
-
 Undocumented arguments in Rd file 'probMap.Rd'
   '...'
 Documented arguments not in \usage in Rd file 'probMap.Rd':
@@ -314,11 +305,6 @@ Undocumented arguments in Rd file 'readCentrData.Rd'
   'path' 'verbose' '...'
 Documented arguments not in \usage in Rd file 'readCentrData.Rd':
   'path:' 'verbose:' '...:'
-
-Undocumented arguments in Rd file 'readSingleSpect.Rd'
-  'path'
-Documented arguments not in \usage in Rd file 'readSingleSpect.Rd':
-  'path:'
 
 Documented arguments not in \usage in Rd file 'recreateExData.Rd':
   'pathToImzml:' 'pathToSingleSpctr:' 'pathToSldb:' 'pathToMtspc:'

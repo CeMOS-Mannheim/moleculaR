@@ -19,11 +19,18 @@
         BiocParallel::SnowParam(workers = numCores, progressbar = FALSE)
 }
 
-.msiBatchChunkSize <- function(n, chunkSize) {
+.msiBatchChunkSize <- function(n, chunkSize, x = NULL) {
     if (is.null(chunkSize)) {
         chunkSize <- Cardinal::getCardinalChunksize()
         if (length(chunkSize) != 1L || is.na(chunkSize)) {
             chunkSize <- ceiling(n / Cardinal::getCardinalNChunks())
+        } else if (inherits(chunkSize, "size_bytes")) {
+            if (is.null(x)) stop("A Cardinal object is required for a byte-sized chunk budget.")
+            peaks <- if (methods::is(x, "MSImagingArrays")) max(lengths(Cardinal::mz(x))) else length(Cardinal::mz(x))
+            # Cardinal accepts both record counts and typed byte budgets. This
+            # conservative estimate covers double mass/intensity vectors for
+            # the longest spectrum; output memory still grows with detections.
+            chunkSize <- max(1, floor(as.numeric(chunkSize) / (16 * max(1, peaks))))
         }
     }
     if (!is.numeric(chunkSize) || length(chunkSize) != 1L || !is.finite(chunkSize) ||
@@ -107,7 +114,7 @@
     .msiValidate(x, extraction = TRUE)
     queries <- .msiBatchQueries(mz, fwhm, method)
     n <- .msiNumberOfPixels(x)
-    chunkSize <- .msiBatchChunkSize(n, chunkSize)
+    chunkSize <- .msiBatchChunkSize(n, chunkSize, x)
     if (!methods::is(BPPARAM, "BiocParallelParam")) {
         stop("BPPARAM must be a BiocParallelParam object.")
     }
@@ -144,7 +151,7 @@
     # Reuse a caller-started backend. Stop only a cluster that this call starts.
     started <- !BiocParallel::bpisup(BPPARAM)
     if (started) {
-        BiocParallel::bpstart(BPPARAM)
+        .msiStartBackend(BPPARAM)
         on.exit(BiocParallel::bpstop(BPPARAM), add = TRUE)
     }
     starts <- seq.int(1, n, by = chunkSize)

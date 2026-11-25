@@ -15,22 +15,31 @@ estimateFwhm(
   savePlot = NULL,
   modality = "FTICR",
   userMassRes = NULL,
-  constant = FALSE
+  constant = FALSE,
+  mz = NULL,
+  intensity = NULL,
+  peakIndices = NULL,
+  peakMethod = "diff",
+  BPPARAM = NULL
 )
 }
 \arguments{
-\item{s}{A single profile (continuous) \code{MALDIquant::MassSpectrum}, a list
-of these, or a list of \code{MALDIquant::MassPeaks} with precomputed widths
-(see Details). Omit or supply \code{NULL} to use \code{\link[=useDefaultFwhm]{useDefaultFwhm()}}.}
+\item{s}{A numeric profile returned by \code{\link[=readSingleSpect]{readSingleSpect()}}, a list/data frame
+with mz/intensity vectors, a list of those profiles, a native Cardinal
+object with known profile status, or an mz/fwhm table of precomputed widths
+(optional snr column). A numeric m/z vector can be paired with intensity.
+Existing MALDIquant spectra/lists remain temporarily supported. Omit or
+supply NULL to use \code{\link[=useDefaultFwhm]{useDefaultFwhm()}}.}
 
 \item{spectraSampling}{an integer specifying how many spectra should be used for fwhm estimation
-(the lower the faster) when \code{s} is a list of \code{MALDIquant::MassSpectrum} objects. Defaults to 10.}
+(the lower the faster) for a list or Cardinal experiment. Defaults to 10.}
 
 \item{peakSampling}{an integer specifying how many detected peaks (in each spectrum) to consider for fwhm estimation,
 the lower the faster. Defaults to 1000.}
 
-\item{numCores}{an integer specifying the number of cores used for the FWHM computations when s is a
-\code{MassSpectrum} or a list thereof. This is ignored on windows.}
+\item{numCores}{Positive worker count for native Cardinal processing. The
+default is serial; values above one use Snow workers. Legacy inputs retain
+their existing platform-specific behavior.}
 
 \item{smoothingMethod}{a character, one of \code{c('loess','superSmoother')}, the method that is used for fitting a smoothing curve to
 represent fwhm as a function of m/z. Defaults to \code{loess} which produced better fits but takes
@@ -51,10 +60,25 @@ longer to compute.}
 
 \item{constant}{Logical; use a constant width instead of the instrument
 model when \code{s} is \code{NULL}. Passed to \code{\link[=useDefaultFwhm]{useDefaultFwhm()}}.}
+
+\item{mz}{Optional numeric mass vector paired with intensity, instead of s.}
+
+\item{intensity}{Numeric profile intensities paired with numeric s or mz.}
+
+\item{peakIndices}{Optional unique sample indices for one numeric profile.
+Supplying these isolates peak-width calculations from automatic picking.}
+
+\item{peakMethod}{Native Cardinal peakPick method; default diff. Other
+supported methods are sd, mad, quantile, filter and cwt.}
+
+\item{BPPARAM}{Optional native BiocParallel backend; keep numCores at one when
+supplying it. Caller-started backends retain their lifecycle.}
 }
 \value{
 An S3 \code{fwhm} object containing \code{fwhmInterpolator}, \code{peaks}, and \code{fwhmVals}.
 For default models, widths are model predictions rather than measurements.
+Native measured models also contain estimation metadata recording sampled
+spectra, peak selection, detected/discarded counts and processing settings.
 }
 \description{
 Estimate FWHM as a function of m/z from spectra, or use an approximate
@@ -69,13 +93,17 @@ constant resolving power. Measured widths are preferable when available.
 Invalid spectra or failed estimation raise errors rather than using a default.
 Sampling, smoothing and SNR settings apply only to supplied spectra.
 
-The input \code{s} could be a single profile (continuous) \code{MassSpectrum} object. This could be supplied externally
-or via \code{readSingleSpect} function (see \code{?readSingleSpect}). This is normally the case when dealing with MRMS (FTICR)
-centroided data which does not contain any information about peaks FWHM values (for example when read from a centroided
-imzML file).
-
-\code{s} could also be a list of \code{MassSpectrum} objects. This could be the case when dealing with continuous TOF data.
-In this case, the list of spectra is sampled and FWHM values are computed based on these.
+Native automatic picking uses Cardinal, which can select different peaks
+from the historical MALDIquant SuperSmoother detector. The half-height linear
+interpolation and the loess/SuperSmoother curve-fitting choices are preserved.
+Sampling uses R's random stream; set.seed() makes selected spectra and peaks
+reproducible. Only selected Cardinal profiles are retrieved. Profile masses
+must be strictly increasing; select one run and complete queued processing
+explicitly before fitting a Cardinal experiment.
+Known centroided or unknown-status Cardinal input cannot supply measured
+widths directly. Use a native mz/fwhm table when widths were measured elsewhere.
+Invalid/unbounded calculated widths are discarded with a warning and recorded;
+at least five distinct valid width samples are required for native fitting.
 
 If \code{s} is a list of centroided \code{MassPeaks} objects, the function assumes that FWHM values have been
 (externally) pre-computed and attached to each centroided spectrum (\code{MassPeaks} object) via the

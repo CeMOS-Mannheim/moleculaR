@@ -64,6 +64,8 @@ Collate:
     'msi-accessors.R'
     'msi-extractIon.R'
     'msi-extractIons.R'
+    'msi-fwhm.R'
+    'msi-preprocessing.R'
     'normalizeIntensity.R'
     'plotting-functions.R'
     'probMap.R'

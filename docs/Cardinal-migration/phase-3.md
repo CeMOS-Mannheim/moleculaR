@@ -154,6 +154,9 @@ or repeated statistical performance study was performed. Cardinal's existing
 scan-direction ontology warning is suppressed only inside the benchmark's
 import; production reader behavior is unchanged. This is one moderate-size
 dataset, not Phase 7 large-scale validation or a legacy preprocessing benchmark.
+Here all-data measurements mean all acquired pixels in the supplied input; its
+centroided feature set is reduced/shrunk. No profile peak picking or measured
+width estimation was performed on that imzML data.
 
 Raw metrics are in `batch-benchmark.csv`. Reproduce with
 `Rscript --vanilla docs/Cardinal-migration/benchmark-batch.R [imzML]` after
@@ -170,8 +173,8 @@ thousands of targets can still require substantial RAM. Single-query dense
 vectors are created while constructing point patterns, and spatial algorithms
 retain their independent memory costs.
 
-Phase 4 remains measured-FWHM input adapters, normalization equivalence and
-feature filtering. Later phases cover Cardinal Shiny integration, examples and
-vignettes, legacy dependency removal, other operating systems and larger-scale
-validation. Existing default FWHM models, probability mapping and historical
-fixtures are preserved in this stage.
+Phase 4's measured-FWHM adapters, Cardinal normalization and feature filtering
+are described in [phase-4.md](phase-4.md). Later phases cover Cardinal Shiny
+integration, examples and vignettes, legacy dependency removal, other operating
+systems and larger-scale validation. Existing default FWHM models, probability
+mapping and historical fixtures were preserved in this stage.

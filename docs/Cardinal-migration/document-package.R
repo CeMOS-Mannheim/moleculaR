@@ -8,7 +8,9 @@
 .libPaths(c(file.path(getwd(), "renv/library/cardinal-migration"), .libPaths()))
 document_migration <- function() {
     unrelated <- setdiff(list.files("man", full.names = TRUE), file.path("man", c("readMsi.Rd",
-        "searchAnalyte.Rd", "batchAnalyteSearch.Rd", "batchLipidSearch.Rd")))
+        "searchAnalyte.Rd", "batchAnalyteSearch.Rd", "batchLipidSearch.Rd",
+        "readSingleSpect.Rd", "estimateFwhm.Rd", "useDefaultFwhm.Rd",
+        "normalizeIntensity.Rd", "filterPeaks.Rd")))
     original <- lapply(unrelated, function(path) readBin(path, "raw", file.size(path)))
     on.exit(for (i in seq_along(unrelated)) writeBin(original[[i]], unrelated[i]))
 

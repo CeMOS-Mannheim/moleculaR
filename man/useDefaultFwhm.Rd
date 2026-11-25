@@ -7,40 +7,41 @@
 useDefaultFwhm(userMassRes = NULL, modality = "FTICR", constant = FALSE)
 }
 \arguments{
-\item{userMassRes}{A numeric vector of the form \code{c(massRes = , mass = )},
+\item{userMassRes}{A numeric vector of the form `c(massRes = , mass = )`,
 specifying resolving power and its reference m/z, respectively. Positional
 vectors are also accepted. If omitted, the defaults at m/z 249 are 123000
 for FTICR, 40000 for TIMS-TOF, and 10000 for TOF-reflector.}
 
-\item{modality}{Instrument type: \code{"FTICR"}, \code{"TOF-reflector"}, or
-\code{"TIMS-TOF"}. The aliases \code{"TOF"} and \code{"timsTOF"} are also accepted.}
+\item{modality}{Instrument type: `"FTICR"`, `"TOF-reflector"`, or
+`"TIMS-TOF"`. The aliases `"TOF"` and `"timsTOF"` are also accepted.}
 
-\item{constant}{A logical. If \code{TRUE}, use the width computed from
-\code{userMassRes} across the entire mass range, including for FTICR.}
+\item{constant}{A logical. If `TRUE`, use the width computed from
+`userMassRes` across the entire mass range, including for FTICR.}
 }
 \value{
-An S3 \code{fwhm} object containing \code{fwhmInterpolator}, reference
-\code{peaks}, and corresponding model-predicted \code{fwhmVals} in Da.
+An S3 `fwhm` object containing `fwhmInterpolator`, reference
+  `peaks`, and corresponding model-predicted `fwhmVals` in Da.
 }
 \description{
 Approximate FWHM as a function of m/z when measured peak widths are unavailable.
 }
 \details{
-The FTICR model uses the nonlinear interpolated curve in the bundled
-\code{processed-example-Data} dataset. The example instrument's resolving power
+The FTICR model uses a native numeric calibration extracted from the original
+example dataset; constructing it no longer loads legacy spectral objects.
+The example instrument's resolving power
 was 123000 at m/z 249. The curve is multiplied by a positive scale factor
-so that its width at the reference mass equals \code{mass / massRes}.
+so that its width at the reference mass equals `mass / massRes`.
 This preserves its nonlinear shape without introducing negative widths,
 which could result from an additive vertical shift. The returned
-\code{fwhmVals} contain model predictions rather than the original measured widths.
+`fwhmVals` contain model predictions rather than the original measured widths.
 
 TOF-reflector (e.g. Rapiflex) and TIMS-TOF assume approximately constant
-resolving power, so FWHM increases linearly with m/z: \code{FWHM(mz) = mz / massRes}.
+resolving power, so FWHM increases linearly with m/z: `FWHM(mz) = mz / massRes`.
 Their defaults are 10000 and 40000, respectively. The supplied reference
-mass does not affect this model unless \code{constant = TRUE}, which explicitly
-overrides the instrument model with a constant width of \code{mass / massRes}.
+mass does not affect this model unless `constant = TRUE`, which explicitly
+overrides the instrument model with a constant width of `mass / massRes`.
 
-These are approximate models. Measured widths from \code{\link[=estimateFwhm]{estimateFwhm()}} are
+These are approximate models. Measured widths from [estimateFwhm()] are
 preferable when available. The FTICR interpolator retains the bundled
 curve's endpoint behavior outside its measured mass range.
 }
@@ -52,4 +53,5 @@ getFwhm(custom, 400) # 400 / 150000
 tof <- useDefaultFwhm(modality = "TOF")
 timstof <- useDefaultFwhm(modality = "timsTOF")
 getFwhm(timstof, c(249, 800)) # c(249, 800) / 40000
+
 }

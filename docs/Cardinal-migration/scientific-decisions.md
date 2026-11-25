@@ -163,3 +163,152 @@ replace the cache after such edits. No full-file hashing or spectral conversion
 is performed to create a cache key. Changing normalization, run/ROI, target,
 width, representation, ordinary file timestamps or intensity values invalidates
 the entry. The cache is opt-in, session-local and not a durable artifact.
+
+## 2026-11-25 — D012: independent FTICR calibration
+
+Extract the original interpolator's numeric x/y knots, interpolation method,
+endpoint values and options, together with its measured masses/widths, into a
+small native RDS under inst/extdata. Reconstruct it using stats::approxfun and
+retain the existing positive multiplicative resolving-power calibration. Verify
+reference points, a dense grid and extrapolation against the frozen Phase 3
+baseline. Default model construction must no longer load the legacy dataset or
+any MALDIquant object. Preserve the original dataset for later cleanup.
+
+## 2026-11-25 — D013: native measured spectra and peak detection
+
+readSingleSpect returns a validated numeric moleculaRSpectrum with mz/intensity
+vectors. Its default header=TRUE preserves the old reader's first-row handling;
+header=FALSE permits explicitly headerless input. Native profile masses must be
+positive and strictly increasing; intensities must be finite and non-negative.
+estimateFwhm accepts these spectra, numeric vectors, lists/data frames, selected
+Cardinal profile spectra, and native precomputed mz/fwhm tables. Existing legacy
+input dispatch remains available.
+
+Preserve the two half-height linear interpolations and the existing loess and
+SuperSmoother curve fitting. Explicit peakIndices isolate width equivalence.
+For automatic native peak detection use Cardinal peakPick(method="diff") by
+default, with an explicit peakMethod option. This replaces MALDIquant's
+SuperSmoother detector for new native inputs, not its curve-fitting method.
+Report that choice and quantify peak-set, width-curve and downstream differences
+on synthetic and bundled real profiles. Never assume the pickers are equivalent.
+Reject known-centroided Cardinal inputs unless widths are supplied separately;
+unknown status is not evidence of profile data. Reject queued processing.
+Discard unbounded/invalid calculated widths with an explicit warning, record
+counts and selected spectra/peaks, and require at least five distinct valid
+width samples for fitting. No fallback to an approximate model after failure.
+
+## 2026-11-25 — D014: native normalization and processing state
+
+Keep the public normalization methods and division-only legacy formulas.
+Cardinal's default TIC/RMS scale must not be inherited silently. Use a scalar
+factor pass and a custom native addProcessing worker, then Cardinal::process
+with outfile to stream double-precision output into a new imzML bundle.
+Processing without outfile can materialize the entire result and is unsuitable.
+Refuse existing output bundles/intermediate binaries and never overwrite source
+files. Return completed native data, recorded factors in pixelData, and Cardinal
+processing history. Pre-existing queues must be processed explicitly first.
+
+Empty/all-zero acquired spectra remain zero with factor one. Undefined factors
+for nonzero spectra are errors rather than NaN/Inf. RMS uses a scaled equivalent
+formula to avoid intermediate overflow. Internal standards use the nearest
+measured peak within inclusive absolute tolerance, with deterministic lower-mass
+ties; missing standards use the median positive observed standard. A measured
+zero standard in a nonzero spectrum is an error. Do not mix runs when estimating
+global standard/reference factors. Retain legacy dispatch unchanged.
+
+## 2026-11-25 — D015: aligned median fold-change semantics
+
+Require an explicitly aligned MSImagingExperiment for native medianFoldChange;
+do not align arrays silently. Reference mean/median/sum is calculated feature by
+feature in bounded blocks. Default zeroAsMissing=TRUE interprets shared-axis zeros
+as absent centroid peaks, matching legacy mergeMassPeaks(ignore.na=TRUE) on
+positive observed peaks. Set zeroAsMissing=FALSE to reproduce legacy lists that
+explicitly store every aligned feature, including zeros. This representation
+ambiguity cannot be inferred from intensities alone and must be documented.
+Reference-zero features contain no signal and are excluded from ratios; invalid
+nonzero-spectrum median factors are errors. Use an explicit featureChunkSize or
+Cardinal's configured byte budget, falling back to a documented 16 MiB target
+for dense feature-block workspace (at least one feature row).
+
+## 2026-11-25 — D016: feature-frequency filtering
+
+Require aligned, known-centroided data with a completed processing queue.
+Recompute count/freq from finite non-negative intensities: one positive value
+per acquired pixel contributes to its feature row. Keep freq >= minFreq,
+including equality, following the legacy code rather than its old <= prose.
+Retain separate shared feature rows even when their masses coincide. Stored
+zero values are absent for frequency purposes; legacy sparse stored-entry counts
+could include them. Test and document that ambiguity explicitly. Never perform
+implicit alignment for arrays. Preserve metadata, empty feature results, and
+processing provenance without moving the spatial-analysis boundary.
+
+## 2026-11-25 — D017: user-authorized Cardinal alternatives
+
+The user explicitly clarified that legacy normalization and peak-picking
+specifics need not be retained where reasonable Cardinal alternatives exist.
+This supersedes D014's division-only scaling, missing-standard median imputation
+and zero-standard error requirements for native inputs. D013's Cardinal picker
+remains the native default. Legacy input adapters may remain temporarily without
+constraining the new native path.
+
+Use Cardinal's actual exported matter rescale_sum/rescale_rms/rescale_ref
+implementations inside a Cardinal processing worker. Default scale follows
+Cardinal: the maximum spectrum length/shared feature count for TIC/RMS, and one
+for reference normalization. Expose scale=1 when division-only output is wanted.
+Guard empty spectra (Cardinal RMS currently errors there), reject non-finite
+input/factors, and preserve acquired zero pixels. For IS, retain an explicit
+absolute matching tolerance as a safeguard against normalizing to an unrelated
+peak. Missing or zero references yield zero spectra, following Cardinal's
+zero-reference policy, rather than legacy median imputation. Reference axes must
+be sorted; ties follow the installed Cardinal implementation. Quantify these
+intentional changes against the frozen legacy fixtures and direct Cardinal.
+
+Median and median fold-change have no equivalent in the installed Cardinal
+normalization methods and remain custom native processing workers. Their
+documented feature/zero handling still follows D015. Preserve half-height width
+calculations and default instrument calibrations; changing peak selection is
+explicit and tested, not a claim of identical measured-width fits.
+
+## 2026-11-25 — D018: robust native output and isolated worker startup
+
+The initial Cardinal process(outfile=...) prototype worked on tiny inputs but
+failed while recursively combining backed results on a 2,000-spectrum real
+subset in this installation. process() without outfile returns resident results.
+Replace that output mechanism with a double-precision matter_list/matter_mat
+destination inside the native Cardinal object. Write one normalized spectrum at
+a time, retain original m/z backing, and record completed processing and factors
+through exported accessors. This supersedes D014's imzML-bundle output plan;
+outfile now names a new intensity backing file, not an imzML export. Existing
+paths are refused; partial new files are removed on failure. Persistent objects
+require both their new intensity file and original m/z sources to remain present.
+The algorithms and scaling remain the approved Cardinal/matter alternatives.
+
+Snow startup also requires the isolated project library to be visible before
+workers can load their dependencies. Expose the parent's .libPaths() through
+R_LIBS during internally owned startup only, restoring the original environment
+afterward. Test caller-owned backend lifecycle and scalar-factor parallel
+equivalence; the file write pass remains serial and bounded by one spectrum.
+
+## 2026-11-25 — D019: distinguish profile and reduced centroided evidence
+
+The user clarified that the supplied imzML data are reduced/shrunk centroided
+data and unsuitable for picking or estimating widths. Automatic picker and
+measured-width evaluation use only the separate bundled
+pos-XIII-82492-singleSpectrum.tsv profile, with input checksum recorded.
+The real imzML pair is used only after fitting, for extraction/map sensitivity
+and file-backed normalization checks. Those results describe the provided
+reduced feature set, not an original complete spectral acquisition. Synthetic
+profile imzML fixtures test native adapters independently. Reject known-centroided
+and unknown-status Cardinal inputs for measured-width estimation; no assumption
+of profile data is made from the processed/continuous file-layout label.
+
+## 2026-11-25 — D020: record counts versus typed byte budgets
+
+The installed Cardinal settings distinguish a plain chunk-size number (records)
+from a named byte size such as c(MB=2), returned as size_bytes in actual bytes.
+Use only a typed byte setting for feature-block workspace, otherwise the 16 MiB
+fallback. The batch pixel helper now also distinguishes typed bytes from counts,
+estimating pixels conservatively from the longest input spectrum's double
+mass/intensity vectors. Explicit pixel chunkSize continues to override settings.
+This corrects the old interpretation of a byte budget as a pixel count. Defaults
+with NA and ordinary numeric record counts keep their existing behavior.

@@ -6,6 +6,9 @@
 # warnings/skips, so the change log can cite concrete validation results.
 
 .libPaths(c(file.path(getwd(), "renv/library/cardinal-migration"), .libPaths()))
+# Fresh Snow workers must be able to load dependencies from this isolated
+# library before BiocParallel can export the parent's functions.
+Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
 pkgload::load_all(".", quiet = TRUE)
 
 results <- testthat::test_local(".", reporter = "summary", stop_on_failure = TRUE)

@@ -71,3 +71,26 @@ S4 metadata table to a list would invoke an unnecessary optional IRanges path.
 New source is included in Collate and batch help is generated through roxygen2.
 See `phase-3.md`, the new batch regression file, and `batch-benchmark.csv` for
 the validation and measured scope.
+
+## Phase 4 update (2026-11-25)
+
+- `readSingleSpect()` returns validated numeric profiles and supports explicit
+  header handling. `estimateFwhm()` accepts numeric profiles/tables, sampled
+  Cardinal profile data and precomputed widths. Native detection uses Cardinal;
+  numeric half-height interpolation and existing curve fits remain separate.
+- The FTICR default loads only `inst/extdata/fticr-fwhm-reference.rds`, containing
+  native calibration knots/options. It no longer loads the legacy MSI bundle.
+- `msi-preprocessing.R` adds native TIC/RMS/reference rescaling through the same
+  exported matter functions as Cardinal, custom median/fold-change methods,
+  bounded feature-reference blocks, streamed double-precision intensity output,
+  factor/history metadata and inclusive aligned frequency filtering.
+- Old normalization/estimation/filtering input paths remain compatibility code;
+  the new native path is tested with legacy picker/spectrum constructors disabled.
+  No dependency versions or renv.lock records changed. `probMap()` is unchanged.
+- Worker startup exposes project libraries only during internally owned startup.
+  Typed Cardinal byte budgets are distinguished from plain record counts in
+  feature workspace and batch pixel sizing. New files are included in Collate;
+  modified public help is regenerated through roxygen2.
+- Real width/picker evidence uses only the separate profile TSV. Provided
+  reduced centroided imzML supports extraction/map/storage checks only. See
+  `phase-4.md` and its CSV evidence for measured differences and limitations.

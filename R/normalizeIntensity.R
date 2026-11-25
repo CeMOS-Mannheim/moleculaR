@@ -2,21 +2,45 @@
 #'
 #' This normalizes spectral intensities based on a number of different methods.
 #'
-#' @param x:               a list of \code{MassPeaks} objects.
-#' @param method:          the normalization method,  has to be one of
+#' @param x A native Cardinal object or a temporary legacy MassPeaks list.
+#' @param method The normalization method, one of
 #' c('medianFoldChange', 'RMS', 'TIC', 'median', 'IS').
-#' @param meanMethod:   only used for `medianFoldChange` normalization. See
-#' \code{?MALDIquant::mergeMassPeaks} for more info.
-#' @param mz:           a numeric, the m/z value of the internal standard (IS) -
+#' @param meanMethod Reference aggregation for medianFoldChange: mean, median or sum.
+#' @param mz A numeric, the m/z value of the internal standard (IS) -
 #' only relevant for `method='IS'`.
-#' @param tol:          a numeric, the absolute tolerance for m/z (in Da) -
+#' @param tol A numeric, the absolute tolerance for m/z (in Da) -
 #' only relevant for `method='IS'`.
+#' @param scale Native input only: positive output scale, or NA for Cardinal's
+#'   defaults (maximum spectrum length/shared feature count for TIC/RMS, one
+#'   otherwise). Use one for division-only normalization.
+#' @param zeroAsMissing Native medianFoldChange only: interpret shared zeros as
+#'   absent centroid peaks (TRUE), or explicitly observed zeros (FALSE).
+#' @param outfile Native input only: new intensity backing file. Defaults to
+#'   temporary session storage. Keep this file and the original m/z source files
+#'   accessible, or provide a persistent destination. Existing paths are refused.
+#' @param featureChunkSize Optional feature rows per reference block for native
+#'   medianFoldChange. The default targets Cardinal's byte budget, or 16 MiB.
+#' @param BPPARAM Optional native BiocParallel backend; serial by default.
+#' @param verbose Logical; show native processing progress.
 #'
 #' @details
-#' The `medianFoldChange` normalization is done such that for every spectrum a median
+#' Native TIC, RMS and reference scaling use the same exported matter rescaling
+#' functions as Cardinal. Empty/all-zero spectra remain zero. Non-finite inputs
+#' and undefined nonzero-spectrum factors raise errors. IS uses the nearest
+#' reference within tol on a sorted mass axis; absent/zero standards yield zero
+#' spectra, following Cardinal's zero-reference policy. It does not apply the
+#' legacy median imputation. Default TIC/RMS scales differ from legacy values.
+#' Factors are recorded in pixelData and completed processing in Cardinal history.
+#' Existing queued preprocessing must be processed explicitly before this call.
+#'
+#' Native medianFoldChange requires aligned centroided MSImagingExperiment data.
+#' Reference-zero features are excluded from ratios; zeroAsMissing controls the
+#' interpretation of other zeros. Arrays are never aligned implicitly.
+#'
+#' On the temporary legacy path, `medianFoldChange` is done such that for every spectrum a median
 #' fold-change of peak intensities is calculated with reference to the mean spectrum
 #' which is then taken as a normalization factor for that particular spectrum (see
-#' reference [1]). The `RMS`, `TIC` and `median` normalization methods are
+#' reference 1). The `RMS`, `TIC` and `median` normalization methods are
 #' equivalent to their counterparts in other packages (ex. MALDIquant), they are
 #' just adapted to process centroided data of `MassPeak` Objects. Note that for
 #' `medianFoldChange` normalization, it is important to run peak binning beforehand.
@@ -24,7 +48,8 @@
 #' which all intensities are normalized (pixel-wise).
 #'
 #' @return
-#' Intensity-normalized list of \code{MassPeaks} objects.
+#' Native input returns the same Cardinal class with completed, file-backed
+#' intensities in a new backing file. Legacy input returns a normalized list.
 #'
 #' @references
 #' 1. Veselkov, Kirill, et al. "BASIS: High-performance bioinformatics platform for processing of large-scale mass
@@ -34,9 +59,21 @@
 #'
 #'
 #' @export
+#' @md
 #'
 
-normalizeIntensity <- function(x, method, meanMethod = "mean", mz = NULL, tol = NULL){
+normalizeIntensity <- function(x, method, meanMethod = "mean", mz = NULL, tol = NULL,
+                               scale = NA_real_, zeroAsMissing = TRUE, outfile = NULL,
+                               featureChunkSize = NULL, BPPARAM = NULL, verbose = FALSE) {
+
+         if (.msiIsObject(x)) {
+                  return(.normalizeCardinal(x, method, meanMethod, mz, tol, scale,
+                         zeroAsMissing, outfile, featureChunkSize, BPPARAM, verbose))
+         }
+         if (!missing(scale) || !missing(zeroAsMissing) || !is.null(outfile) ||
+             !is.null(featureChunkSize) || !is.null(BPPARAM) || isTRUE(verbose)) {
+                  stop("Native normalization options require Cardinal input.")
+         }
 
 
          if(method == "IS"){
