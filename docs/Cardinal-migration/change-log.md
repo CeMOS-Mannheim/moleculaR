@@ -410,3 +410,16 @@ Confirmed and suspected legacy defects are tracked separately in
   benchmarking sums its available reduced features, not an original full-spectrum
   TIC. Phase 5 Shiny integration, example/vignette cleanup, legacy dependency
   removal, other platforms and larger-scale validation remain later work.
+
+## 2026-11-25 — Step 16: Shiny audit and session architecture
+
+- Confirmed Cardinal-dev at 8b61395 with a clean working tree. Inspected both app
+  files, launch code, upload/model tests, native batch/preprocessing helpers and
+  Phase 5 requirements. Existing apps duplicate server code and assign state
+  through <<-, initialize sparse matrices and snap masses to legacy axes.
+- Recorded D021-D025 before implementation: native session modules, owned file
+  lifecycle, explicit models/processing/run/ROI, theoretical masses, native
+  reduced example, grouped lipid searches, reproducible maps and portable results.
+- Added a deliberate native example generator; runtime migration and validation
+  follow. Neither provided centroided imzML nor the reduced example is eligible
+  for profile picking or measured-width estimation.

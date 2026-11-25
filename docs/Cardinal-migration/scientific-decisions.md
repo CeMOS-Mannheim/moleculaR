@@ -312,3 +312,74 @@ estimating pixels conservatively from the longest input spectrum's double
 mass/intensity vectors. Explicit pixel chunkSize continues to override settings.
 This corrects the old interpretation of a byte budget as a pixel count. Defaults
 with NA and ordinary numeric record counts keep their existing behavior.
+
+## 2026-11-25 — D021: one native Shiny session per analysis tab
+
+Replace the two duplicated app servers with a shared module used by upload and
+example tabs. Each module owns one native Cardinal MSI object, model, tissue
+window, run/ROI selection, processing snapshot and last-request ion cache.
+Never assign datasets or analysis results into the global environment. Copy
+paired uploads and optional profile/annotation files into unique owned temporary
+directories; derived intensity files live there as well. Retire old references
+and cache entries before deleting replaced derivatives, and verify ownership
+and resolved path boundaries before recursive cleanup. Closing a session removes
+only its own temporary files, never packaged examples or original upload paths.
+
+## 2026-11-25 — D022: measured profiles, theoretical masses and input scope
+
+Support only known-centroided two-dimensional MSI in the apps. Profile or
+unknown-status MSI is rejected with instructions for explicit external Cardinal
+preprocessing; no app peak picking or width estimation is performed on imzML.
+Measured FWHM uses a separately uploaded numeric profile TSV (header choice and
+Cardinal picker/SNR shown explicitly); otherwise use the preserved instrument
+models. Require one run and allow an explicit rectangular ROI. Derive the tissue
+window from every acquired pixel in that selection, retaining zeros and holes.
+Optional pixel spacing resolves small/irregular grid ambiguity without physical
+unit conversion. Theoretical m/z values are never snapped to a measured/shared
+axis. Validate centres against the selected data's supported range by streaming
+m/z-only summaries for arrays; never construct a global spectral mass axis.
+
+## 2026-11-25 — D023: explicit preprocessing and current results
+
+Offer no normalization by default, plus native TIC/RMS/median/reference methods.
+Every initialization rereads the owned input, then applies the selected settings
+once; normalization is never stacked accidentally. A changed run, ROI, profile,
+model or preprocessing setting marks the session unready, clears results and
+invalidates extraction cache until reinitialized. Query/statistical changes
+clear results; presentation changes only redraw existing results. Compute maps
+in action handlers, never renderPlot. Keep progress stages visible. Calculations
+remain synchronous in each R worker; caching and batched extraction avoid
+unnecessary rereads but do not promise asynchronous multi-session scheduling.
+
+## 2026-11-25 — D024: native cropped example and lipid grouping
+
+Generate a small 32-by-32 coordinate crop from the preserved reduced centroided
+example as a float64 native imzML pair, plus plain annotation/lipid metadata.
+The one-time generator can use legacy classes; neither app loads those classes
+or the legacy dataset at runtime. Use default FTICR calibration explicitly and
+label the crop reduced, not a profile or complete biological acquisition. Retain
+SwissLipids identifiers and all supported adduct metadata. Class, ion-milieu and
+saturation views select database rows/adducts before native batch extraction;
+keep the existing (lyso)GPL class definition. Preserve separate lipid annotations
+at repeated masses. Custom mass-list CPPMs deduplicate masses as the old app did.
+Optional per-analyte z-score/range standardization calls the existing function;
+reject constant/insufficient groups rather than silently changing that formula.
+
+## 2026-11-25 — D025: reproducible maps and self-contained downloads
+
+Keep probMap and its statistical defaults unchanged; expose automatic bandwidth
+or a supplied fixed value, with seed 1 as an explicit reproducible UI default.
+Display the selected aggregation honestly: a Gaussian-weighted analyte image is
+not labeled as an unweighted summed ion image. Downloads contain point values,
+lipid/confirmation metadata, map results, model/settings and source filenames;
+they do not serialize a live Cardinal object or temporary dataset paths. Export
+CSV, RDS and PNG from the current result only. Capture scientific warnings for
+display. Record and test intentional model/ROI/preprocessing differences rather
+than claiming equivalence to the old app's nearest-feature snapping or globals.
+
+For the separate uploaded profile, fit all valid widths selected by the chosen
+Cardinal picker/SNR, without random peak subsampling. This is bounded to one
+profile and makes repeated initialization reproducible. The map seed controls
+the existing CSR calculation independently. The packaged full SwissLipids species
+metadata are also exported to a plain RDS asset, so Main can retain its default
+database without loading the legacy spectral bundle.
