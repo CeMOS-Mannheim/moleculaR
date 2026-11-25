@@ -33,9 +33,32 @@ git show Cardinal-dev:docs/Cardinal-migration/legacy-bugs.md
 
 | ID | Defect | Priority | Legacy status | Cardinal-dev status |
 |---|---|---|---|---|
-| LEGACY-001 | Nearest-index selection admits masses outside the intended search interval | High: scientific correctness | Confirmed; open on verified main | Fixed for Cardinal input in `321e1bc`; temporary sparse path still affected |
-| LEGACY-002 | Simulation window operations depend on unimported functions being attached | Medium: affected simulation shapes fail | Confirmed; open on verified main | Fixed in `e111d98` |
-| LEGACY-003 | A valid rectangular `spwin` causes an error in searchAnalyte | Medium: supported spatial input fails | Confirmed; open on verified main | Handled by Cardinal input in `321e1bc`; temporary sparse path still affected |
+| LEGACY-001 | Nearest-index selection admits masses outside the intended search interval | High: scientific correctness | Fixed and validated on main in `006dc71` | Fixed for Cardinal input in `321e1bc`; temporary sparse path still affected |
+| LEGACY-002 | Simulation window operations depend on unimported functions being attached | Medium: affected simulation shapes fail | Fixed and validated on main in `323cf40` | Fixed in `e111d98` |
+| LEGACY-003 | A valid rectangular `spwin` causes an error in searchAnalyte | Medium: supported spatial input fails | Fixed and validated on main in `b9a9368` | Handled by Cardinal input in `321e1bc`; temporary sparse path still affected |
+
+### Legacy repair synchronization (2026-11-25)
+
+Read local `main` at `b9a9368dafc2c51596d67eff83f2136e809091fd` using
+`git show`, without checking it out or changing it. Its root `legacy-bugs.md`
+records the independent repairs and their validation on 2026-11-23:
+
+- `006dc71`: inclusive three-sigma selection, regression tests for all four
+  methods, and representative fixed-seed map comparisons on 24,504 pixels.
+- `323cf40`: add both simulation operations to the legacy dynamic importer and
+  pass function objects to `do.call()`; fresh-session simulation tests pass.
+- `b9a9368`: validate supplied windows and limit polygon diagnostics to
+  polygonal windows; rectangle/polygon/mask regressions pass.
+
+The legacy repair log records all seven standalone test scripts passing and a
+source-archive check with zero errors, nine warnings, and three notes. These are
+the legacy checkout's recorded results; they were not rerun during this
+documentation synchronization. Inspect the complete repair log with
+`git show main:legacy-bugs.md`. The original baseline and reproductions below
+remain historical evidence. Remote freshness was not checked. These repairs
+have not been merged into Cardinal-dev's temporary sparse extraction path.
+All failure reproductions below describe the original unfixed baseline, not
+the repaired main revision.
 
 ## LEGACY-001 — Mass selection can extend beyond three sigma
 
@@ -44,7 +67,8 @@ git show Cardinal-dev:docs/Cardinal-migration/legacy-bugs.md
   `idxlwr:idxupr`, and corresponding Gaussian-weight indexing expressions.
 - **Affected entry points:** single-analyte search and callers such as batch and
   lipid searches that use this function.
-- **Legacy repair commit / validation:** not yet supplied.
+- **Legacy repair commit / validation:** `006dc71`; validated on main 2026-11-23,
+  recorded in `main:legacy-bugs.md` and synchronized above.
 
 ### Cause and expected behavior
 
@@ -65,8 +89,10 @@ Cardinal itself.
 
 ### Minimal reproduction in a legacy installation
 
-Use a fresh R session with the legacy moleculaR package installed. The polygonal
-window below deliberately avoids LEGACY-003 so that mass selection is isolated.
+Use a fresh R session with the original unfixed legacy baseline installed. The
+repaired main returns 12 for this example. The polygonal window below
+deliberately avoids LEGACY-003 so that the historical mass-selection failure is
+isolated.
 
 ```r
 library(moleculaR)
@@ -109,9 +135,12 @@ contributes intensity 8 in the legacy result despite lying outside that interval
   that peak's intensity**. An outside peak has a lower weight, but a sufficiently
   intense peak can still contribute substantially. This is not a bound on the
   relative error in the final analyte intensity.
-- Detected pixels and downstream maps can be affected. The size of that effect
-  on historical biological datasets has not been quantified. This finding alone
-  does not establish that every previous map is materially different.
+- Detected pixels and downstream maps can be affected. The later main repair
+  quantified representative fixed-seed maps on the bundled 24,504-pixel dataset;
+  detailed results are in `main:legacy-bugs.md` and
+  `main:tests/manual/legacy001-map-results.csv`. Broader historical biological
+  impact remains unassessed. This finding alone does not establish that every
+  previous map is materially different.
 
 ### Legacy fix and acceptance criteria
 
@@ -140,7 +169,10 @@ expectations separately when fixing this defect.
 - **Discovered:** 2026-11-23, intermediary spatstat namespace audit.
 - **Affected code:** `R/simulation-functions.R`, `createHotspotWin()`;
   `R/manualSpatstatImport.R` omits the two required operations.
-- **Legacy repair commit / validation:** not yet supplied.
+- **Legacy repair commit / validation:** `323cf40`; validated on main 2026-11-23.
+  The legacy repair follows its existing dynamic-import policy, adding both
+  operations to that importer rather than introducing Cardinal-dev's namespace
+  policy. See `main:legacy-bugs.md` for the fresh-session validation.
 
 ### Reproduction and cause
 
@@ -164,8 +196,10 @@ binding supplied by its historical importer and without attaching spatstat.
 
 ### Legacy fix and acceptance criteria
 
-- Pass `spatstat.geom::union.owin` and `spatstat.geom::setminus.owin` as function
-  objects to `do.call()`, with the appropriate direct dependency declared.
+- On legacy main, add both operations to its existing dynamic importer and
+  pass the imported function objects to `do.call()`. Cardinal-dev uses explicit
+  `spatstat.geom` calls instead. Preserve each branch's established dependency
+  policy; the original direct-namespace suggestion is superseded for main.
 - Test `centralCircle`, `multiCircle`, and `donut` in a fresh session that does
   not attach spatstat. Verify geometry and ensure simulation callers work.
 - Keep shape definitions, radii, and spatial units unchanged.
@@ -179,7 +213,8 @@ binding supplied by its historical importer and without attaching spatstat.
 - **Discovered:** 2026-11-23, first-milestone boundary regression setup.
 - **Affected code:** `R/searchAnalyte.R`, the supplied-window diagnostic beginning
   with `owinInfo <- summary(spwin)`.
-- **Legacy repair commit / validation:** not yet supplied.
+- **Legacy repair commit / validation:** `b9a9368`; validated on main 2026-11-23,
+  including rectangular, polygonal, and mask windows. See `main:legacy-bugs.md`.
 
 ### Reproduction and cause
 
