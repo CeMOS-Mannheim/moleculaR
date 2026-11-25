@@ -13,11 +13,15 @@ batchAnalyteSearch(
   wMethod = "Gaussian",
   verifiedMasses = NA,
   confirmedOnly = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  chunkSize = NULL,
+  BPPARAM = NULL,
+  cache = NULL
 )
 }
 \arguments{
-\item{spData}{an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data.}
+\item{spData}{A native Cardinal `MSImagingArrays` or `MSImagingExperiment`,
+or a temporary legacy `sparseIntensityMatrix`.}
 
 \item{fwhmObj}{an S3 object of type `fwhm` with the estimated fwhm data.}
 
@@ -26,8 +30,9 @@ spatial window out of the coordinates of all points of the dataset stored in `sp
 
 \item{m}{a numeric vector of m/z values of interest.}
 
-\item{numCores}{an integer, the number of cores to be used for the search, passed to `parallel::mclapply`. Not
-supported on Windows machines.}
+\item{numCores}{Number of workers. Cardinal uses serial execution by default
+and a cross-platform BiocParallel SnowParam for values greater than one.
+The legacy path uses `parallel::mclapply` and is serial on Windows.}
 
 \item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
 
@@ -37,7 +42,20 @@ annotation result.}
 
 \item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
 
-\item{verbose}{whether to show progress. Ignored when `numCores > 1`.}
+\item{verbose}{Logical; show pixel-block progress for Cardinal input. The
+legacy path ignores this when `numCores > 1`.}
+
+\item{chunkSize}{Cardinal input only: positive integer number of pixels per
+block. NULL uses Cardinal's configured chunk size or number of chunks.}
+
+\item{BPPARAM}{Cardinal input only: optional BiocParallel backend. Leave
+numCores at one when supplying this argument. Caller-started backends stay
+running; backends started by this call are stopped on exit.}
+
+\item{cache}{Cardinal input only: optional unlocked environment storing the
+last sparse extraction. Reuse requires identical data, processing, run/ROI,
+masses, widths, method and backing-file statistics. Keep backing files
+immutable; clear the environment after external edits preserving timestamps.}
 }
 \value{
 An analyte point patter of type `ppp` and `analytePointPattern` containing all analyte hits identified in the
@@ -46,4 +64,14 @@ MSI dataset `spData` for the specified m/z values in `m` taking into account the
 \description{
 This applies `moleculaR::searchAnalyte` on a given MSI dataset against a vector of provided m/z values representing
 analytes of interest.
+}
+\details{
+Cardinal spectra are read once per batch in pixel blocks. Extraction
+  follows [searchAnalyte()] including strict inclusive mass windows and the
+  representation-specific mean denominator. Input order and duplicate masses
+  are preserved in detected-analyte metadata. NA targets are skipped; other
+  invalid masses and invalid FWHM predictions raise errors. Out-of-range
+  centres are evaluated when their windows overlap measured peaks. Empty or
+  undetected batches return an empty ppp. Output memory grows with detections;
+  no complete spectral or dense pixel-by-query matrix is constructed.
 }

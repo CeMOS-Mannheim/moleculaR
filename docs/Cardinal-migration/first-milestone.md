@@ -188,8 +188,9 @@ From the repository root, use `Rscript --vanilla` followed by the script path:
 
 ## Remaining migration
 
-Chunked batch/lipid searches, measured FWHM input migration, normalization,
-feature filtering, Shiny integration, example-data cleanup, removal of legacy
+The single-analyte milestone and its original validation above are historical.
+The subsequent batch/lipid implementation and validation are described in
+[phase-3.md](phase-3.md). Measured FWHM input migration, normalization, feature
+filtering, Shiny integration, example-data cleanup, removal of legacy
 dependencies, cross-platform testing, and large-scale validation remain later
-phases. The first milestone establishes the native single-analyte interface
-and its scientific regression boundary.
+phases.

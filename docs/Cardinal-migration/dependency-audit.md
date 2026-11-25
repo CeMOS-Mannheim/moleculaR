@@ -11,8 +11,8 @@ tests, DESCRIPTION, NAMESPACE, and repository-wide searches for peak processing.
 | readSingleSpect | Two-column TSV becomes MassSpectrum | Numeric input rewrite in phase 4 |
 | createSparseMat / S3classes | All masses/intensities unlisted; global union axis; pixels by features; Matrix dgCMatrix | Bypass for Cardinal; retain reference utility |
 | searchAnalyte | match.closest for confirmation and inclusive nearest-index span; dense selected columns; global mean denominator | Add strict Cardinal extraction; document boundary and mean differences |
-| batchAnalyteSearch | spData$coordinates, mzAxis range; repeated searchAnalyte via mclapply | Phase 3 chunked engine; Cardinal batch support not claimed yet |
-| batchLipidSearch / legacy-searchLipid | Same sparse assumptions; repeated mass/adduct searches; annotation metadata | Phase 3 shared extraction engine, preserve all adduct metadata |
+| batchAnalyteSearch | Temporary sparse path still uses coordinates/mzAxis and mclapply | Phase 3 adds native Cardinal pixel chunks, sparse query results, BiocParallel and optional cache |
+| batchLipidSearch / legacy-searchLipid | Sparse assumptions remain on the temporary path and archived searchLipid | Phase 3 routes native lipid/adduct queries through the shared batch engine and preserves metadata |
 | normalizeIntensity | MALDIquant intensity setters; mergeMassPeaks; exact shared feature matching; IS imputation | Phase 4 validate factors/scaling and missing-standard policy |
 | filterPeaks | Creates sparse matrix; stored-entry frequencies via diff(@p); keeps >= threshold; reconstructs MassPeaks/FWHM metadata | Aligned Cardinal filtering in phase 4; code threshold differs from prose <= statement |
 | estimateFwhm | MassSpectrum/MassPeaks tests/accessors, SuperSmoother peak detection, match.closest, numeric half-height interpolation | Preserve fitting/defaults; replace adapters and validate peak selection in phase 4 |
@@ -53,3 +53,21 @@ directly to `do.call()`. Existing explicitly namespaced calls are preserved.
 The legacy source fixture remains unchanged. Its private replay environment
 provides only ppp, owin, and as.polygonal; production namespaces no longer contain
 copied spatstat functions or installed-package enumeration objects.
+
+## Phase 3 update (2026-11-25)
+
+`R/msi-extractIons.R` owns multi-query extraction, query validation and
+deduplication, sparse result assembly, optional caching, pixel chunk sizing,
+BiocParallel backend ownership, common spatial preparation and lipid query
+metadata. Both public batch functions dispatch native MSI objects there; legacy
+sparse implementations remain intact. No Cardinal dataset is converted into a
+global spectral matrix. The result matrix contains extracted query values only.
+
+The cache reads backing-file paths through `matter::path()`, so matter moves
+from Suggests to Imports with the already-validated version floor. No package
+version or lockfile changes are required. Spectral metadata use the exported
+`ProtGenerics::spectraData()` accessor and integer indexing; coercing the entire
+S4 metadata table to a list would invoke an unnecessary optional IRanges path.
+New source is included in Collate and batch help is generated through roxygen2.
+See `phase-3.md`, the new batch regression file, and `batch-benchmark.csv` for
+the validation and measured scope.

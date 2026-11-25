@@ -3,20 +3,33 @@
 #' This applies `moleculaR::searchAnalyte` on a given MSI dataset against the entire SwissLipids database
 #' taking into account the different ionization statuses (i.e. adducts).
 #'
-#' @param spData an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data.
+#' @param spData A native Cardinal `MSImagingArrays` or `MSImagingExperiment`,
+#'   or a temporary legacy `sparseIntensityMatrix`.
 #' @param fwhmObj an S3 object of type `fwhm` with the estimated fwhm data.
 #' @param spwin optional, an object of type `owin`. If not given the function tries to generate the
 #' spatial window out of the coordinates of all points of the dataset stored in `spData` (default behavior).
 #' @param sldb the SwissLipid database loaded as a data.frame.
 #' @param adduct a character vector specifying the ionisation status of interest, c("M-H", "M+H", "M+Na", "M+K").
-#' @param numCores an integer, the number of cores to be used for the search, passed to `parallel::mclapply`. Not
-#' supported on Windows machines.
+#' @param numCores Number of workers. Cardinal uses serial execution by default
+#'   and cross-platform BiocParallel SnowParam workers when greater than one.
+#'   Legacy input uses `parallel::mclapply` and is serial on Windows.
 #' @param wMethod wighting method; c("Gaussian", "sum", "max", "mean").
 #' @param verifiedMasses an optional numeric vector of m/z values that are (externally) verified to
 #' be real molecular entities with a certain confidence, ex. 'mz' column of a METASPACE
 #' annotation result.
 #' @param confirmedOnly if `TRUE`, returns detections only if confirmed by `verifiedMasses`.
-#' @param verbose whether to show progress. Ignored when `numCores > 1`.
+#' @param verbose Logical; show pixel-block progress for Cardinal input. The
+#'   legacy path ignores this when `numCores > 1`.
+#' @param chunkSize Cardinal pixel block size; see [batchAnalyteSearch()].
+#' @param BPPARAM Optional Cardinal BiocParallel backend; see [batchAnalyteSearch()].
+#' @param cache Optional environment for the last Cardinal extraction; see
+#'   [batchAnalyteSearch()]. Backing data must remain immutable while cached.
+#'
+#' @details For Cardinal input, generate all requested theoretical adduct masses
+#'   before reading spectra. One batch extraction preserves database-row order,
+#'   the established M-H, M+H, M+Na, M+K ordering, repeated masses and lipid
+#'   metadata. Missing masses are skipped. Confirmation uses exactly the same
+#'   three-sigma rule as [searchAnalyte()], without the legacy database prefilter.
 #'
 #' @return An analyte point patter of type `ppp` and `analytePointPattern` containing all lipid hits identified in the
 #' MSI dataset `spData` for the specified `adduct` formations taking into account the `fwhm` information.
@@ -27,7 +40,18 @@
 
 batchLipidSearch <- function(spData, fwhmObj, spwin = NA, sldb, adduct = c("M-H", "M+H", "M+Na", "M+K"),
                               numCores = 1L, wMethod = "Gaussian", verifiedMasses = NA,
-                              confirmedOnly = FALSE, verbose = TRUE) {
+                              confirmedOnly = FALSE, verbose = TRUE,
+                              chunkSize = NULL, BPPARAM = NULL, cache = NULL) {
+
+      if (.msiIsObject(spData)) {
+            queries <- .msiLipidQueries(sldb, adduct)
+            return(.searchCardinalAnalytes(spData, fwhmObj, spwin, queries$mz,
+                   numCores, wMethod, verifiedMasses, confirmedOnly, verbose,
+                   chunkSize, BPPARAM, cache, metadata = queries$metadata))
+      }
+      if (!is.null(chunkSize) || !is.null(BPPARAM) || !is.null(cache)) {
+            stop("chunkSize, BPPARAM and cache require Cardinal input.")
+      }
 
 
       # check for sldb

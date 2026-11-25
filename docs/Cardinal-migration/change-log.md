@@ -210,3 +210,88 @@ Confirmed and suspected legacy defects are tracked separately in
 - Existing user modifications now also include `renv.lock`; preserve it along
   with the specification, vignette ignore file, and local reference material.
   Legacy repairs and historical biological-data impact assessment remain open.
+
+## 2026-11-25 — Step 8: reconcile legacy status and begin batch extraction
+
+- Rechecked local main at `b9a9368` through Git objects. Synchronized the three
+  independent legacy repair commits and their recorded validation into this
+  branch's bug register; preserved the original baseline and reproductions.
+- No branch checkout, legacy source change, or historical fixture regeneration.
+  The temporary Cardinal-dev sparse path still has LEGACY-001 and LEGACY-003.
+- Documentation synchronization is recorded separately in commit `bad8ff8`.
+- Inspected the batch/lipid implementations, native extraction and spatial
+  adapters, installed Cardinal 3.14.0 / matter 2.14.0 methods, and Phase 3
+  requirements. Recorded D010-D011 before implementation.
+- Implementation, numerical/parallel tests, and performance results follow as
+  completed. No Phase 3 completion or performance claim is made at this step.
+
+## 2026-11-25 — Step 9: native batch implementation and scientific regressions
+
+- Added `R/msi-extractIons.R`: validated/deduplicated queries, binary interval
+  lookup with the exact single-search predicate, one visit per spectrum in
+  pixel chunks, sparse query results, optional last-request cache, backend
+  ownership and spatial/lipid adapters. Added this source to Collate.
+- Both public batch functions now dispatch native Cardinal objects to that
+  engine and expose optional `chunkSize`, `BPPARAM` and `cache` arguments.
+  The temporary sparse algorithms and all immutable fixtures remain unchanged.
+- Lipid queries preserve database rows, all four adducts, metadata and duplicate
+  annotations. The native path uses single-search three-sigma confirmation
+  instead of the narrower legacy database prefilter. Missing masses are
+  skipped; invalid real targets/model widths fail. Windows outside the measured
+  range are evaluated when they overlap peaks, matching single search.
+- Cache identity includes native values/processing/ROI/run, query masses and
+  evaluated widths, representation, method, selection rule and backing-file
+  statistics. It caches no generated IDs or maps. Declared the already-locked
+  matter package as a direct Import for `matter::path()`; no installed dependency
+  versions or lockfile records changed.
+- Runtime investigation corrected the metadata accessor to exported
+  `ProtGenerics::spectraData()` and iterates that table by integer index to avoid
+  an unnecessary optional IRanges coercion. Initial cache failures were fixed,
+  and the full affected suite was rerun.
+- Final source suite: **512 passing assertions across 28 tests**, with no test
+  warnings, skips, errors or failures. Coverage includes all four methods and
+  both representations, chunk sizes, backed data, boundaries, duplicates,
+  annotations, exact lipid metadata, one logical visit per acquired spectrum,
+  cache hit/invalidation/annotation refresh, backend ownership, serial/Snow
+  equivalence, unchanged legacy dispatch and seeded MPM references at 1e-10.
+- Current source installs successfully in the isolated project library. Batch
+  help was regenerated through the existing roxygen workflow; unrelated Rd
+  files were restored byte-for-byte. Updated the dependency audit, historical
+  milestone pointer and `phase-3.md`; added a reproducible fresh-process batch
+  benchmark. Its parent process explicitly loads Matrix before comparing S4
+  results. Final benchmark and archive-check results follow in Step 10.
+
+## 2026-11-25 — Step 10: batch performance and source-archive validation
+
+- Final benchmark used fresh R processes without a concurrent regression run:
+  24,504 acquired pixels, 681,849,892-byte ibd, eight theoretical lipid queries
+  and unchanged default FTICR widths. Repeated single extraction took 36.81 s;
+  one native batch took 8.15 s; a warmed cache lookup took 0.03 s. Every batch,
+  cache and chunk/worker tuning result had maximum absolute difference **zero**
+  from its independent single-query reference.
+- Whole-process peak working sets were 724,180,992 bytes for repeated singles
+  and 579,817,472 bytes for the batch. These include packages, XML parsing and
+  import, not incremental extraction memory. Both returned the same 162,416
+  positive pixel/query values in a 1,950,536-byte sparse object.
+- On 2,000 pixels, chunks of 100 / 500 / 2,000 took 4.36 / 1.39 / 0.92 s;
+  two Snow workers with a 2,000-pixel chunk took 2.88 s including startup and
+  shutdown. Kept serial execution as the default and configurable chunk sizing.
+  Disk cache was uncontrolled, worker memory is excluded from the parent peak,
+  and no large-scale or cross-platform acceptance claim is made.
+- Source-archive build and installation pass. R CMD check reports **zero
+  errors, 10 existing warnings and 2 notes**; its testthat run is
+  **FAIL 0 / WARN 0 / SKIP 0 / PASS 512**. All four older standalone regression
+  scripts and examples pass. PDF/manual generation and vignette rebuilding
+  remain disabled; legacy warning categories match the prior milestone.
+- Saved the CSV benchmark, updated build/check reports, and completed
+  `phase-3.md` with API usage, numerical interpretation, backend ownership,
+  memory/cache limits and the scope of the measurements. Whitespace checks pass.
+  Frozen fixtures, probability-map algorithms, default FWHM models and renv.lock
+  are unchanged. The earlier strict-boundary and mean differences remain
+  explicitly documented; the native batch introduces no further extraction
+  differences from single search on equivalent data.
+- Phase 3 is implemented and validated on this Windows environment. Phase 4
+  (measured FWHM adapters, normalization and filtering), Cardinal Shiny/examples,
+  legacy dependency removal, other operating systems and larger-scale testing
+  remain future stages. Main's repairs are synchronized in the documentation;
+  Cardinal-dev's temporary sparse-path defects remain separate from this work.

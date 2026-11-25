@@ -118,3 +118,48 @@ geometry bindings; do not reintroduce runtime dynamic imports.
 Expand comments, argument layouts, and validation blocks in the new Cardinal
 helpers and development scripts so their purpose, data flow, memory behavior,
 and scientific conventions can be followed without reconstructing the migration.
+
+## 2026-11-25 — D010: batch extraction and output semantics
+
+Phase 3 visits each spectrum once per batch, evaluates all unique (mass, FWHM)
+queries there, and stores positive results as a sparse pixel-by-query matrix.
+Pixel chunks bound transient spectral/results storage; output memory still
+grows with the number of detections. Obtain the default pixel chunk size from
+Cardinal's configured chunk size or number of chunks; expose an explicit
+`chunkSize` override for reproducible tuning. Never build a global spectral
+matrix. Shared experiments retain the union of queried feature rows, including
+zeros for their mean denominator. Arrays retain their observed-peak denominator.
+
+Batch results must match repeated single-analyte searches, including inclusive
+boundaries and windows overlapping the edge of the measured mass range. Do not
+discard a query solely because its centre lies outside that range. Missing
+(`NA`) targets are skipped; non-positive/non-finite supplied targets or invalid
+model widths are errors. Empty/no-detection batches return an empty ppp. Retain
+input order and duplicate query metadata, while deduplicating spectral work.
+Lipid metadata follow database row order and the established M-H, M+H, M+Na,
+M+K adduct order. Use the same three-sigma confirmation rule as single search;
+the legacy FWHM-only database prefilter must not discard valid confirmations or
+duplicate database rows. The temporary legacy APIs remain unchanged.
+
+Serial execution remains the default. Expose BiocParallel configuration and
+map explicit `numCores > 1` to a cross-platform SnowParam, with equivalence tests
+and timing comparisons before recommending it. Caller-owned backends retain
+their lifecycle; stop only backends started internally for this call.
+
+## 2026-11-25 — D011: optional bounded extraction cache
+
+An optional caller-owned environment retains only the last extraction and its
+key. The key includes the native object (spectra, coordinates, run/ROI,
+representation, metadata and processing state), requested masses and evaluated
+FWHM values, aggregation and mass-selection rule, and backing-file paths,
+sizes and modification times. Query annotations and lipid labels are reapplied
+to cached intensities. Do not cache generated point-pattern IDs or spatial maps.
+Use matter's exported path accessor for backing-file provenance and declare
+matter as a direct dependency. Check file state again before saving a result.
+
+Backing data must remain immutable while in use. File statistics do not detect
+external rewrites that preserve both size and timestamps; callers must clear or
+replace the cache after such edits. No full-file hashing or spectral conversion
+is performed to create a cache key. Changing normalization, run/ROI, target,
+width, representation, ordinary file timestamps or intensity values invalidates
+the entry. The cache is opt-in, session-local and not a durable artifact.

@@ -14,11 +14,15 @@ batchLipidSearch(
   wMethod = "Gaussian",
   verifiedMasses = NA,
   confirmedOnly = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  chunkSize = NULL,
+  BPPARAM = NULL,
+  cache = NULL
 )
 }
 \arguments{
-\item{spData}{an S3 object of type `sparseIntensityMatrix` holding the sparse MSI data.}
+\item{spData}{A native Cardinal `MSImagingArrays` or `MSImagingExperiment`,
+or a temporary legacy `sparseIntensityMatrix`.}
 
 \item{fwhmObj}{an S3 object of type `fwhm` with the estimated fwhm data.}
 
@@ -29,8 +33,9 @@ spatial window out of the coordinates of all points of the dataset stored in `sp
 
 \item{adduct}{a character vector specifying the ionisation status of interest, c("M-H", "M+H", "M+Na", "M+K").}
 
-\item{numCores}{an integer, the number of cores to be used for the search, passed to `parallel::mclapply`. Not
-supported on Windows machines.}
+\item{numCores}{Number of workers. Cardinal uses serial execution by default
+and cross-platform BiocParallel SnowParam workers when greater than one.
+Legacy input uses `parallel::mclapply` and is serial on Windows.}
 
 \item{wMethod}{wighting method; c("Gaussian", "sum", "max", "mean").}
 
@@ -40,7 +45,15 @@ annotation result.}
 
 \item{confirmedOnly}{if `TRUE`, returns detections only if confirmed by `verifiedMasses`.}
 
-\item{verbose}{whether to show progress. Ignored when `numCores > 1`.}
+\item{verbose}{Logical; show pixel-block progress for Cardinal input. The
+legacy path ignores this when `numCores > 1`.}
+
+\item{chunkSize}{Cardinal pixel block size; see [batchAnalyteSearch()].}
+
+\item{BPPARAM}{Optional Cardinal BiocParallel backend; see [batchAnalyteSearch()].}
+
+\item{cache}{Optional environment for the last Cardinal extraction; see
+[batchAnalyteSearch()]. Backing data must remain immutable while cached.}
 }
 \value{
 An analyte point patter of type `ppp` and `analytePointPattern` containing all lipid hits identified in the
@@ -49,4 +62,11 @@ MSI dataset `spData` for the specified `adduct` formations taking into account t
 \description{
 This applies `moleculaR::searchAnalyte` on a given MSI dataset against the entire SwissLipids database
 taking into account the different ionization statuses (i.e. adducts).
+}
+\details{
+For Cardinal input, generate all requested theoretical adduct masses
+  before reading spectra. One batch extraction preserves database-row order,
+  the established M-H, M+H, M+Na, M+K ordering, repeated masses and lipid
+  metadata. Missing masses are skipped. Confirmation uses exactly the same
+  three-sigma rule as [searchAnalyte()], without the legacy database prefilter.
 }

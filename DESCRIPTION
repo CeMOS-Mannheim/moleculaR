@@ -14,6 +14,7 @@ License: MIT + file LICENSE
 Depends: R (>= 4.6.0)
 Imports: 
       Cardinal (>= 3.14.0),
+      matter (>= 2.14.0),
       BiocParallel,
       ProtGenerics,
       methods,
@@ -34,7 +35,6 @@ Encoding: UTF-8
 LazyData: true
 Suggests:
     CardinalIO,
-    matter,
     MALDIquantForeign,
     rmarkdown,
     knitr,
@@ -63,6 +63,7 @@ Collate:
     'moleculaR.R'
     'msi-accessors.R'
     'msi-extractIon.R'
+    'msi-extractIons.R'
     'normalizeIntensity.R'
     'plotting-functions.R'
     'probMap.R'
