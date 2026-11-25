@@ -191,5 +191,5 @@ From the repository root, use `Rscript --vanilla` followed by the script path:
 The single-analyte milestone and its original validation above are historical.
 Subsequent work is described in [phase-3.md](phase-3.md) for batch/lipid
 extraction and [phase-4.md](phase-4.md) for measured FWHM and preprocessing.
-Shiny integration, example-data cleanup, removal of legacy dependencies,
+Shiny integration is described in [phase-5.md](phase-5.md). Example-data cleanup, removal of legacy dependencies,
 cross-platform testing, and large-scale validation remain later phases.

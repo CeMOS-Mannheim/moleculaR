@@ -94,3 +94,27 @@ the validation and measured scope.
 - Real width/picker evidence uses only the separate profile TSV. Provided
   reduced centroided imzML supports extraction/map/storage checks only. See
   `phase-4.md` and its CSV evidence for measured differences and limitations.
+
+## Phase 5 update (2026-11-25)
+
+- Both Shiny entry points now use `shiny-cardinal.R` and `shiny-cardinal-data.R`:
+  native session-owned Cardinal arrays, guarded temporary-file lifecycle, explicit
+  FWHM/run/ROI/preprocessing settings, existing batch/cache APIs and unchanged
+  probability-map algorithms. No app runtime imports legacy spectra, builds a
+  global sparse matrix or shared mass axis, or snaps theoretical masses.
+- The cropped native example, numeric annotations and slim/full species metadata
+  live in `inst/extdata/shiny-example/`. The one-time generator uses the preserved
+  legacy bundle; app runtime uses only the native pair and ordinary data frames.
+  The old bundle/functions remain for Phase 6 example/vignette/API cleanup.
+- The separate profile TSV is the only app source for measured widths. Measured
+  fitting uses all valid Cardinal-picked widths, avoiding random subsampling.
+  Centroided/unknown-status MSI cannot enter this route. Normalization uses native
+  Phase 4 methods and private intensity files, always starting from the copied
+  source. Default FWHM calibration remains unchanged.
+- CSV/RDS/PNG downloads serialize portable spatial results and provenance,
+  without a live experiment or private upload paths. The two old standalone app
+  implementations and their legacy mocked-upload regression are replaced by one
+  tested module and installed native app smoke tests. No dependency versions,
+  lockfile records, spatial algorithms or immutable reference fixtures changed.
+- See `phase-5.md`, `test-cardinal-shiny.R` and `phase5-benchmark.csv` for validation,
+  intentional behavior changes, performance scope and remaining release work.

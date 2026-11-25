@@ -423,3 +423,74 @@ Confirmed and suspected legacy defects are tracked separately in
 - Added a deliberate native example generator; runtime migration and validation
   follow. Neither provided centroided imzML nor the reduced example is eligible
   for profile picking or measured-width estimation.
+
+## 2026-11-25 — Step 17: shared native Shiny workflows
+
+- Added `R/shiny-cardinal-data.R` and `R/shiny-cardinal.R` for both app entry
+  points. Main/Example and concurrent sessions own independent Cardinal arrays,
+  models, windows, settings and extraction caches. Replaced duplicated legacy
+  servers, global assignments, complete sparse conversions and mass snapping.
+- Added validated paired/auxiliary copies, guarded reset/replacement/closure
+  cleanup, explicit run/ROI/spacing and known-centroided input requirements.
+  Models use preserved instrument calibration or only a separate profile TSV;
+  measured fitting uses all valid picked widths without random subsampling.
+- Added native optional normalization with private binary output and fresh-source
+  reinitialization; failed partial writes are tracked for cleanup. Data/model
+  changes invalidate readiness/cache/results; query changes clear results;
+  display changes redraw. Maps run in action handlers with progress/notices,
+  explicit seed and auto/fixed bandwidth. Execution remains synchronous per R
+  worker. No probability-map/statistical or legacy reference algorithms changed.
+- Preserved exact theoretical masses, Gaussian/sum/max/mean, annotation confirmation,
+  custom mass CPPMs, lipid class/(lyso)GPL ion/saturation groups, species/adduct
+  metadata and optional existing standardization. Lipid annotations at repeated
+  masses stay distinct; custom mass lists deduplicate. Degenerate standardization
+  reports a useful error. Native example assets were committed as 08a0c7a.
+- Added current-result CSV/RDS/PNG downloads and labeled aggregation views. Downloads
+  contain numeric spatial results, FWHM/settings and provenance, without live MSI
+  objects or private data paths. Updated runShiny validation/help, Collate, app/main
+  guidance, dependency audit and milestone navigation. Dependencies, renv.lock,
+  original scientific fixtures and the legacy data bundle are unchanged.
+- Added eight automatic Shiny/native tests and replaced the old mocked legacy
+  app script with installed native app smoke tests. Core validation passed 821
+  assertions across 48 tests with no failures/errors/skips/test warnings. Additional
+  interrupted-normalization and uploaded-database lifecycle tests follow in the
+  final validation. UI rendering, all plot/download formats, concurrent-session
+  ownership, default/measured FWHM, direct API equivalence and frozen historical
+  spatial fields are covered. Both installed app entry points generate maps;
+  a live package-app HTTP smoke returned 200 with both namespaced tabs.
+- validate-phase5.R recorded an example initialization/MPM/CPPM/lipid CPPM in
+  1.17/7.72/6.57/7.06 s. All 24,504 supplied reduced centroided pixels initialized
+  (including private paired copy) in 4.91 s; MPM/CPPM took 13.25/11.61 s. Both
+  remained file-backed and matched direct API map fields exactly, with original
+  input checksums unchanged. Whole-process peaks were about 1.35/1.56 GB, including
+  package load and preceding workflows. Largest profiled single R allocations
+  were below 1 MB/2,206,448 bytes. Native/total allocations and incremental RAM are
+  not measured. Other validation ran concurrently; these are local observations,
+  not large-scale/unreduced-acquisition acceptance. No centroided data supplied
+  picking or widths. The existing real-data ontology warning is shown as a notice.
+- Added phase-5.md, phase5-benchmark.csv and the reproducible validation script.
+  Browser/shinytest2/Chromote interaction testing is unavailable; Shiny testServer,
+  headless plots, installed native entry points and live HTTP provide the recorded
+  validation. Package check completion is recorded in the next step.
+
+## 2026-11-25 — Step 18: complete Phase 5 validation
+
+- Final source suite: **829 passing assertions across 48 tests**, including 163
+  new assertions across eight Shiny tests, with zero failures/errors/skips/test
+  warnings. All original 666 assertions and immutable scientific references pass.
+  Additional coverage verifies failed partial normalization cleanup and loading
+  the bundled/uploaded species databases without legacy runtime data objects.
+- The final expanded source archive builds and installs. R CMD check reports
+  **zero errors, 10 existing warnings and 2 notes**; installed testthat reports
+  **FAIL 0 / WARN 0 / SKIP 0 / PASS 829**. All four standalone scripts pass,
+  including both installed native app entry points. PDF/manual generation and
+  vignette rebuilding were disabled; suggested rmarkdown was unavailable.
+  Build/check reports are updated; startup build-version notices are distinct
+  from test warnings. No new warning/note category was introduced by this phase.
+- Phase 5 is complete within the recorded Windows/data scope. The provided
+  shrunk centroided data were used only for extraction/maps/storage; measured
+  FWHM uses a separate profile TSV. Browser automation and cross-platform/large
+  acquisition acceptance remain outside this validation. Phase 6 is cleanup:
+  replace remaining legacy example/vignette/API paths, remove MALDIquant and
+  compatibility dependencies, update documentation/data/NAMESPACE/renv.lock and
+  verify installation/tests without MALDIquant. Phase 7 covers large-scale work.

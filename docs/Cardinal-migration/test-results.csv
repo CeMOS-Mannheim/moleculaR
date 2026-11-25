@@ -35,6 +35,14 @@
 "test-cardinal-preprocessing.R","native preprocessing reaches seeded maps without MALDIquant algorithms",6,0,FALSE,FALSE,0,6
 "test-cardinal-preprocessing.R","native preprocessing workers preserve library environment and backend ownership",5,0,FALSE,FALSE,0,5
 "test-cardinal-preprocessing.R","Cardinal byte budgets remain distinct from record counts",6,0,FALSE,FALSE,0,6
+"test-cardinal-shiny.R","Shiny uploads, auxiliary files and cleanup are owned and bounded",14,0,FALSE,FALSE,0,14
+"test-cardinal-shiny.R","Shiny input parsing and mass bounds do not construct a global intensity representation",16,0,FALSE,FALSE,0,16
+"test-cardinal-shiny.R","Shiny initialization keeps file-backed data and rereads the original for normalization",17,0,FALSE,FALSE,0,17
+"test-cardinal-shiny.R","Shiny rejects unsupported MSI and validates run, ROI and profile model separately",21,0,FALSE,FALSE,0,21
+"test-cardinal-shiny.R","Shiny maps match direct native APIs and downloads remain portable",32,0,FALSE,FALSE,0,32
+"test-cardinal-shiny.R","Shiny lipid groups preserve annotations and explicit standardization errors",15,0,FALSE,FALSE,0,15
+"test-cardinal-shiny.R","Shiny session actions invalidate correctly and close only owned files",31,0,FALSE,FALSE,0,31
+"test-cardinal-shiny.R","both Shiny interfaces use namespaced native workflows and validate launch choices",17,0,FALSE,FALSE,0,17
 "test-spatstat-namespaces.R","the package namespace contains no dynamic spatstat copies",9,0,FALSE,FALSE,0,9
 "test-spatstat-namespaces.R","spatial combination, image conversion, and expression evaluation work",11,0,FALSE,FALSE,0,11
 "test-spatstat-namespaces.R","all simulation shapes resolve their geometry explicitly",7,0,FALSE,FALSE,0,7

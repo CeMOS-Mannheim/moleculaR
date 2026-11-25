@@ -1,0 +1,3 @@
+"source","filename","centroidedReduced","pixels","imzmlBytes","ibdBytes","initializeSeconds","singleSeconds","batchSeconds","lipidSeconds","singlePoints","batchAnalytes","lipidAnalytes","backed","objectBytes","largestProfiledRAllocationBytes","peakProcessWorkingSetBytes","maxMapDifference","originalFilesUnchanged"
+"example","example.imzML",TRUE,1024,1433827,1838176,1.17,7.72,6.57,7.06,874,2,32,TRUE,327744,0,1351708672,0,TRUE
+"upload","pos-XIII-82492-msi.imzML",TRUE,24504,59735434,681849892,4.91,13.25,11.61,NA,17646,2,NA,TRUE,7180312,2206448,1562378240,0,TRUE

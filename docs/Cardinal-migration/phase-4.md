@@ -214,7 +214,8 @@ TIC in this storage check sums only the available reduced features; it does
 not reconstruct the original acquisition's full-spectrum total ion current.
 Raw figures are in `phase4-benchmark.csv`.
 
-Phase 5 remains Cardinal integration into Shiny. Example/vignette cleanup,
+Phase 5 Cardinal integration into Shiny is documented in [phase-5.md](phase-5.md).
+Example/vignette cleanup,
 legacy dependency removal, broader biological data, other platforms and large
 benchmarks remain later phases. No shrunk centroided acquisition is treated as
 a profile, and no probability-map algorithm is changed in this phase.
